@@ -37,7 +37,7 @@ module Stormancer {
         private _requestProcessor: RequestProcessor;
         private _scenesDispatcher: SceneDispatcher;
 
-        private _serializers: IMap<ISerializer> = {};
+        private _serializers: IMap<ISerializer> = { "msgpack/map" : new MsgPackSerializer()};
 
         private _cts: Cancellation.tokenSource;
 

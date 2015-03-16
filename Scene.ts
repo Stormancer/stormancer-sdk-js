@@ -116,8 +116,8 @@ module Stormancer {
             });
             
             // extract the route id
-            var routeId = new Uint16Array(packet.data.buffer, packet.data.byteOffset, 2)[0];
-
+            var routeId = new DataView(packet.data.buffer, packet.data.byteOffset).getUint16(0, true);
+            packet.data = packet.data.subarray(2);
             packet.setMetadataValue("routeId", routeId);
 
             var observer = this._handlers[routeId];
