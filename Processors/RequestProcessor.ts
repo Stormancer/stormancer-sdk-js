@@ -52,6 +52,7 @@ module Stormancer {
                 }
                 else {
                     console.error("Unknow request id.");
+                    return true;
                 }
 
                 return true;
@@ -66,6 +67,7 @@ module Stormancer {
                 }
                 else {
                     console.error("Unknow request id.");
+                    return true;
                 }
 
                 delete this._pendingRequests[id];
@@ -81,13 +83,14 @@ module Stormancer {
 
             config.addProcessor(MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, p => {
                 var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-
+                
                 var request = this._pendingRequests[id];
                 if (request) {
                     p.setMetadataValue("request", request);
                 }
                 else {
                     console.error("Unknow request id.");
+                    return true;
                 }
 
                 delete this._pendingRequests[id];
@@ -109,7 +112,7 @@ module Stormancer {
 
         private reserveRequestSlot(observer: IObserver<Packet<IConnection>>) {
             var id = 0;
-
+            (<any>this).toto = 1;
             while (id < 65535) {
                 if (!this._pendingRequests[id]) {
                     var request: Request = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred<void>() };
@@ -136,13 +139,6 @@ module Stormancer {
             dataToSend.set(new Uint8Array(idArray.buffer));
             dataToSend.set(data, 2);
             peer.sendSystem(msgId, dataToSend);
-
-            deferred.promise().always(() => {
-                var r = this._pendingRequests[request.id];
-                if (r == request) {
-                    delete this._pendingRequests[request.id];
-                }
-            });
 
             return deferred.promise();
         }

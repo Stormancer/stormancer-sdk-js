@@ -3,7 +3,7 @@ module Stormancer {
         private _scenes: Scene[] = [];
 
         public registerProcessor(config: PacketProcessorConfig): void {
-            config.addCatchAllProcessor(this.handler);
+            config.addCatchAllProcessor((handler, packet) => this.handler(handler, packet));
         }
 
         private handler(sceneHandler: number, packet: Packet<IConnection>): boolean {
