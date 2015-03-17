@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stormancer.js", "Stormancer.js.csproj", "{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stormancer-sdk-js", "stormancer-sdk-js.csproj", "{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
