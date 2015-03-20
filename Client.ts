@@ -91,7 +91,7 @@ module Stormancer {
 
         public getScene(token: string): JQueryPromise<IScene> {
             var ci = this._tokenHandler.decodeToken(token);
-            return this.getSceneImpl(ci.tokenData[7], ci);
+            return this.getSceneImpl(ci.tokenData.SceneId, ci);
         }
 
         private getSceneImpl(sceneId: string, ci: SceneEndpoint): JQueryPromise<IScene> {
@@ -124,7 +124,7 @@ module Stormancer {
             return Helpers.promiseIf(self._serverConnection == null,() => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
                     .then(() => {
-                    return self._transport.connect(ci.tokenData[3][self._transport.name])
+                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
                         .then(c => self.registerConnection(c));
                 });
             }, self);

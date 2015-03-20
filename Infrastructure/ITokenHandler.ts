@@ -13,7 +13,7 @@ module Stormancer {
         public decodeToken(token: string): SceneEndpoint {
             var data = token.split('-')[0];
             var buffer = Helpers.base64ToByteArray(data);
-            var result = this._tokenSerializer.deserialize<any[]>(buffer);
+            var result = this._tokenSerializer.deserialize<ConnectionData>(buffer);
 
             var sceneEndpoint = new SceneEndpoint();
             sceneEndpoint.token = token;

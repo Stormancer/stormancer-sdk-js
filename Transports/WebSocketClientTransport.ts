@@ -47,7 +47,7 @@ module Stormancer {
             if (!this._socket && !this._connecting) {
                 this._connecting = true;
 
-                var socket = new WebSocket("ws://" + endpoint + "/");
+                var socket = new WebSocket(endpoint + "/");
                 socket.binaryType = "arraybuffer";
 
                 socket.onmessage = args => this.onMessage(args.data);
