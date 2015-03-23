@@ -48,25 +48,19 @@ module Stormancer {
                 this._localRoutesMap[route] = routeObj;
             }
 
-            this.onMessage(route, handler);
-        }
-
-        public onMessage(route: string, handler: (packet: Packet<IScenePeer>) => void): void {
-            if (this.connected) {
-                throw new Error("You cannot register handles once the scene is connected.");
-            }
-
-            var routeObj = this._localRoutesMap[route];
-            if (!routeObj) {
-                routeObj = new Route(this, route);
-                this._localRoutesMap[route] = routeObj;
-            }
-
             this.onMessageImpl(routeObj, handler);
         }
 
+        public registerRoute<T>(route: string, handler: (message: T) => void): void {
+            this.addRoute(route,(packet: Packet<IScenePeer>) => {
+                var message = this.hostConnection.serializer.deserialize<T>(packet.data);
+                handler(message);
+            });
+        }
+
+
         private onMessageImpl(route: Route, handler: (packet: Packet<IScenePeer>) => void): void {
-            var index = route.index;
+
 
             var action = (p: Packet<IConnection>) => {
                 var packet = new Packet(this.host(), p.data, p.getMetadata());

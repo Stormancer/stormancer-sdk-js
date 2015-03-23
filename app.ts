@@ -45,7 +45,11 @@
         var deferred = $.Deferred<string>();
         scenePromise.then(scene => {
             this.scene = scene;
-            scene.addRoute("echo.out", packet => this.messageReceived(packet));
+            //scene.addRoute("echo.out", packet => this.messageReceived(packet));
+            scene.registerRoute<string>("echo.out", message => {
+                console.log("Message received :", message);
+                this.receivedSpan.innerHTML = message;
+            });
 
             return scene.connect().then(() => {
                 this.timerToken = setInterval(() => {

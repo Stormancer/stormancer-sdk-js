@@ -14,8 +14,11 @@ module Stormancer {
 
         hostConnection: IConnection;
 
-        // Registers a route on the local peer.
+        // Adds a route on the local scene, handling packets.
         addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
+
+        // Registers a route on the local scene, handling deserialized messages.
+        registerRoute<T>(route: string, handler: (message: T) => void): void;
 
         // Sends a binary packet to the scene.
         sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
@@ -33,7 +36,5 @@ module Stormancer {
         packetReceived: ((packet: Packet<IConnection>) => void)[];
 
         host(): IScenePeer;
-
-        onMessage(route: string, handler: (packet: Packet<IScenePeer>) => void): void;
     }
 }
