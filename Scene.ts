@@ -76,7 +76,7 @@ module Stormancer {
             route.handlers.push(p => action(p));
         }
 
-        // Sends a packet to the scene.
+        // Sends a binary packet to the scene.
         public sendPacket(route: string, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
             if (!route) {
                 throw new Error("route is null or undefined!");
@@ -94,6 +94,10 @@ module Stormancer {
             }
 
             this.hostConnection.sendToScene(this.handle, routeObj.index, data, priority, reliability);
+        }
+
+        public send<T>(route: string, data: T, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
+            return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
         }
 
         // Connects the scene to the server.

@@ -33,10 +33,10 @@
     }
 
     start() {
-        //var config = Stormancer.Configuration.forAccount("d9590543-56c3-c94a-f7bf-c394b26deb15", "testecho");
+        var config = Stormancer.Configuration.forAccount("d9590543-56c3-c94a-f7bf-c394b26deb15", "testecho");
 
-        var config = Stormancer.Configuration.forAccount("714d5095-cba1-ffec-4c0b-cccca70e0d93", "testecho");
-        config.serverEndpoint = "http://localhost:8081";
+        //var config = Stormancer.Configuration.forAccount("714d5095-cba1-ffec-4c0b-cccca70e0d93", "testecho");
+        //config.serverEndpoint = "http://localhost:8081";
 
         var client = $.stormancer(config);
 
@@ -58,7 +58,8 @@
     }
 
     sendMessage(routeName, message) {
-        this.scene.sendPacket(routeName, msgpack.pack(message) /*new Uint8Array([parseInt((<any>document.getElementById("byte")).value) this.i%256 ])*/ );
+        //this.scene.sendPacket(routeName, msgpack.pack(message) /*new Uint8Array([parseInt((<any>document.getElementById("byte")).value) this.i%256 ])*/ );
+        this.scene.send(routeName, message);
         console.log("Message sent on " + routeName + ":" + message);
     }
 

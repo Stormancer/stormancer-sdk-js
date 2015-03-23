@@ -17,8 +17,11 @@ module Stormancer {
         // Registers a route on the local peer.
         addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
 
-        // Sends a packet to the scene.
+        // Sends a binary packet to the scene.
         sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
+
+        // Serialize and sends an object to the scene
+        send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
 
         // Disconnects the scene.
         disconnect(): JQueryPromise<void>;
