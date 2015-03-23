@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stormancer-sdk-js", "stormancer-sdk-js.csproj", "{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EF042117-5269-4865-B492-6C0A3802F940}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{8A0942AA-DC07-4A67-9192-91F4EEEEA3D5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stormancer-sdk-js", "src\stormancer-sdk-js\stormancer-sdk-js.csproj", "{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +22,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7} = {EF042117-5269-4865-B492-6C0A3802F940}
 	EndGlobalSection
 EndGlobal
