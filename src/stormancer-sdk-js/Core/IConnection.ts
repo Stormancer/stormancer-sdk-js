@@ -50,6 +50,7 @@ module Stormancer {
         // Returns advanced statistics about the connection.
         //getConnectionStatistics(): IConnectionStatistics;
 
+        serializerChosen: boolean;
         serializer: ISerializer;
     }
 }

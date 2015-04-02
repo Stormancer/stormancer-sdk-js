@@ -63,6 +63,7 @@ module Stormancer {
             this.application = application;
         }
 
-        public serializer: ISerializer;
+        public serializerChosen: boolean = false;
+        public serializer: ISerializer = new MsgPackSerializer();
     }
 }

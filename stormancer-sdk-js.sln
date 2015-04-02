@@ -9,6 +9,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{8A09
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "stormancer-sdk-js", "src\stormancer-sdk-js\stormancer-sdk-js.csproj", "{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Echo", "samples\Samples.Echo\Samples.Echo.csproj", "{F706A854-E68F-4AE2-AE2A-714110651EED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7} = {AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,11 +24,16 @@ Global
 		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F706A854-E68F-4AE2-AE2A-714110651EED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F706A854-E68F-4AE2-AE2A-714110651EED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F706A854-E68F-4AE2-AE2A-714110651EED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F706A854-E68F-4AE2-AE2A-714110651EED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{AC5DB693-0AAB-4BA7-8D74-67C307BCDCE7} = {EF042117-5269-4865-B492-6C0A3802F940}
+		{F706A854-E68F-4AE2-AE2A-714110651EED} = {8A0942AA-DC07-4A67-9192-91F4EEEEA3D5}
 	EndGlobalSection
 EndGlobal

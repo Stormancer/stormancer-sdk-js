@@ -100,12 +100,13 @@ module Stormancer {
                 var parameter: SceneInfosRequestDto = { Metadata: self._serverConnection.metadata, Token: ci.token };
                 return self.sendSystemRequest<SceneInfosRequestDto, SceneInfosDto>(MessageIDTypes.ID_GET_SCENE_INFOS, parameter);
             }).then((result: SceneInfosDto) => {
-                if (!self._serverConnection.serializer) {
+                if (!self._serverConnection.serializerChosen) {
                     if (!result.SelectedSerializer) {
                         throw new Error("No serializer selected.");
                     }
                     self._serverConnection.serializer = self._serializers[result.SelectedSerializer];
                     self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
+                    self._serverConnection.serializerChosen = true;
                 }
                 var scene = new Scene(self._serverConnection, self, sceneId, ci.token, result);
                 return scene;
