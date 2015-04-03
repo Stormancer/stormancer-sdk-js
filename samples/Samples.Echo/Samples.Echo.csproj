@@ -24,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
-    <TypeScriptCompile Include="Scripts\msgPack.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\msgpack\msgpack.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\stormancer\stormancer.d.ts" />
@@ -72,7 +71,7 @@
     <TypeScriptSourceMap>false</TypeScriptSourceMap>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>xcopy /d "$(SolutionDir)..\build\stormancer.js" ".."</PreBuildEvent>
+    <PreBuildEvent>xcopy /d /y "$(SolutionDir)build\stormancer.js" ".."</PreBuildEvent>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
 </Project>
