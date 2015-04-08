@@ -796,7 +796,7 @@ var Stormancer;
             this.metadata[key] = value;
             return this;
         };
-        Configuration.apiEndpoint = "http://api.stormancer.com/";
+        Configuration.apiEndpoint = "http://api1.stormancer.com/";
         return Configuration;
     })();
     Stormancer.Configuration = Configuration;

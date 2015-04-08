@@ -9,7 +9,7 @@ module Stormancer {
             this.serializers.push(new MsgPackSerializer());
         }
 
-        static apiEndpoint: string = "http://api.stormancer.com/";
+        static apiEndpoint: string = "http://api1.stormancer.com/";
 
         
         
