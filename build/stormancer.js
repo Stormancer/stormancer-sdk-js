@@ -1,5 +1,339 @@
 var Stormancer;
 (function (Stormancer) {
+    var ApiClient = (function () {
+        function ApiClient(config, tokenHandler) {
+            this.createTokenUri = "/{0}/{1}/scenes/{2}/token";
+            this._config = config;
+            this._tokenHandler = tokenHandler;
+        }
+        ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
+            var _this = this;
+            var serializer = new Stormancer.MsgPackSerializer();
+            var data = serializer.serialize(userData);
+            var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
+            return $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "application/msgpack",
+                headers: {
+                    "Accept": "application/json",
+                    "x-version": "1.0.0"
+                },
+                data: data
+            }).then(function (result) {
+                return _this._tokenHandler.decodeToken(result);
+            });
+        };
+        return ApiClient;
+    })();
+    Stormancer.ApiClient = ApiClient;
+})(Stormancer || (Stormancer = {}));
+var Cancellation;
+(function (Cancellation) {
+    var tokenSource = (function () {
+        function tokenSource() {
+            this.data = {
+                reason: null,
+                isCancelled: false,
+                listeners: []
+            };
+            this.token = new token(this.data);
+        }
+        tokenSource.prototype.cancel = function (reason) {
+            this.data.isCancelled = true;
+            reason = reason || 'Operation Cancelled';
+            this.data.reason = reason;
+            setTimeout(function () {
+                for (var i = 0; i < this.data.listeners.length; i++) {
+                    if (typeof this.data.listeners[i] === 'function') {
+                        this.data.listeners[i](reason);
+                    }
+                }
+            }, 0);
+        };
+        return tokenSource;
+    })();
+    Cancellation.tokenSource = tokenSource;
+    var token = (function () {
+        function token(data) {
+            this.data = data;
+        }
+        token.prototype.isCancelled = function () {
+            return this.data.isCancelled;
+        };
+        token.prototype.throwIfCancelled = function () {
+            if (this.isCancelled()) {
+                throw this.data.reason;
+            }
+        };
+        token.prototype.onCancelled = function (callBack) {
+            if (this.isCancelled()) {
+                setTimeout(function () {
+                    callBack(this.data.reason);
+                }, 0);
+            }
+            else {
+                this.data.listeners.push(callBack);
+            }
+        };
+        return token;
+    })();
+    Cancellation.token = token;
+})(Cancellation || (Cancellation = {}));
+var Stormancer;
+(function (Stormancer) {
+    var ConnectionHandler = (function () {
+        function ConnectionHandler() {
+            this._current = 0;
+        }
+        ConnectionHandler.prototype.generateNewConnectionId = function () {
+            return this._current++;
+        };
+        ConnectionHandler.prototype.newConnection = function (connection) {
+        };
+        ConnectionHandler.prototype.getConnection = function (id) {
+            throw new Error("Not implemented.");
+        };
+        ConnectionHandler.prototype.closeConnection = function (connection, reason) {
+        };
+        return ConnectionHandler;
+    })();
+    Stormancer.ConnectionHandler = ConnectionHandler;
+    var Client = (function () {
+        function Client(config) {
+            this._tokenHandler = new Stormancer.TokenHandler();
+            this._serializers = { "msgpack/map": new Stormancer.MsgPackSerializer() };
+            this._systemSerializer = new Stormancer.MsgPackSerializer();
+            this._accountId = config.account;
+            this._applicationName = config.application;
+            this._apiClient = new Stormancer.ApiClient(config, this._tokenHandler);
+            this._transport = config.transport;
+            this._dispatcher = config.dispatcher;
+            this._requestProcessor = new Stormancer.RequestProcessor(this._logger, []);
+            this._scenesDispatcher = new Stormancer.SceneDispatcher();
+            this._dispatcher.addProcessor(this._requestProcessor);
+            this._dispatcher.addProcessor(this._scenesDispatcher);
+            this._metadata = config.metadata;
+            for (var i in config.serializers) {
+                var serializer = config.serializers[i];
+                this._serializers[serializer.name] = serializer;
+            }
+            this._metadata["serializers"] = Stormancer.Helpers.mapKeys(this._serializers).join(',');
+            this._metadata["transport"] = this._transport.name;
+            this._metadata["version"] = "1.0.0a";
+            this._metadata["platform"] = "JS";
+            this._metadata["protocol"] = "2";
+            this.initialize();
+        }
+        Client.prototype.initialize = function () {
+            var _this = this;
+            if (!this._initialized) {
+                this._initialized = true;
+                this._transport.packetReceived.push(function (packet) { return _this.transportPacketReceived(packet); });
+            }
+        };
+        Client.prototype.transportPacketReceived = function (packet) {
+            this._dispatcher.dispatchPacket(packet);
+        };
+        Client.prototype.getPublicScene = function (sceneId, userData) {
+            var _this = this;
+            return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData).then(function (ci) { return _this.getSceneImpl(sceneId, ci); });
+        };
+        Client.prototype.getScene = function (token) {
+            var ci = this._tokenHandler.decodeToken(token);
+            return this.getSceneImpl(ci.tokenData.SceneId, ci);
+        };
+        Client.prototype.getSceneImpl = function (sceneId, ci) {
+            var self = this;
+            return this.ensureTransportStarted(ci).then(function () {
+                var parameter = { Metadata: self._serverConnection.metadata, Token: ci.token };
+                return self.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_GET_SCENE_INFOS, parameter);
+            }).then(function (result) {
+                if (!self._serverConnection.serializerChosen) {
+                    if (!result.SelectedSerializer) {
+                        throw new Error("No serializer selected.");
+                    }
+                    self._serverConnection.serializer = self._serializers[result.SelectedSerializer];
+                    self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
+                    self._serverConnection.serializerChosen = true;
+                }
+                return self.updateMetadata().then(function (_) { return result; });
+            }).then(function (r) {
+                var scene = new Stormancer.Scene(self._serverConnection, self, sceneId, ci.token, r);
+                return scene;
+            });
+        };
+        Client.prototype.updateMetadata = function () {
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata)).then(function (packet) {
+            });
+        };
+        Client.prototype.sendSystemRequest = function (id, parameter) {
+            var _this = this;
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter)).then(function (packet) { return _this._systemSerializer.deserialize(packet.data); });
+        };
+        Client.prototype.ensureTransportStarted = function (ci) {
+            var self = this;
+            return Stormancer.Helpers.promiseIf(self._serverConnection == null, function () {
+                return Stormancer.Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self).then(function () {
+                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name]).then(function (c) {
+                        self.registerConnection(c);
+                        return self.updateMetadata();
+                    });
+                });
+            }, self);
+        };
+        Client.prototype.startTransport = function () {
+            this._cts = new Cancellation.tokenSource();
+            return this._transport.start("client", new ConnectionHandler(), this._cts.token);
+        };
+        Client.prototype.registerConnection = function (connection) {
+            this._serverConnection = connection;
+            for (var key in this._metadata) {
+                this._serverConnection.metadata[key] = this._metadata[key];
+            }
+        };
+        Client.prototype.disconnectScene = function (scene, sceneHandle) {
+            var _this = this;
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () { return _this._scenesDispatcher.removeScene(sceneHandle); });
+        };
+        Client.prototype.disconnect = function () {
+            if (this._serverConnection) {
+                this._serverConnection.close();
+            }
+        };
+        Client.prototype.connectToScene = function (scene, token, localRoutes) {
+            var _this = this;
+            var parameter = {
+                Token: token,
+                Routes: [],
+                ConnectionMetadata: this._serverConnection.metadata
+            };
+            for (var i = 0; i < localRoutes.length; i++) {
+                var r = localRoutes[i];
+                parameter.Routes.push({
+                    Handle: r.index,
+                    Metadata: r.metadata,
+                    Name: r.name
+                });
+            }
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
+                scene.completeConnectionInitialization(result);
+                _this._scenesDispatcher.addScene(scene);
+            });
+        };
+        return Client;
+    })();
+    Stormancer.Client = Client;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var Configuration = (function () {
+        function Configuration() {
+            this.metadata = {};
+            this.transport = new Stormancer.WebSocketTransport();
+            this.dispatcher = new Stormancer.DefaultPacketDispatcher();
+            this.serializers = [];
+            this.serializers.push(new Stormancer.MsgPackSerializer());
+        }
+        Configuration.prototype.getApiEndpoint = function () {
+            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
+        };
+        Configuration.forAccount = function (accountId, applicationName) {
+            var config = new Configuration();
+            config.account = accountId;
+            config.application = applicationName;
+            return config;
+        };
+        Configuration.prototype.Metadata = function (key, value) {
+            this.metadata[key] = value;
+            return this;
+        };
+        Configuration.apiEndpoint = "http://api1.stormancer.com/";
+        return Configuration;
+    })();
+    Stormancer.Configuration = Configuration;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    (function (ConnectionState) {
+        ConnectionState[ConnectionState["Disconnected"] = 0] = "Disconnected";
+        ConnectionState[ConnectionState["Connecting"] = 1] = "Connecting";
+        ConnectionState[ConnectionState["Connected"] = 2] = "Connected";
+    })(Stormancer.ConnectionState || (Stormancer.ConnectionState = {}));
+    var ConnectionState = Stormancer.ConnectionState;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var Packet = (function () {
+        function Packet(source, data, metadata) {
+            this.connection = source;
+            this.data = data;
+            this._metadata = metadata;
+        }
+        Packet.prototype.setMetadata = function (metadata) {
+            this._metadata = metadata;
+        };
+        Packet.prototype.getMetadata = function () {
+            if (!this._metadata) {
+                this._metadata = {};
+            }
+            return this._metadata;
+        };
+        Packet.prototype.setMetadataValue = function (key, value) {
+            if (!this._metadata) {
+                this._metadata = {};
+            }
+            this._metadata[key] = value;
+        };
+        Packet.prototype.getMetadataValue = function (key) {
+            if (!this._metadata) {
+                this._metadata = {};
+            }
+            return this._metadata[key];
+        };
+        return Packet;
+    })();
+    Stormancer.Packet = Packet;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    (function (PacketPriority) {
+        PacketPriority[PacketPriority["IMMEDIATE_PRIORITY"] = 0] = "IMMEDIATE_PRIORITY";
+        PacketPriority[PacketPriority["HIGH_PRIORITY"] = 1] = "HIGH_PRIORITY";
+        PacketPriority[PacketPriority["MEDIUM_PRIORITY"] = 2] = "MEDIUM_PRIORITY";
+        PacketPriority[PacketPriority["LOW_PRIORITY"] = 3] = "LOW_PRIORITY";
+    })(Stormancer.PacketPriority || (Stormancer.PacketPriority = {}));
+    var PacketPriority = Stormancer.PacketPriority;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    (function (PacketReliability) {
+        PacketReliability[PacketReliability["UNRELIABLE"] = 0] = "UNRELIABLE";
+        PacketReliability[PacketReliability["UNRELIABLE_SEQUENCED"] = 1] = "UNRELIABLE_SEQUENCED";
+        PacketReliability[PacketReliability["RELIABLE"] = 2] = "RELIABLE";
+        PacketReliability[PacketReliability["RELIABLE_ORDERED"] = 3] = "RELIABLE_ORDERED";
+        PacketReliability[PacketReliability["RELIABLE_SEQUENCED"] = 4] = "RELIABLE_SEQUENCED";
+    })(Stormancer.PacketReliability || (Stormancer.PacketReliability = {}));
+    var PacketReliability = Stormancer.PacketReliability;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var Route = (function () {
+        function Route(scene, name, index, metadata) {
+            if (index === void 0) { index = 0; }
+            if (metadata === void 0) { metadata = {}; }
+            this.scene = scene;
+            this.name = name;
+            this.index = index;
+            this.metadata = metadata;
+            this.handlers = [];
+        }
+        return Route;
+    })();
+    Stormancer.Route = Route;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
     var Helpers = (function () {
         function Helpers() {
         }
@@ -55,6 +389,493 @@ var Stormancer;
         return Helpers;
     })();
     Stormancer.Helpers = Helpers;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var DefaultPacketDispatcher = (function () {
+        function DefaultPacketDispatcher() {
+            this._handlers = {};
+            this._defaultProcessors = [];
+        }
+        DefaultPacketDispatcher.prototype.dispatchPacket = function (packet) {
+            var processed = false;
+            var count = 0;
+            var msgType = 0;
+            while (!processed && count < 40) {
+                msgType = packet.data[0];
+                packet.data = packet.data.subarray(1);
+                if (this._handlers[msgType]) {
+                    processed = this._handlers[msgType](packet);
+                    count++;
+                }
+                else {
+                    break;
+                }
+            }
+            for (var i = 0, len = this._defaultProcessors.length; i < len; i++) {
+                if (this._defaultProcessors[i](msgType, packet)) {
+                    processed = true;
+                    break;
+                }
+            }
+            if (!processed) {
+                throw new Error("Couldn't process message. msgId: " + msgType);
+            }
+        };
+        DefaultPacketDispatcher.prototype.addProcessor = function (processor) {
+            processor.registerProcessor(new Stormancer.PacketProcessorConfig(this._handlers, this._defaultProcessors));
+        };
+        return DefaultPacketDispatcher;
+    })();
+    Stormancer.DefaultPacketDispatcher = DefaultPacketDispatcher;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var TokenHandler = (function () {
+        function TokenHandler() {
+            this._tokenSerializer = new Stormancer.MsgPackSerializer();
+        }
+        TokenHandler.prototype.decodeToken = function (token) {
+            var data = token.split('-')[0];
+            var buffer = Stormancer.Helpers.base64ToByteArray(data);
+            var result = this._tokenSerializer.deserialize(buffer);
+            var sceneEndpoint = new Stormancer.SceneEndpoint();
+            sceneEndpoint.token = token;
+            sceneEndpoint.tokenData = result;
+            return sceneEndpoint;
+        };
+        return TokenHandler;
+    })();
+    Stormancer.TokenHandler = TokenHandler;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var MsgPackSerializer = (function () {
+        function MsgPackSerializer() {
+            this.name = "msgpack/map";
+        }
+        MsgPackSerializer.prototype.serialize = function (data) {
+            return new Uint8Array(msgpack.pack(data));
+        };
+        MsgPackSerializer.prototype.deserialize = function (bytes) {
+            return msgpack.unpack(bytes);
+        };
+        return MsgPackSerializer;
+    })();
+    Stormancer.MsgPackSerializer = MsgPackSerializer;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var PacketProcessorConfig = (function () {
+        function PacketProcessorConfig(handlers, defaultprocessors) {
+            this._handlers = handlers;
+            this._defaultProcessors = defaultprocessors;
+        }
+        PacketProcessorConfig.prototype.addProcessor = function (msgId, handler) {
+            if (this._handlers[msgId]) {
+                throw new Error("An handler is already registered for id " + msgId);
+            }
+            this._handlers[msgId] = handler;
+        };
+        PacketProcessorConfig.prototype.addCatchAllProcessor = function (handler) {
+            this._defaultProcessors.push(function (n, p) { return handler(n, p); });
+        };
+        return PacketProcessorConfig;
+    })();
+    Stormancer.PacketProcessorConfig = PacketProcessorConfig;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var MessageIDTypes = (function () {
+        function MessageIDTypes() {
+        }
+        MessageIDTypes.ID_SYSTEM_REQUEST = 134;
+        MessageIDTypes.ID_REQUEST_RESPONSE_MSG = 137;
+        MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE = 138;
+        MessageIDTypes.ID_REQUEST_RESPONSE_ERROR = 139;
+        MessageIDTypes.ID_CONNECTION_RESULT = 140;
+        MessageIDTypes.ID_SCENES = 141;
+        return MessageIDTypes;
+    })();
+    Stormancer.MessageIDTypes = MessageIDTypes;
+    var SystemRequestIDTypes = (function () {
+        function SystemRequestIDTypes() {
+        }
+        SystemRequestIDTypes.ID_GET_SCENE_INFOS = 136;
+        SystemRequestIDTypes.ID_CONNECT_TO_SCENE = 134;
+        SystemRequestIDTypes.ID_SET_METADATA = 0;
+        SystemRequestIDTypes.ID_SCENE_READY = 1;
+        SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE = 135;
+        return SystemRequestIDTypes;
+    })();
+    Stormancer.SystemRequestIDTypes = SystemRequestIDTypes;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var RequestContext = (function () {
+        function RequestContext(p) {
+            this._didSendValues = false;
+            this.isComplete = false;
+            this._packet = p;
+            this._requestId = p.data.subarray(0, 2);
+            this.inputData = p.data.subarray(2);
+        }
+        RequestContext.prototype.send = function (data) {
+            if (this.isComplete) {
+                throw new Error("The request is already completed.");
+            }
+            this._didSendValues = true;
+            var dataToSend = new Uint8Array(2 + data.length);
+            dataToSend.set(this._requestId);
+            dataToSend.set(data, 2);
+            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_MSG, dataToSend);
+        };
+        RequestContext.prototype.complete = function () {
+            var dataToSend = new Uint8Array(3);
+            dataToSend.set(this._requestId);
+            dataToSend.set(2, this._didSendValues ? 1 : 0);
+            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE, dataToSend);
+        };
+        RequestContext.prototype.error = function (data) {
+            var dataToSend = new Uint8Array(2 + data.length);
+            dataToSend.set(this._requestId);
+            dataToSend.set(data, 2);
+            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, dataToSend);
+        };
+        return RequestContext;
+    })();
+    Stormancer.RequestContext = RequestContext;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var RequestProcessor = (function () {
+        function RequestProcessor(logger, modules) {
+            this._pendingRequests = {};
+            this._isRegistered = false;
+            this._handlers = {};
+            this._pendingRequests = {};
+            this._logger = logger;
+            for (var key in modules) {
+                var mod = modules[key];
+                mod.register(this.addSystemRequestHandler);
+            }
+        }
+        RequestProcessor.prototype.registerProcessor = function (config) {
+            var _this = this;
+            this._isRegistered = true;
+            for (var key in this._handlers) {
+                var handler = this._handlers[key];
+                config.addProcessor(key, function (p) {
+                    var context = new Stormancer.RequestContext(p);
+                    var continuation = function (fault) {
+                        if (!context.isComplete) {
+                            if (fault) {
+                                context.error(p.connection.serializer.serialize(fault));
+                            }
+                            else {
+                                context.complete();
+                            }
+                        }
+                    };
+                    handler(context).done(function () { return continuation(null); }).fail(function (error) { return continuation(error); });
+                    return true;
+                });
+            }
+            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_MSG, function (p) {
+                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
+                var request = _this._pendingRequests[id];
+                if (request) {
+                    p.setMetadataValue["request"] = request;
+                    request.lastRefresh = new Date();
+                    p.data = p.data.subarray(2);
+                    request.observer.onNext(p);
+                    request.deferred.resolve();
+                }
+                else {
+                    console.error("Unknow request id.");
+                    return true;
+                }
+                return true;
+            });
+            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE, function (p) {
+                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
+                var request = _this._pendingRequests[id];
+                if (request) {
+                    p.setMetadataValue("request", request);
+                }
+                else {
+                    console.error("Unknow request id.");
+                    return true;
+                }
+                delete _this._pendingRequests[id];
+                if (p.data[3]) {
+                    request.deferred.promise().always(function () { return request.observer.onCompleted(); });
+                }
+                else {
+                    request.observer.onCompleted();
+                }
+                return true;
+            });
+            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, function (p) {
+                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
+                var request = _this._pendingRequests[id];
+                if (request) {
+                    p.setMetadataValue("request", request);
+                }
+                else {
+                    console.error("Unknow request id.");
+                    return true;
+                }
+                delete _this._pendingRequests[id];
+                var msg = p.connection.serializer.deserialize(p.data.subarray(2));
+                request.observer.onError(new Error(msg));
+                return true;
+            });
+        };
+        RequestProcessor.prototype.addSystemRequestHandler = function (msgId, handler) {
+            if (this._isRegistered) {
+                throw new Error("Can only add handler before 'registerProcessor' is called.");
+            }
+            this._handlers[msgId] = handler;
+        };
+        RequestProcessor.prototype.reserveRequestSlot = function (observer) {
+            var id = 0;
+            this.toto = 1;
+            while (id < 65535) {
+                if (!this._pendingRequests[id]) {
+                    var request = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred() };
+                    this._pendingRequests[id] = request;
+                    return request;
+                }
+                id++;
+            }
+            throw new Error("Unable to create new request: Too many pending requests.");
+        };
+        RequestProcessor.prototype.sendSystemRequest = function (peer, msgId, data) {
+            var deferred = $.Deferred();
+            var request = this.reserveRequestSlot({
+                onNext: function (packet) {
+                    deferred.resolve(packet);
+                },
+                onError: function (e) {
+                    deferred.reject(e);
+                },
+                onCompleted: function () {
+                    deferred.resolve();
+                }
+            });
+            var dataToSend = new Uint8Array(3 + data.length);
+            var idArray = new Uint16Array([request.id]);
+            dataToSend.set([msgId], 0);
+            dataToSend.set(new Uint8Array(idArray.buffer), 1);
+            dataToSend.set(data, 3);
+            peer.sendSystem(Stormancer.MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend);
+            return deferred.promise();
+        };
+        return RequestProcessor;
+    })();
+    Stormancer.RequestProcessor = RequestProcessor;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var SceneDispatcher = (function () {
+        function SceneDispatcher() {
+            this._scenes = [];
+            this._buffers = [];
+        }
+        SceneDispatcher.prototype.registerProcessor = function (config) {
+            var _this = this;
+            config.addCatchAllProcessor(function (handler, packet) { return _this.handler(handler, packet); });
+        };
+        SceneDispatcher.prototype.handler = function (sceneHandle, packet) {
+            if (sceneHandle < Stormancer.MessageIDTypes.ID_SCENES) {
+                return false;
+            }
+            var scene = this._scenes[sceneHandle - Stormancer.MessageIDTypes.ID_SCENES];
+            if (!scene) {
+                var buffer;
+                if (this._buffers[sceneHandle] == undefined) {
+                    buffer = [];
+                    this._buffers[sceneHandle] = buffer;
+                }
+                else {
+                    buffer = this._buffers[sceneHandle];
+                }
+                buffer.push(packet);
+                return true;
+            }
+            else {
+                packet.setMetadataValue("scene", scene);
+                scene.handleMessage(packet);
+                return true;
+            }
+        };
+        SceneDispatcher.prototype.addScene = function (scene) {
+            this._scenes[scene.handle - Stormancer.MessageIDTypes.ID_SCENES] = scene;
+            if (this._buffers[scene.handle] != undefined) {
+                var buffer = this._buffers[scene.handle];
+                delete this._buffers[scene.handle];
+                while (buffer.length > 0) {
+                    var packet = buffer.pop();
+                    packet.setMetadataValue("scene", scene);
+                    scene.handleMessage(packet);
+                }
+            }
+        };
+        SceneDispatcher.prototype.removeScene = function (sceneHandle) {
+            delete this._scenes[sceneHandle - Stormancer.MessageIDTypes.ID_SCENES];
+        };
+        return SceneDispatcher;
+    })();
+    Stormancer.SceneDispatcher = SceneDispatcher;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var Scene = (function () {
+        function Scene(connection, client, id, token, dto) {
+            this._remoteRoutesMap = {};
+            this._localRoutesMap = {};
+            this._handlers = {};
+            this.id = id;
+            this.hostConnection = connection;
+            this._token = token;
+            this._client = client;
+            this._metadata = dto.Metadata;
+            for (var i = 0; i < dto.Routes.length; i++) {
+                var route = dto.Routes[i];
+                this._remoteRoutesMap[route.Name] = new Stormancer.Route(this, route.Name, route.Handle, route.Metadata);
+            }
+        }
+        Scene.prototype.getHostMetadata = function (key) {
+            return this._metadata[key];
+        };
+        Scene.prototype.addRoute = function (route, handler, metadata) {
+            if (metadata === void 0) { metadata = {}; }
+            if (route[0] === "@") {
+                throw new Error("A route cannot start with the @ character.");
+            }
+            if (this.connected) {
+                throw new Error("You cannot register handles once the scene is connected.");
+            }
+            var routeObj = this._localRoutesMap[route];
+            if (!routeObj) {
+                routeObj = new Stormancer.Route(this, route, 0, metadata);
+                this._localRoutesMap[route] = routeObj;
+            }
+            this.onMessageImpl(routeObj, handler);
+        };
+        Scene.prototype.registerRoute = function (route, handler) {
+            var _this = this;
+            this.addRoute(route, function (packet) {
+                var message = _this.hostConnection.serializer.deserialize(packet.data);
+                handler(message);
+            });
+        };
+        Scene.prototype.onMessageImpl = function (route, handler) {
+            var _this = this;
+            var action = function (p) {
+                var packet = new Stormancer.Packet(_this.host(), p.data, p.getMetadata());
+                handler(packet);
+            };
+            route.handlers.push(function (p) { return action(p); });
+        };
+        Scene.prototype.sendPacket = function (route, data, priority, reliability) {
+            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            if (!route) {
+                throw new Error("route is null or undefined!");
+            }
+            if (!data) {
+                throw new Error("data is null or undefind!");
+            }
+            if (!this.connected) {
+                throw new Error("The scene must be connected to perform this operation.");
+            }
+            var routeObj = this._remoteRoutesMap[route];
+            if (!routeObj) {
+                throw new Error("The route " + route + " doesn't exist on the scene.");
+            }
+            this.hostConnection.sendToScene(this.handle, routeObj.index, data, priority, reliability);
+        };
+        Scene.prototype.send = function (route, data, priority, reliability) {
+            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
+        };
+        Scene.prototype.connect = function () {
+            var _this = this;
+            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this._localRoutesMap)).then(function () {
+                _this.connected = true;
+            });
+        };
+        Scene.prototype.disconnect = function () {
+            return this._client.disconnectScene(this, this.handle);
+        };
+        Scene.prototype.handleMessage = function (packet) {
+            var ev = this.packetReceived;
+            ev && ev.map(function (value) {
+                value(packet);
+            });
+            var routeId = new DataView(packet.data.buffer, packet.data.byteOffset).getUint16(0, true);
+            packet.data = packet.data.subarray(2);
+            packet.setMetadataValue("routeId", routeId);
+            var observer = this._handlers[routeId];
+            observer && observer.map(function (value) {
+                value(packet);
+            });
+        };
+        Scene.prototype.completeConnectionInitialization = function (cr) {
+            this.handle = cr.SceneHandle;
+            for (var key in this._localRoutesMap) {
+                var route = this._localRoutesMap[key];
+                route.index = cr.RouteMappings[key];
+                this._handlers[route.index] = route.handlers;
+            }
+        };
+        Scene.prototype.host = function () {
+            return new Stormancer.ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
+        };
+        return Scene;
+    })();
+    Stormancer.Scene = Scene;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var SceneEndpoint = (function () {
+        function SceneEndpoint() {
+        }
+        return SceneEndpoint;
+    })();
+    Stormancer.SceneEndpoint = SceneEndpoint;
+    var ConnectionData = (function () {
+        function ConnectionData() {
+        }
+        return ConnectionData;
+    })();
+    Stormancer.ConnectionData = ConnectionData;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var ScenePeer = (function () {
+        function ScenePeer(connection, sceneHandle, routeMapping, scene) {
+            this._connection = connection;
+            this._sceneHandle = sceneHandle;
+            this._routeMapping = routeMapping;
+            this._scene = scene;
+        }
+        ScenePeer.prototype.id = function () {
+            return this._connection.id;
+        };
+        ScenePeer.prototype.send = function (route, data, priority, reliability) {
+            var r = this._routeMapping[route];
+            if (!r) {
+                throw new Error("The route " + route + " is not declared on the server.");
+            }
+            this._connection.sendToScene(this._sceneHandle, r.index, data, priority, reliability);
+        };
+        return ScenePeer;
+    })();
+    Stormancer.ScenePeer = ScenePeer;
 })(Stormancer || (Stormancer = {}));
 this.msgpack || (function (globalScope) {
     globalScope.msgpack = {
@@ -556,787 +1377,6 @@ this.msgpack || (function (globalScope) {
 Function vblen(b)vblen=LenB(b.responseBody)End Function\n\
 Function vbstr(b)vbstr=CStr(b.responseBody)+chr(0)End Function</' + 'script>');
 })(this);
-var Stormancer;
-(function (Stormancer) {
-    var ApiClient = (function () {
-        function ApiClient(config, tokenHandler) {
-            this.createTokenUri = "/{0}/{1}/scenes/{2}/token";
-            this._config = config;
-            this._tokenHandler = tokenHandler;
-        }
-        ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
-            var _this = this;
-            var serializer = new Stormancer.MsgPackSerializer();
-            var data = serializer.serialize(userData);
-            var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
-            return $.ajax({
-                type: "POST",
-                url: url,
-                contentType: "application/msgpack",
-                headers: {
-                    "Accept": "application/json",
-                    "x-version": "1.0.0"
-                },
-                data: data
-            }).then(function (result) {
-                return _this._tokenHandler.decodeToken(result);
-            });
-        };
-        return ApiClient;
-    })();
-    Stormancer.ApiClient = ApiClient;
-})(Stormancer || (Stormancer = {}));
-var Cancellation;
-(function (Cancellation) {
-    var tokenSource = (function () {
-        function tokenSource() {
-            this.data = {
-                reason: null,
-                isCancelled: false,
-                listeners: []
-            };
-            this.token = new token(this.data);
-        }
-        tokenSource.prototype.cancel = function (reason) {
-            this.data.isCancelled = true;
-            reason = reason || 'Operation Cancelled';
-            this.data.reason = reason;
-            setTimeout(function () {
-                for (var i = 0; i < this.data.listeners.length; i++) {
-                    if (typeof this.data.listeners[i] === 'function') {
-                        this.data.listeners[i](reason);
-                    }
-                }
-            }, 0);
-        };
-        return tokenSource;
-    })();
-    Cancellation.tokenSource = tokenSource;
-    var token = (function () {
-        function token(data) {
-            this.data = data;
-        }
-        token.prototype.isCancelled = function () {
-            return this.data.isCancelled;
-        };
-        token.prototype.throwIfCancelled = function () {
-            if (this.isCancelled()) {
-                throw this.data.reason;
-            }
-        };
-        token.prototype.onCancelled = function (callBack) {
-            if (this.isCancelled()) {
-                setTimeout(function () {
-                    callBack(this.data.reason);
-                }, 0);
-            }
-            else {
-                this.data.listeners.push(callBack);
-            }
-        };
-        return token;
-    })();
-    Cancellation.token = token;
-})(Cancellation || (Cancellation = {}));
-var Stormancer;
-(function (Stormancer) {
-    var ConnectionHandler = (function () {
-        function ConnectionHandler() {
-            this._current = 0;
-        }
-        ConnectionHandler.prototype.generateNewConnectionId = function () {
-            return this._current++;
-        };
-        ConnectionHandler.prototype.newConnection = function (connection) {
-        };
-        ConnectionHandler.prototype.getConnection = function (id) {
-            throw new Error("Not implemented.");
-        };
-        ConnectionHandler.prototype.closeConnection = function (connection, reason) {
-        };
-        return ConnectionHandler;
-    })();
-    Stormancer.ConnectionHandler = ConnectionHandler;
-    var Client = (function () {
-        function Client(config) {
-            this._tokenHandler = new Stormancer.TokenHandler();
-            this._serializers = { "msgpack/map": new Stormancer.MsgPackSerializer() };
-            this._systemSerializer = new Stormancer.MsgPackSerializer();
-            this._accountId = config.account;
-            this._applicationName = config.application;
-            this._apiClient = new Stormancer.ApiClient(config, this._tokenHandler);
-            this._transport = config.transport;
-            this._dispatcher = config.dispatcher;
-            this._requestProcessor = new Stormancer.RequestProcessor(this._logger, []);
-            this._scenesDispatcher = new Stormancer.SceneDispatcher();
-            this._dispatcher.addProcessor(this._requestProcessor);
-            this._dispatcher.addProcessor(this._scenesDispatcher);
-            this._metadata = config.metadata;
-            for (var i in config.serializers) {
-                var serializer = config.serializers[i];
-                this._serializers[serializer.name] = serializer;
-            }
-            this._metadata["serializers"] = Stormancer.Helpers.mapKeys(this._serializers).join(',');
-            this._metadata["transport"] = this._transport.name;
-            this._metadata["version"] = "1.0.0a";
-            this._metadata["platform"] = "JS";
-            this.initialize();
-        }
-        Client.prototype.initialize = function () {
-            var _this = this;
-            if (!this._initialized) {
-                this._initialized = true;
-                this._transport.packetReceived.push(function (packet) { return _this.transportPacketReceived(packet); });
-            }
-        };
-        Client.prototype.transportPacketReceived = function (packet) {
-            this._dispatcher.dispatchPacket(packet);
-        };
-        Client.prototype.getPublicScene = function (sceneId, userData) {
-            var _this = this;
-            return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData).then(function (ci) { return _this.getSceneImpl(sceneId, ci); });
-        };
-        Client.prototype.getScene = function (token) {
-            var ci = this._tokenHandler.decodeToken(token);
-            return this.getSceneImpl(ci.tokenData.SceneId, ci);
-        };
-        Client.prototype.getSceneImpl = function (sceneId, ci) {
-            var self = this;
-            return this.ensureTransportStarted(ci).then(function () {
-                var parameter = { Metadata: self._serverConnection.metadata, Token: ci.token };
-                return self.sendSystemRequest(Stormancer.MessageIDTypes.ID_GET_SCENE_INFOS, parameter);
-            }).then(function (result) {
-                if (!self._serverConnection.serializerChosen) {
-                    if (!result.SelectedSerializer) {
-                        throw new Error("No serializer selected.");
-                    }
-                    self._serverConnection.serializer = self._serializers[result.SelectedSerializer];
-                    self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
-                    self._serverConnection.serializerChosen = true;
-                }
-                var scene = new Stormancer.Scene(self._serverConnection, self, sceneId, ci.token, result);
-                return scene;
-            });
-        };
-        Client.prototype.sendSystemRequest = function (id, parameter) {
-            var _this = this;
-            return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter)).then(function (packet) { return _this._systemSerializer.deserialize(packet.data); });
-        };
-        Client.prototype.ensureTransportStarted = function (ci) {
-            var self = this;
-            return Stormancer.Helpers.promiseIf(self._serverConnection == null, function () {
-                return Stormancer.Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self).then(function () {
-                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name]).then(function (c) { return self.registerConnection(c); });
-                });
-            }, self);
-        };
-        Client.prototype.startTransport = function () {
-            this._cts = new Cancellation.tokenSource();
-            return this._transport.start("client", new ConnectionHandler(), this._cts.token);
-        };
-        Client.prototype.registerConnection = function (connection) {
-            this._serverConnection = connection;
-            for (var key in this._metadata) {
-                this._serverConnection.metadata[key] = this._metadata[key];
-            }
-        };
-        Client.prototype.disconnectScene = function (scene, sceneHandle) {
-            var _this = this;
-            return this.sendSystemRequest(Stormancer.MessageIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () { return _this._scenesDispatcher.removeScene(sceneHandle); });
-        };
-        Client.prototype.disconnect = function () {
-            if (this._serverConnection) {
-                this._serverConnection.close();
-            }
-        };
-        Client.prototype.connectToScene = function (scene, token, localRoutes) {
-            var _this = this;
-            var parameter = {
-                Token: token,
-                Routes: [],
-                ConnectionMetadata: this._serverConnection.metadata
-            };
-            for (var i = 0; i < localRoutes.length; i++) {
-                var r = localRoutes[i];
-                parameter.Routes.push({
-                    Handle: r.index,
-                    Metadata: r.metadata,
-                    Name: r.name
-                });
-            }
-            return this.sendSystemRequest(Stormancer.MessageIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
-                scene.completeConnectionInitialization(result);
-                _this._scenesDispatcher.addScene(scene);
-            });
-        };
-        return Client;
-    })();
-    Stormancer.Client = Client;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var Configuration = (function () {
-        function Configuration() {
-            this.metadata = {};
-            this.transport = new Stormancer.WebSocketTransport();
-            this.dispatcher = new Stormancer.DefaultPacketDispatcher();
-            this.serializers = [];
-            this.serializers.push(new Stormancer.MsgPackSerializer());
-        }
-        Configuration.prototype.getApiEndpoint = function () {
-            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
-        };
-        Configuration.forAccount = function (accountId, applicationName) {
-            var config = new Configuration();
-            config.account = accountId;
-            config.application = applicationName;
-            return config;
-        };
-        Configuration.prototype.Metadata = function (key, value) {
-            this.metadata[key] = value;
-            return this;
-        };
-        Configuration.apiEndpoint = "http://api1.stormancer.com/";
-        return Configuration;
-    })();
-    Stormancer.Configuration = Configuration;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    (function (ConnectionState) {
-        ConnectionState[ConnectionState["Disconnected"] = 0] = "Disconnected";
-        ConnectionState[ConnectionState["Connecting"] = 1] = "Connecting";
-        ConnectionState[ConnectionState["Connected"] = 2] = "Connected";
-    })(Stormancer.ConnectionState || (Stormancer.ConnectionState = {}));
-    var ConnectionState = Stormancer.ConnectionState;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var Packet = (function () {
-        function Packet(source, data, metadata) {
-            this.connection = source;
-            this.data = data;
-            this._metadata = metadata;
-        }
-        Packet.prototype.setMetadata = function (metadata) {
-            this._metadata = metadata;
-        };
-        Packet.prototype.getMetadata = function () {
-            if (!this._metadata) {
-                this._metadata = {};
-            }
-            return this._metadata;
-        };
-        Packet.prototype.setMetadataValue = function (key, value) {
-            if (!this._metadata) {
-                this._metadata = {};
-            }
-            this._metadata[key] = value;
-        };
-        Packet.prototype.getMetadataValue = function (key) {
-            if (!this._metadata) {
-                this._metadata = {};
-            }
-            return this._metadata[key];
-        };
-        return Packet;
-    })();
-    Stormancer.Packet = Packet;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    (function (PacketPriority) {
-        PacketPriority[PacketPriority["IMMEDIATE_PRIORITY"] = 0] = "IMMEDIATE_PRIORITY";
-        PacketPriority[PacketPriority["HIGH_PRIORITY"] = 1] = "HIGH_PRIORITY";
-        PacketPriority[PacketPriority["MEDIUM_PRIORITY"] = 2] = "MEDIUM_PRIORITY";
-        PacketPriority[PacketPriority["LOW_PRIORITY"] = 3] = "LOW_PRIORITY";
-    })(Stormancer.PacketPriority || (Stormancer.PacketPriority = {}));
-    var PacketPriority = Stormancer.PacketPriority;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    (function (PacketReliability) {
-        PacketReliability[PacketReliability["UNRELIABLE"] = 0] = "UNRELIABLE";
-        PacketReliability[PacketReliability["UNRELIABLE_SEQUENCED"] = 1] = "UNRELIABLE_SEQUENCED";
-        PacketReliability[PacketReliability["RELIABLE"] = 2] = "RELIABLE";
-        PacketReliability[PacketReliability["RELIABLE_ORDERED"] = 3] = "RELIABLE_ORDERED";
-        PacketReliability[PacketReliability["RELIABLE_SEQUENCED"] = 4] = "RELIABLE_SEQUENCED";
-    })(Stormancer.PacketReliability || (Stormancer.PacketReliability = {}));
-    var PacketReliability = Stormancer.PacketReliability;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var Route = (function () {
-        function Route(scene, name, index, metadata) {
-            if (index === void 0) { index = 0; }
-            if (metadata === void 0) { metadata = {}; }
-            this.scene = scene;
-            this.name = name;
-            this.index = index;
-            this.metadata = metadata;
-            this.handlers = [];
-        }
-        return Route;
-    })();
-    Stormancer.Route = Route;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var DefaultPacketDispatcher = (function () {
-        function DefaultPacketDispatcher() {
-            this._handlers = {};
-            this._defaultProcessors = [];
-        }
-        DefaultPacketDispatcher.prototype.dispatchPacket = function (packet) {
-            var processed = false;
-            var count = 0;
-            var msgType = 0;
-            while (!processed && count < 40) {
-                msgType = packet.data[0];
-                packet.data = packet.data.subarray(1);
-                if (this._handlers[msgType]) {
-                    processed = this._handlers[msgType](packet);
-                    count++;
-                }
-                else {
-                    break;
-                }
-            }
-            for (var i = 0, len = this._defaultProcessors.length; i < len; i++) {
-                if (this._defaultProcessors[i](msgType, packet)) {
-                    processed = true;
-                    break;
-                }
-            }
-            if (!processed) {
-                throw new Error("Couldn't process message. msgId: " + msgType);
-            }
-        };
-        DefaultPacketDispatcher.prototype.addProcessor = function (processor) {
-            processor.registerProcessor(new Stormancer.PacketProcessorConfig(this._handlers, this._defaultProcessors));
-        };
-        return DefaultPacketDispatcher;
-    })();
-    Stormancer.DefaultPacketDispatcher = DefaultPacketDispatcher;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var TokenHandler = (function () {
-        function TokenHandler() {
-            this._tokenSerializer = new Stormancer.MsgPackSerializer();
-        }
-        TokenHandler.prototype.decodeToken = function (token) {
-            var data = token.split('-')[0];
-            var buffer = Stormancer.Helpers.base64ToByteArray(data);
-            var result = this._tokenSerializer.deserialize(buffer);
-            var sceneEndpoint = new Stormancer.SceneEndpoint();
-            sceneEndpoint.token = token;
-            sceneEndpoint.tokenData = result;
-            return sceneEndpoint;
-        };
-        return TokenHandler;
-    })();
-    Stormancer.TokenHandler = TokenHandler;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var MsgPackSerializer = (function () {
-        function MsgPackSerializer() {
-            this.name = "msgpack/map";
-        }
-        MsgPackSerializer.prototype.serialize = function (data) {
-            return new Uint8Array(msgpack.pack(data));
-        };
-        MsgPackSerializer.prototype.deserialize = function (bytes) {
-            return msgpack.unpack(bytes);
-        };
-        return MsgPackSerializer;
-    })();
-    Stormancer.MsgPackSerializer = MsgPackSerializer;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var PacketProcessorConfig = (function () {
-        function PacketProcessorConfig(handlers, defaultprocessors) {
-            this._handlers = handlers;
-            this._defaultProcessors = defaultprocessors;
-        }
-        PacketProcessorConfig.prototype.addProcessor = function (msgId, handler) {
-            if (this._handlers[msgId]) {
-                throw new Error("An handler is already registered for id " + msgId);
-            }
-            this._handlers[msgId] = handler;
-        };
-        PacketProcessorConfig.prototype.addCatchAllProcessor = function (handler) {
-            this._defaultProcessors.push(function (n, p) { return handler(n, p); });
-        };
-        return PacketProcessorConfig;
-    })();
-    Stormancer.PacketProcessorConfig = PacketProcessorConfig;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var MessageIDTypes = (function () {
-        function MessageIDTypes() {
-        }
-        MessageIDTypes.ID_CONNECT_TO_SCENE = 134;
-        MessageIDTypes.ID_DISCONNECT_FROM_SCENE = 135;
-        MessageIDTypes.ID_GET_SCENE_INFOS = 136;
-        MessageIDTypes.ID_REQUEST_RESPONSE_MSG = 137;
-        MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE = 138;
-        MessageIDTypes.ID_REQUEST_RESPONSE_ERROR = 139;
-        MessageIDTypes.ID_CONNECTION_RESULT = 140;
-        MessageIDTypes.ID_SCENES = 141;
-        return MessageIDTypes;
-    })();
-    Stormancer.MessageIDTypes = MessageIDTypes;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var RequestContext = (function () {
-        function RequestContext(p) {
-            this._didSendValues = false;
-            this.isComplete = false;
-            this._packet = p;
-            this._requestId = p.data.subarray(0, 2);
-            this.inputData = p.data.subarray(2);
-        }
-        RequestContext.prototype.send = function (data) {
-            if (this.isComplete) {
-                throw new Error("The request is already completed.");
-            }
-            this._didSendValues = true;
-            var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set(this._requestId);
-            dataToSend.set(data, 2);
-            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_MSG, dataToSend);
-        };
-        RequestContext.prototype.complete = function () {
-            var dataToSend = new Uint8Array(3);
-            dataToSend.set(this._requestId);
-            dataToSend.set(2, this._didSendValues ? 1 : 0);
-            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE, dataToSend);
-        };
-        RequestContext.prototype.error = function (data) {
-            var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set(this._requestId);
-            dataToSend.set(data, 2);
-            this._packet.connection.sendSystem(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, dataToSend);
-        };
-        return RequestContext;
-    })();
-    Stormancer.RequestContext = RequestContext;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var RequestProcessor = (function () {
-        function RequestProcessor(logger, modules) {
-            this._pendingRequests = {};
-            this._isRegistered = false;
-            this._handlers = {};
-            this._pendingRequests = {};
-            this._logger = logger;
-            for (var key in modules) {
-                var mod = modules[key];
-                mod.register(this.addSystemRequestHandler);
-            }
-        }
-        RequestProcessor.prototype.registerProcessor = function (config) {
-            var _this = this;
-            this._isRegistered = true;
-            for (var key in this._handlers) {
-                var handler = this._handlers[key];
-                config.addProcessor(key, function (p) {
-                    var context = new Stormancer.RequestContext(p);
-                    var continuation = function (fault) {
-                        if (!context.isComplete) {
-                            if (fault) {
-                                context.error(p.connection.serializer.serialize(fault));
-                            }
-                            else {
-                                context.complete();
-                            }
-                        }
-                    };
-                    handler(context).done(function () { return continuation(null); }).fail(function (error) { return continuation(error); });
-                    return true;
-                });
-            }
-            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_MSG, function (p) {
-                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-                var request = _this._pendingRequests[id];
-                if (request) {
-                    p.setMetadataValue["request"] = request;
-                    request.lastRefresh = new Date();
-                    p.data = p.data.subarray(2);
-                    request.observer.onNext(p);
-                    request.deferred.resolve();
-                }
-                else {
-                    console.error("Unknow request id.");
-                    return true;
-                }
-                return true;
-            });
-            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE, function (p) {
-                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-                var request = _this._pendingRequests[id];
-                if (request) {
-                    p.setMetadataValue("request", request);
-                }
-                else {
-                    console.error("Unknow request id.");
-                    return true;
-                }
-                delete _this._pendingRequests[id];
-                if (p.data[3]) {
-                    request.deferred.promise().always(function () { return request.observer.onCompleted(); });
-                }
-                else {
-                    request.observer.onCompleted();
-                }
-                return true;
-            });
-            config.addProcessor(Stormancer.MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, function (p) {
-                var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-                var request = _this._pendingRequests[id];
-                if (request) {
-                    p.setMetadataValue("request", request);
-                }
-                else {
-                    console.error("Unknow request id.");
-                    return true;
-                }
-                delete _this._pendingRequests[id];
-                var msg = p.connection.serializer.deserialize(p.data.subarray(2));
-                request.observer.onError(new Error(msg));
-                return true;
-            });
-        };
-        RequestProcessor.prototype.addSystemRequestHandler = function (msgId, handler) {
-            if (this._isRegistered) {
-                throw new Error("Can only add handler before 'registerProcessor' is called.");
-            }
-            this._handlers[msgId] = handler;
-        };
-        RequestProcessor.prototype.reserveRequestSlot = function (observer) {
-            var id = 0;
-            this.toto = 1;
-            while (id < 65535) {
-                if (!this._pendingRequests[id]) {
-                    var request = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred() };
-                    this._pendingRequests[id] = request;
-                    return request;
-                }
-                id++;
-            }
-            throw new Error("Unable to create new request: Too many pending requests.");
-        };
-        RequestProcessor.prototype.sendSystemRequest = function (peer, msgId, data) {
-            var deferred = $.Deferred();
-            var request = this.reserveRequestSlot({
-                onNext: function (packet) {
-                    deferred.resolve(packet);
-                },
-                onError: function (e) {
-                    deferred.reject(e);
-                },
-                onCompleted: function () {
-                }
-            });
-            var dataToSend = new Uint8Array(2 + data.length);
-            var idArray = new Uint16Array([request.id]);
-            dataToSend.set(new Uint8Array(idArray.buffer));
-            dataToSend.set(data, 2);
-            peer.sendSystem(msgId, dataToSend);
-            return deferred.promise();
-        };
-        return RequestProcessor;
-    })();
-    Stormancer.RequestProcessor = RequestProcessor;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var SceneDispatcher = (function () {
-        function SceneDispatcher() {
-            this._scenes = [];
-        }
-        SceneDispatcher.prototype.registerProcessor = function (config) {
-            var _this = this;
-            config.addCatchAllProcessor(function (handler, packet) { return _this.handler(handler, packet); });
-        };
-        SceneDispatcher.prototype.handler = function (sceneHandler, packet) {
-            if (sceneHandler < Stormancer.MessageIDTypes.ID_SCENES) {
-                return false;
-            }
-            var scene = this._scenes[sceneHandler - Stormancer.MessageIDTypes.ID_SCENES];
-            if (!scene) {
-                return false;
-            }
-            else {
-                packet.setMetadataValue("scene", scene);
-                scene.handleMessage(packet);
-                return true;
-            }
-        };
-        SceneDispatcher.prototype.addScene = function (scene) {
-            this._scenes[scene.handle - Stormancer.MessageIDTypes.ID_SCENES] = scene;
-        };
-        SceneDispatcher.prototype.removeScene = function (sceneHandle) {
-            delete this._scenes[sceneHandle - Stormancer.MessageIDTypes.ID_SCENES];
-        };
-        return SceneDispatcher;
-    })();
-    Stormancer.SceneDispatcher = SceneDispatcher;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var Scene = (function () {
-        function Scene(connection, client, id, token, dto) {
-            this._remoteRoutesMap = {};
-            this._localRoutesMap = {};
-            this._handlers = {};
-            this.id = id;
-            this.hostConnection = connection;
-            this._token = token;
-            this._client = client;
-            this._metadata = dto.Metadata;
-            for (var i = 0; i < dto.Routes.length; i++) {
-                var route = dto.Routes[i];
-                this._remoteRoutesMap[route.Name] = new Stormancer.Route(this, route.Name, route.Handle, route.Metadata);
-            }
-        }
-        Scene.prototype.getHostMetadata = function (key) {
-            return this._metadata[key];
-        };
-        Scene.prototype.addRoute = function (route, handler, metadata) {
-            if (metadata === void 0) { metadata = {}; }
-            if (route[0] === "@") {
-                throw new Error("A route cannot start with the @ character.");
-            }
-            if (this.connected) {
-                throw new Error("You cannot register handles once the scene is connected.");
-            }
-            var routeObj = this._localRoutesMap[route];
-            if (!routeObj) {
-                routeObj = new Stormancer.Route(this, route, 0, metadata);
-                this._localRoutesMap[route] = routeObj;
-            }
-            this.onMessageImpl(routeObj, handler);
-        };
-        Scene.prototype.registerRoute = function (route, handler) {
-            var _this = this;
-            this.addRoute(route, function (packet) {
-                var message = _this.hostConnection.serializer.deserialize(packet.data);
-                handler(message);
-            });
-        };
-        Scene.prototype.onMessageImpl = function (route, handler) {
-            var _this = this;
-            var action = function (p) {
-                var packet = new Stormancer.Packet(_this.host(), p.data, p.getMetadata());
-                handler(packet);
-            };
-            route.handlers.push(function (p) { return action(p); });
-        };
-        Scene.prototype.sendPacket = function (route, data, priority, reliability) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
-            if (!route) {
-                throw new Error("route is null or undefined!");
-            }
-            if (!data) {
-                throw new Error("data is null or undefind!");
-            }
-            if (!this.connected) {
-                throw new Error("The scene must be connected to perform this operation.");
-            }
-            var routeObj = this._remoteRoutesMap[route];
-            if (!routeObj) {
-                throw new Error("The route " + route + " doesn't exist on the scene.");
-            }
-            this.hostConnection.sendToScene(this.handle, routeObj.index, data, priority, reliability);
-        };
-        Scene.prototype.send = function (route, data, priority, reliability) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
-            return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
-        };
-        Scene.prototype.connect = function () {
-            var _this = this;
-            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this._localRoutesMap)).then(function () {
-                _this.connected = true;
-            });
-        };
-        Scene.prototype.disconnect = function () {
-            return this._client.disconnectScene(this, this.handle);
-        };
-        Scene.prototype.handleMessage = function (packet) {
-            var ev = this.packetReceived;
-            ev && ev.map(function (value) {
-                value(packet);
-            });
-            var routeId = new DataView(packet.data.buffer, packet.data.byteOffset).getUint16(0, true);
-            packet.data = packet.data.subarray(2);
-            packet.setMetadataValue("routeId", routeId);
-            var observer = this._handlers[routeId];
-            observer && observer.map(function (value) {
-                value(packet);
-            });
-        };
-        Scene.prototype.completeConnectionInitialization = function (cr) {
-            this.handle = cr.SceneHandle;
-            for (var key in this._localRoutesMap) {
-                var route = this._localRoutesMap[key];
-                route.index = cr.RouteMappings[key];
-                this._handlers[route.index] = route.handlers;
-            }
-        };
-        Scene.prototype.host = function () {
-            return new Stormancer.ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
-        };
-        return Scene;
-    })();
-    Stormancer.Scene = Scene;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var SceneEndpoint = (function () {
-        function SceneEndpoint() {
-        }
-        return SceneEndpoint;
-    })();
-    Stormancer.SceneEndpoint = SceneEndpoint;
-    var ConnectionData = (function () {
-        function ConnectionData() {
-        }
-        return ConnectionData;
-    })();
-    Stormancer.ConnectionData = ConnectionData;
-})(Stormancer || (Stormancer = {}));
-var Stormancer;
-(function (Stormancer) {
-    var ScenePeer = (function () {
-        function ScenePeer(connection, sceneHandle, routeMapping, scene) {
-            this._connection = connection;
-            this._sceneHandle = sceneHandle;
-            this._routeMapping = routeMapping;
-            this._scene = scene;
-        }
-        ScenePeer.prototype.id = function () {
-            return this._connection.id;
-        };
-        ScenePeer.prototype.send = function (route, data, priority, reliability) {
-            var r = this._routeMapping[route];
-            if (!r) {
-                throw new Error("The route " + route + " is not declared on the server.");
-            }
-            this._connection.sendToScene(this._sceneHandle, r.index, data, priority, reliability);
-        };
-        return ScenePeer;
-    })();
-    Stormancer.ScenePeer = ScenePeer;
-})(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
     var jQueryWrapper = (function () {

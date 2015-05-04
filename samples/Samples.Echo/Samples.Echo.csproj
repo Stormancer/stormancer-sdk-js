@@ -71,7 +71,8 @@
     <TypeScriptSourceMap>false</TypeScriptSourceMap>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>xcopy /d /y "$(SolutionDir)build\stormancer.js" ".."</PreBuildEvent>
+    <PreBuildEvent>xcopy /d /y "$(SolutionDir)build\stormancer.js" ".."
+</PreBuildEvent>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
 </Project>

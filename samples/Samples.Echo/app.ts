@@ -26,11 +26,19 @@
     }
 
     start() {
+        ///Local debug test configuration
+        //var sceneName = "test-scene";
+        //var config = Stormancer.Configuration.forAccount("test", "echo");
+        //config.serverEndpoint = "http://localhost:8081";
+
+        //Online test configuration
+        var sceneName = "scene1";
         var config = Stormancer.Configuration.forAccount("d9590543-56c3-c94a-f7bf-c394b26deb15", "newtest");
+        
 
         var client = $.stormancer(config);
 
-        var scenePromise = client.getPublicScene("scene1", "moi");
+        var scenePromise = client.getPublicScene(sceneName, "moi");
 
         var deferred = $.Deferred<string>();
         scenePromise.then(scene => {

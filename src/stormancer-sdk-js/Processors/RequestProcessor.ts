@@ -1,3 +1,4 @@
+///<reference path="../MessageIDTypes.ts"/>
 module Stormancer {
     export class RequestProcessor implements IPacketProcessor {
         private _pendingRequests: IMap<Request> = {};
@@ -83,7 +84,7 @@ module Stormancer {
 
             config.addProcessor(MessageIDTypes.ID_REQUEST_RESPONSE_ERROR, p => {
                 var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-                
+
                 var request = this._pendingRequests[id];
                 if (request) {
                     p.setMetadataValue("request", request);
@@ -131,14 +132,17 @@ module Stormancer {
             var request = this.reserveRequestSlot({
                 onNext(packet) { deferred.resolve(packet); },
                 onError(e) { deferred.reject(e) },
-                onCompleted() { }
+                onCompleted() {
+                    deferred.resolve();
+                }
             });
 
-            var dataToSend = new Uint8Array(2 + data.length);
+            var dataToSend = new Uint8Array(3 + data.length);
             var idArray = new Uint16Array([request.id]);
-            dataToSend.set(new Uint8Array(idArray.buffer));
-            dataToSend.set(data, 2);
-            peer.sendSystem(msgId, dataToSend);
+            dataToSend.set([msgId],0);
+            dataToSend.set(new Uint8Array(idArray.buffer), 1);
+            dataToSend.set(data, 3);
+            peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend);
 
             return deferred.promise();
         }

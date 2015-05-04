@@ -1,3 +1,5 @@
+///
+
 module Stormancer {
     export class ConnectionHandler implements IConnectionManager {
         private _current = 0;
@@ -37,7 +39,7 @@ module Stormancer {
         private _requestProcessor: RequestProcessor;
         private _scenesDispatcher: SceneDispatcher;
 
-        private _serializers: IMap<ISerializer> = { "msgpack/map" : new MsgPackSerializer()};
+        private _serializers: IMap<ISerializer> = { "msgpack/map": new MsgPackSerializer() };
 
         private _cts: Cancellation.tokenSource;
 
@@ -69,6 +71,7 @@ module Stormancer {
             this._metadata["transport"] = this._transport.name;
             this._metadata["version"] = "1.0.0a";
             this._metadata["platform"] = "JS";
+            this._metadata["protocol"] = "2";
 
             this.initialize();
         }
@@ -98,7 +101,7 @@ module Stormancer {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
                 var parameter: SceneInfosRequestDto = { Metadata: self._serverConnection.metadata, Token: ci.token };
-                return self.sendSystemRequest<SceneInfosRequestDto, SceneInfosDto>(MessageIDTypes.ID_GET_SCENE_INFOS, parameter);
+                return self.sendSystemRequest<SceneInfosRequestDto, SceneInfosDto>(SystemRequestIDTypes.ID_GET_SCENE_INFOS, parameter);
             }).then((result: SceneInfosDto) => {
                 if (!self._serverConnection.serializerChosen) {
                     if (!result.SelectedSerializer) {
@@ -108,11 +111,17 @@ module Stormancer {
                     self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
                     self._serverConnection.serializerChosen = true;
                 }
-                var scene = new Scene(self._serverConnection, self, sceneId, ci.token, result);
+                return self.updateMetadata().then(_=>result);
+            }).then((r: SceneInfosDto) => {
+
+                var scene = new Scene(self._serverConnection, self, sceneId, ci.token, r);
                 return scene;
             });
         }
 
+        private updateMetadata(): JQueryPromise<void> {
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata)).then(packet=> { });
+        }
         private sendSystemRequest<T, U>(id: number, parameter: T): JQueryPromise<U> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
                 .then(packet => this._systemSerializer.deserialize<U>(packet.data));
@@ -125,8 +134,12 @@ module Stormancer {
             return Helpers.promiseIf(self._serverConnection == null,() => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
                     .then(() => {
-                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
-                        .then(c => self.registerConnection(c));
+                        return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
+                            .then(c => {
+                            self.registerConnection(c);
+                            return self.updateMetadata();
+                        });
+                            
                 });
             }, self);
         }
@@ -146,7 +159,7 @@ module Stormancer {
         private _serverConnection: IConnection;
 
         public disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void> {
-            return this.sendSystemRequest(MessageIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
+            return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => this._scenesDispatcher.removeScene(sceneHandle));
         }
 
@@ -172,7 +185,7 @@ module Stormancer {
                 });
             }
 
-            return this.sendSystemRequest<ConnectToSceneMsg, ConnectionResult>(MessageIDTypes.ID_CONNECT_TO_SCENE, parameter)
+            return this.sendSystemRequest<ConnectToSceneMsg, ConnectionResult>(SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter)
                 .then(result => {
                 scene.completeConnectionInitialization(result);
                 this._scenesDispatcher.addScene(scene);
