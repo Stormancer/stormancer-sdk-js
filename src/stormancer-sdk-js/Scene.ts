@@ -51,16 +51,14 @@ module Stormancer {
             this.onMessageImpl(routeObj, handler);
         }
 
-        public registerRoute<T>(route: string, handler: (message: T) => void): void {
+        public registerRoute<T>(route: string, handler: (message: T, dataView: DataView) => void): void {
             this.addRoute(route,(packet: Packet<IScenePeer>) => {
                 var message = this.hostConnection.serializer.deserialize<T>(packet.data);
-                handler(message);
+                handler(message, new DataView(packet.data.buffer, 3));
             });
         }
 
-
         private onMessageImpl(route: Route, handler: (packet: Packet<IScenePeer>) => void): void {
-
 
             var action = (p: Packet<IConnection>) => {
                 var packet = new Packet(this.host(), p.data, p.getMetadata());

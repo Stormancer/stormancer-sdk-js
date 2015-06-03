@@ -390,7 +390,7 @@ declare module Stormancer {
         constructor(connection: IConnection, client: Client, id: string, token: string, dto: SceneInfosDto);
         getHostMetadata(key: string): string;
         addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
-        registerRoute<T>(route: string, handler: (message: T) => void): void;
+        registerRoute<T>(route: string, handler: (message: T, dataView: DataView) => void): void;
         private onMessageImpl(route, handler);
         sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
         send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
