@@ -1,7 +1,14 @@
 ///<reference path="../MessageIDTypes.ts"/>
 module Stormancer {
+    interface SystemRequest {
+        lastRefresh: Date;
+        id: number;
+        observer: IObserver<Packet<IConnection>>;
+        deferred: JQueryDeferred<void>;
+    }
+
     export class RequestProcessor implements IPacketProcessor {
-        private _pendingRequests: IMap<Request> = {};
+        private _pendingRequests: IMap<SystemRequest> = {};
         private _logger: ILogger;
         private _isRegistered: boolean = false;
         private _handlers: IMap<(context: RequestContext) => JQueryPromise<void>> = {};
@@ -43,7 +50,7 @@ module Stormancer {
 
             config.addProcessor(MessageIDTypes.ID_REQUEST_RESPONSE_MSG, p => {
                 var id = new DataView(p.data.buffer, p.data.byteOffset).getUint16(0, true);
-                var request: Request = this._pendingRequests[id];
+                var request: SystemRequest = this._pendingRequests[id];
                 if (request) {
                     p.setMetadataValue["request"] = request;
                     request.lastRefresh = new Date();
@@ -116,7 +123,7 @@ module Stormancer {
             (<any>this).toto = 1;
             while (id < 65535) {
                 if (!this._pendingRequests[id]) {
-                    var request: Request = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred<void>() };
+                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred<void>() };
                     this._pendingRequests[id] = request;
                     return request;
                 }

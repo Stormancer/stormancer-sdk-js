@@ -65,5 +65,15 @@ module Stormancer {
 
         public serializerChosen: boolean = false;
         public serializer: ISerializer = new MsgPackSerializer();
+
+        private _registeredComponents: IMap<any> = { "serializer": this.serializer };
+
+        public registerComponent<T>(componentName: string, component: T): void {
+            this._registeredComponents[componentName] = component;
+        }
+
+        getComponent<T>(componentName): T {
+            return this._registeredComponents[componentName]();
+        }
     }
 }

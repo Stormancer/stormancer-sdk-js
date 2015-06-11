@@ -142,5 +142,24 @@ module Stormancer {
         public host(): IScenePeer {
             return new ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
         }
+
+        private _registeredComponents: IMap<() => any> = {}
+
+        public registerComponent<T>(componentName: string, factory: () => T): void {
+            this._registeredComponents[componentName] = factory;
+        }
+
+        getComponent<T>(componentName): T {
+            return this._registeredComponents[componentName]();
+        }
+
+        getRemoteRoutes(): Route[] {
+            var result: Route[] = [];
+
+            for (var key in this._remoteRoutesMap) {
+                result.push(this._remoteRoutesMap[key]);
+            }
+            return result;
+        }
     }
 }

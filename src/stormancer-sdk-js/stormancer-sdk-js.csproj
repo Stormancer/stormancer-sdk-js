@@ -19,7 +19,11 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Helpers.ts" />
-    <TypeScriptCompile Include="Plugins\Request.ts" />
+    <TypeScriptCompile Include="Infrastructure\ISubscription.ts" />
+    <TypeScriptCompile Include="Plugins\IClientPlugin.ts" />
+    <TypeScriptCompile Include="Plugins\PluginBuildContext.ts" />
+    <TypeScriptCompile Include="Plugins\RpcClientPlugin.ts" />
+    <TypeScriptCompile Include="Plugins\RpcService.ts" />
     <TypeScriptCompile Include="Scripts\msgPack.ts" />
   </ItemGroup>
   <ItemGroup>
@@ -46,7 +50,6 @@
     <TypeScriptCompile Include="Infrastructure\Modules\IModule.ts" />
     <TypeScriptCompile Include="Infrastructure\MsgPackSerializer.ts" />
     <TypeScriptCompile Include="IPacketProcessor.ts" />
-    <TypeScriptCompile Include="IRequest.ts" />
     <TypeScriptCompile Include="ITransport.ts" />
     <TypeScriptCompile Include="MessageIDTypes.ts" />
     <TypeScriptCompile Include="Plugins\RequestContext.ts" />

@@ -15,11 +15,11 @@ module Stormancer {
         // Metadata associated with the connection.
         metadata: Map;
 
-        //// Register components.
-        //RegisterComponent<T>(component: T): void;
+        // Register components.
+        registerComponent<T>(componentName:string, component: T): void;
 
-        //// Gets a service from the object.
-        //GetComponent<T>(): T;
+        // Gets a service from the object.
+        getComponent<T>(componenentName: string): T;
 
         // Account of the application which the peer is connected to.
         account: string

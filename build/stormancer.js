@@ -103,6 +103,7 @@ var Stormancer;
         function Client(config) {
             this._tokenHandler = new Stormancer.TokenHandler();
             this._serializers = { "msgpack/map": new Stormancer.MsgPackSerializer() };
+            this._pluginCtx = new Stormancer.PluginBuildContext();
             this._systemSerializer = new Stormancer.MsgPackSerializer();
             this._accountId = config.account;
             this._applicationName = config.application;
@@ -123,6 +124,12 @@ var Stormancer;
             this._metadata["version"] = "1.0.0a";
             this._metadata["platform"] = "JS";
             this._metadata["protocol"] = "2";
+            for (var plugin in config.plugins) {
+                plugin.Build(this._pluginCtx);
+            }
+            for (var action in this._pluginCtx.clientCreated) {
+                action(this);
+            }
             this.initialize();
         }
         Client.prototype.initialize = function () {
@@ -133,6 +140,9 @@ var Stormancer;
             }
         };
         Client.prototype.transportPacketReceived = function (packet) {
+            for (var action in this._pluginCtx.packetReceived) {
+                action(packet);
+            }
             this._dispatcher.dispatchPacket(packet);
         };
         Client.prototype.getPublicScene = function (sceneId, userData) {
@@ -144,6 +154,7 @@ var Stormancer;
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
         };
         Client.prototype.getSceneImpl = function (sceneId, ci) {
+            var _this = this;
             var self = this;
             return this.ensureTransportStarted(ci).then(function () {
                 var parameter = { Metadata: self._serverConnection.metadata, Token: ci.token };
@@ -160,6 +171,9 @@ var Stormancer;
                 return self.updateMetadata().then(function (_) { return result; });
             }).then(function (r) {
                 var scene = new Stormancer.Scene(self._serverConnection, self, sceneId, ci.token, r);
+                for (var action in _this._pluginCtx.sceneCreated) {
+                    action(scene);
+                }
                 return scene;
             });
         };
@@ -194,7 +208,12 @@ var Stormancer;
         };
         Client.prototype.disconnectScene = function (scene, sceneHandle) {
             var _this = this;
-            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () { return _this._scenesDispatcher.removeScene(sceneHandle); });
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () {
+                _this._scenesDispatcher.removeScene(sceneHandle);
+                for (var action in _this._pluginCtx.sceneDisconnected) {
+                    action(scene);
+                }
+            });
         };
         Client.prototype.disconnect = function () {
             if (this._serverConnection) {
@@ -219,6 +238,9 @@ var Stormancer;
             return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
                 scene.completeConnectionInitialization(result);
                 _this._scenesDispatcher.addScene(scene);
+                for (var action in _this._pluginCtx.sceneConnected) {
+                    action(scene);
+                }
             });
         };
         return Client;
@@ -229,11 +251,13 @@ var Stormancer;
 (function (Stormancer) {
     var Configuration = (function () {
         function Configuration() {
+            this.plugins = [];
             this.metadata = {};
             this.transport = new Stormancer.WebSocketTransport();
             this.dispatcher = new Stormancer.DefaultPacketDispatcher();
             this.serializers = [];
             this.serializers.push(new Stormancer.MsgPackSerializer());
+            this.plugins.push(new Stormancer.RpcClientPlugin());
         }
         Configuration.prototype.getApiEndpoint = function () {
             return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
@@ -512,6 +536,20 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var PluginBuildContext = (function () {
+        function PluginBuildContext() {
+            this.sceneCreated = [];
+            this.clientCreated = [];
+            this.sceneConnected = [];
+            this.sceneDisconnected = [];
+            this.packetReceived = [];
+        }
+        return PluginBuildContext;
+    })();
+    Stormancer.PluginBuildContext = PluginBuildContext;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
     var RequestContext = (function () {
         function RequestContext(p) {
             this._didSendValues = false;
@@ -545,6 +583,153 @@ var Stormancer;
         return RequestContext;
     })();
     Stormancer.RequestContext = RequestContext;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var RpcClientPlugin = (function () {
+        function RpcClientPlugin() {
+        }
+        RpcClientPlugin.prototype.build = function (ctx) {
+            ctx.sceneCreated.push(function (scene) {
+                var rpcParams = scene.getHostMetadata(RpcClientPlugin.PluginName);
+                if (rpcParams == RpcClientPlugin.Version) {
+                    var processor = new Stormancer.RpcService(scene);
+                    scene.registerComponent(RpcClientPlugin.ServiceName, function () { return processor; });
+                    scene.addRoute(RpcClientPlugin.NextRouteName, function (p) {
+                        processor.next(p);
+                    });
+                    scene.addRoute(RpcClientPlugin.ErrorRouteName, function (p) {
+                        processor.error(p);
+                    });
+                    scene.addRoute(RpcClientPlugin.CompletedRouteName, function (p) {
+                        processor.complete(p);
+                    });
+                }
+            });
+        };
+        RpcClientPlugin.NextRouteName = "stormancer.rpc.next";
+        RpcClientPlugin.ErrorRouteName = "stormancer.rpc.error";
+        RpcClientPlugin.CompletedRouteName = "stormancer.rpc.completed";
+        RpcClientPlugin.Version = "1.0.0";
+        RpcClientPlugin.PluginName = "stormancer.plugins.rpc";
+        RpcClientPlugin.ServiceName = "rpcService";
+        return RpcClientPlugin;
+    })();
+    Stormancer.RpcClientPlugin = RpcClientPlugin;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
+    var RpcService = (function () {
+        function RpcService(scene) {
+            this._currentRequestId = 0;
+            this._pendingRequests = {};
+            this._scene = scene;
+        }
+        RpcService.prototype.RpcRaw = function (route, data, onNext, onError, onCompleted, priority) {
+            var _this = this;
+            if (onError === void 0) { onError = function (error) {
+            }; }
+            if (onCompleted === void 0) { onCompleted = function () {
+            }; }
+            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            var remoteRoutes = this._scene.getRemoteRoutes();
+            var relevantRoute;
+            for (var i = 0; i < remoteRoutes.length; i++) {
+                if (remoteRoutes[i].name == route) {
+                    relevantRoute = remoteRoutes[i];
+                    break;
+                }
+            }
+            if (!relevantRoute) {
+                throw new Error("The target route does not exist on the remote host.");
+            }
+            if (relevantRoute.metadata[Stormancer.RpcClientPlugin.PluginName] != Stormancer.RpcClientPlugin.Version) {
+                throw new Error("The target remote route does not support the plugin RPC version " + Stormancer.RpcClientPlugin.Version);
+            }
+            var deferred = jQuery.Deferred();
+            var observer = {
+                onNext: onNext,
+                onError: function (error) {
+                    onError(error);
+                    deferred.reject(error);
+                },
+                onCompleted: function () {
+                    onCompleted();
+                    deferred.resolve();
+                }
+            };
+            var id = this.reserveId();
+            var request = {
+                observer: observer,
+                deferred: deferred,
+                receivedMessages: 0,
+                id: id
+            };
+            this._pendingRequests[id] = request;
+            var dataToSend = new Uint8Array(2 + data.length);
+            dataToSend.set([i & 255, i >>> 8]);
+            dataToSend.set(data, 2);
+            this._scene.sendPacket(route, dataToSend, priority, 3 /* RELIABLE_ORDERED */);
+            return {
+                unsubscribe: function () {
+                    delete _this._pendingRequests[id];
+                }
+            };
+        };
+        RpcService.prototype.reserveId = function () {
+            var loop = 0;
+            while (this._pendingRequests[this._currentRequestId]) {
+                loop++;
+                this._currentRequestId = (this._currentRequestId + 1) & 65535;
+                if (loop > 65535) {
+                    throw new Error("Too many requests in progress, unable to start a new one.");
+                }
+            }
+            return this._currentRequestId;
+        };
+        RpcService.prototype.getPendingRequest = function (packet) {
+            var id = packet.data[0] + 256 * packet.data[1];
+            packet.data = packet.data.subarray(2);
+            return this._pendingRequests[id];
+        };
+        RpcService.prototype.next = function (packet) {
+            var request = this.getPendingRequest(packet);
+            if (request) {
+                request.receivedMessages++;
+                request.observer.onNext(packet);
+                if (request.deferred.state() == "pending") {
+                    request.deferred.resolve();
+                }
+            }
+        };
+        RpcService.prototype.error = function (packet) {
+            var request = this.getPendingRequest(packet);
+            if (request) {
+                request.observer.onError(packet.connection.serializer.deserialize(packet.data));
+                delete this._pendingRequests[request.id];
+            }
+        };
+        RpcService.prototype.complete = function (packet) {
+            var _this = this;
+            var messageSent = packet.data[0];
+            packet.data = packet.data.subarray(1);
+            var request = this.getPendingRequest(packet);
+            if (request) {
+                if (messageSent) {
+                    request.deferred.then(function () {
+                        request.observer.onCompleted();
+                        delete _this._pendingRequests[request.id];
+                    });
+                }
+                else {
+                    request.observer.onCompleted();
+                    delete this._pendingRequests[request.id];
+                }
+            }
+        };
+        return RpcService;
+    })();
+    Stormancer.RpcService = RpcService;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
@@ -736,6 +921,7 @@ var Stormancer;
             this._remoteRoutesMap = {};
             this._localRoutesMap = {};
             this._handlers = {};
+            this._registeredComponents = {};
             this.id = id;
             this.hostConnection = connection;
             this._token = token;
@@ -835,6 +1021,19 @@ var Stormancer;
         Scene.prototype.host = function () {
             return new Stormancer.ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
         };
+        Scene.prototype.registerComponent = function (componentName, factory) {
+            this._registeredComponents[componentName] = factory;
+        };
+        Scene.prototype.getComponent = function (componentName) {
+            return this._registeredComponents[componentName]();
+        };
+        Scene.prototype.getRemoteRoutes = function () {
+            var result = [];
+            for (var key in this._remoteRoutesMap) {
+                result.push(this._remoteRoutesMap[key]);
+            }
+            return result;
+        };
         return Scene;
     })();
     Stormancer.Scene = Scene;
@@ -862,6 +1061,7 @@ var Stormancer;
             this._sceneHandle = sceneHandle;
             this._routeMapping = routeMapping;
             this._scene = scene;
+            this.serializer = connection.serializer;
         }
         ScenePeer.prototype.id = function () {
             return this._connection.id;
@@ -872,6 +1072,9 @@ var Stormancer;
                 throw new Error("The route " + route + " is not declared on the server.");
             }
             this._connection.sendToScene(this._sceneHandle, r.index, data, priority, reliability);
+        };
+        ScenePeer.prototype.getComponent = function (componentName) {
+            return this._connection.getComponent(componentName);
         };
         return ScenePeer;
     })();
@@ -1402,6 +1605,7 @@ var Stormancer;
             this.metadata = {};
             this.serializerChosen = false;
             this.serializer = new Stormancer.MsgPackSerializer();
+            this._registeredComponents = { "serializer": this.serializer };
             this.id = id;
             this._socket = socket;
             this.connectionDate = new Date();
@@ -1428,6 +1632,12 @@ var Stormancer;
         WebSocketConnection.prototype.setApplication = function (account, application) {
             this.account = account;
             this.application = application;
+        };
+        WebSocketConnection.prototype.registerComponent = function (componentName, component) {
+            this._registeredComponents[componentName] = component;
+        };
+        WebSocketConnection.prototype.getComponent = function (componentName) {
+            return this._registeredComponents[componentName]();
         };
         return WebSocketConnection;
     })();

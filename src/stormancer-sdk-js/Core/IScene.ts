@@ -36,5 +36,14 @@ module Stormancer {
         packetReceived: ((packet: Packet<IConnection>) => void)[];
 
         host(): IScenePeer;
+
+        //Registers a component to the scene
+        registerComponent<T>(componentName: string, factory: () => T): void;
+
+        //Gets a registered comonent from the scene
+        getComponent<T>(componentName): T;
+
+        //Gets the list of declared remote routes
+        getRemoteRoutes(): Route[];
     }
 }

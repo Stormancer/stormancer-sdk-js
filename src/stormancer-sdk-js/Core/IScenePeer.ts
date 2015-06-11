@@ -5,5 +5,9 @@ module Stormancer {
         send(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
 
         id(): number;
+
+        getComponent<T>(componentName: string): T;
+
+        serializer: ISerializer;
     }
 }

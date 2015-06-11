@@ -45,9 +45,13 @@ module Stormancer {
 
         private _metadata: Map;
 
+        private _pluginCtx: PluginBuildContext = new PluginBuildContext();
+
         public applicationName: string;
 
         public _logger: ILogger;
+
+
 
         constructor(config: Configuration) {
             this._accountId = config.account;
@@ -73,6 +77,15 @@ module Stormancer {
             this._metadata["platform"] = "JS";
             this._metadata["protocol"] = "2";
 
+
+            for (var plugin in config.plugins) {
+                plugin.Build(this._pluginCtx);
+            }
+
+            for (var action in this._pluginCtx.clientCreated) {
+                action(this);
+            }
+
             this.initialize();
         }
 
@@ -84,6 +97,9 @@ module Stormancer {
         }
 
         private transportPacketReceived(packet: Packet<IConnection>): void {
+            for (var action in this._pluginCtx.packetReceived) {
+                action(packet);
+            }
             this._dispatcher.dispatchPacket(packet);
         }
 
@@ -111,10 +127,13 @@ module Stormancer {
                     self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
                     self._serverConnection.serializerChosen = true;
                 }
-                return self.updateMetadata().then(_=>result);
+                return self.updateMetadata().then(_=> result);
             }).then((r: SceneInfosDto) => {
-
                 var scene = new Scene(self._serverConnection, self, sceneId, ci.token, r);
+
+                for (var action in this._pluginCtx.sceneCreated) {
+                    action(scene);
+                }
                 return scene;
             });
         }
@@ -134,12 +153,12 @@ module Stormancer {
             return Helpers.promiseIf(self._serverConnection == null,() => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
                     .then(() => {
-                        return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
-                            .then(c => {
-                            self.registerConnection(c);
-                            return self.updateMetadata();
-                        });
-                            
+                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
+                        .then(c => {
+                        self.registerConnection(c);
+                        return self.updateMetadata();
+                    });
+
                 });
             }, self);
         }
@@ -160,7 +179,12 @@ module Stormancer {
 
         public disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
-                .then(() => this._scenesDispatcher.removeScene(sceneHandle));
+                .then(() => {
+                    this._scenesDispatcher.removeScene(sceneHandle);
+                    for (var action in this._pluginCtx.sceneDisconnected) {
+                        action(scene);
+                    }
+            });
         }
 
         public disconnect(): void {
@@ -189,6 +213,9 @@ module Stormancer {
                 .then(result => {
                 scene.completeConnectionInitialization(result);
                 this._scenesDispatcher.addScene(scene);
+                for (var action in this._pluginCtx.sceneConnected) {
+                    action(scene);
+                }
             });
         }
 

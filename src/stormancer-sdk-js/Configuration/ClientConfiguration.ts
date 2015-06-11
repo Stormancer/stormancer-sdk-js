@@ -7,6 +7,7 @@ module Stormancer {
             this.dispatcher = new DefaultPacketDispatcher();
             this.serializers = [];
             this.serializers.push(new MsgPackSerializer());
+            this.plugins.push(new RpcClientPlugin());
         }
 
         static apiEndpoint: string = "http://api1.stormancer.com/";
@@ -22,6 +23,8 @@ module Stormancer {
 
         // A string containing the name of the application.
         public application: string;
+
+        public plugins: IClientPlugin[] = [];
 
         getApiEndpoint(): string {
             return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
