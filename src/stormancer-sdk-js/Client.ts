@@ -66,7 +66,7 @@ module Stormancer {
             this._dispatcher.addProcessor(this._scenesDispatcher);
             this._metadata = config.metadata;
 
-            for (var i in config.serializers) {
+            for (var i = 0; i < config.serializers.length; i++) {
                 var serializer = config.serializers[i];
                 this._serializers[serializer.name] = serializer;
             }
@@ -78,12 +78,12 @@ module Stormancer {
             this._metadata["protocol"] = "2";
 
 
-            for (var plugin in config.plugins) {
-                plugin.Build(this._pluginCtx);
+            for (var i = 0; i < config.plugins.length;i++) {
+                config.plugins[i].build(this._pluginCtx);
             }
 
-            for (var action in this._pluginCtx.clientCreated) {
-                action(this);
+            for (var i = 0; i < this._pluginCtx.clientCreated.length; i++) {
+                this._pluginCtx.clientCreated[i](this);
             }
 
             this.initialize();
@@ -97,8 +97,8 @@ module Stormancer {
         }
 
         private transportPacketReceived(packet: Packet<IConnection>): void {
-            for (var action in this._pluginCtx.packetReceived) {
-                action(packet);
+            for (var i = 0; i < this._pluginCtx.packetReceived.length; i++) {
+                this._pluginCtx.packetReceived[i](packet);
             }
             this._dispatcher.dispatchPacket(packet);
         }
@@ -131,8 +131,8 @@ module Stormancer {
             }).then((r: SceneInfosDto) => {
                 var scene = new Scene(self._serverConnection, self, sceneId, ci.token, r);
 
-                for (var action in this._pluginCtx.sceneCreated) {
-                    action(scene);
+                for (var i = 0; i < this._pluginCtx.sceneCreated.length; i++) {
+                    this._pluginCtx.sceneCreated[i](scene);
                 }
                 return scene;
             });
@@ -181,8 +181,8 @@ module Stormancer {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
                     this._scenesDispatcher.removeScene(sceneHandle);
-                    for (var action in this._pluginCtx.sceneDisconnected) {
-                        action(scene);
+                    for (var i = 0; i< this._pluginCtx.sceneConnected.length; i++) {
+                        this._pluginCtx.sceneConnected[i](scene);
                     }
             });
         }
@@ -213,8 +213,8 @@ module Stormancer {
                 .then(result => {
                 scene.completeConnectionInitialization(result);
                 this._scenesDispatcher.addScene(scene);
-                for (var action in this._pluginCtx.sceneConnected) {
-                    action(scene);
+                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                    this._pluginCtx.sceneConnected[i](scene);
                 }
             });
         }

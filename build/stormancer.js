@@ -115,7 +115,7 @@ var Stormancer;
             this._dispatcher.addProcessor(this._requestProcessor);
             this._dispatcher.addProcessor(this._scenesDispatcher);
             this._metadata = config.metadata;
-            for (var i in config.serializers) {
+            for (var i = 0; i < config.serializers.length; i++) {
                 var serializer = config.serializers[i];
                 this._serializers[serializer.name] = serializer;
             }
@@ -124,11 +124,11 @@ var Stormancer;
             this._metadata["version"] = "1.0.0a";
             this._metadata["platform"] = "JS";
             this._metadata["protocol"] = "2";
-            for (var plugin in config.plugins) {
-                plugin.Build(this._pluginCtx);
+            for (var i = 0; i < config.plugins.length; i++) {
+                config.plugins[i].build(this._pluginCtx);
             }
-            for (var action in this._pluginCtx.clientCreated) {
-                action(this);
+            for (var i = 0; i < this._pluginCtx.clientCreated.length; i++) {
+                this._pluginCtx.clientCreated[i](this);
             }
             this.initialize();
         }
@@ -140,8 +140,8 @@ var Stormancer;
             }
         };
         Client.prototype.transportPacketReceived = function (packet) {
-            for (var action in this._pluginCtx.packetReceived) {
-                action(packet);
+            for (var i = 0; i < this._pluginCtx.packetReceived.length; i++) {
+                this._pluginCtx.packetReceived[i](packet);
             }
             this._dispatcher.dispatchPacket(packet);
         };
@@ -171,8 +171,8 @@ var Stormancer;
                 return self.updateMetadata().then(function (_) { return result; });
             }).then(function (r) {
                 var scene = new Stormancer.Scene(self._serverConnection, self, sceneId, ci.token, r);
-                for (var action in _this._pluginCtx.sceneCreated) {
-                    action(scene);
+                for (var i = 0; i < _this._pluginCtx.sceneCreated.length; i++) {
+                    _this._pluginCtx.sceneCreated[i](scene);
                 }
                 return scene;
             });
@@ -210,8 +210,8 @@ var Stormancer;
             var _this = this;
             return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () {
                 _this._scenesDispatcher.removeScene(sceneHandle);
-                for (var action in _this._pluginCtx.sceneDisconnected) {
-                    action(scene);
+                for (var i = 0; i < _this._pluginCtx.sceneConnected.length; i++) {
+                    _this._pluginCtx.sceneConnected[i](scene);
                 }
             });
         };
@@ -238,8 +238,8 @@ var Stormancer;
             return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
                 scene.completeConnectionInitialization(result);
                 _this._scenesDispatcher.addScene(scene);
-                for (var action in _this._pluginCtx.sceneConnected) {
-                    action(scene);
+                for (var i = 0; i < _this._pluginCtx.sceneConnected.length; i++) {
+                    _this._pluginCtx.sceneConnected[i](scene);
                 }
             });
         };
