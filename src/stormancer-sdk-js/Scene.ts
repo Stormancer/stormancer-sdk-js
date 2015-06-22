@@ -57,16 +57,18 @@ module Stormancer {
                 handler(message);
             });
         }
-
+        
+        public registerRouteRaw(route: string, handler: (dataView: DataView) => void): void {
+            this.addRoute(route,(packet: Packet<IScenePeer>) => {
+                handler(new DataView(packet.data.buffer, packet.data.byteOffset));
+            });
+        }
 
         private onMessageImpl(route: Route, handler: (packet: Packet<IScenePeer>) => void): void {
-
-
             var action = (p: Packet<IConnection>) => {
                 var packet = new Packet(this.host(), p.data, p.getMetadata());
                 handler(packet);
             };
-
             route.handlers.push(p => action(p));
         }
 

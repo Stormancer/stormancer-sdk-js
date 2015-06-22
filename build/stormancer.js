@@ -957,6 +957,11 @@ var Stormancer;
                 handler(message);
             });
         };
+        Scene.prototype.registerRouteRaw = function (route, handler) {
+            this.addRoute(route, function (packet) {
+                handler(new DataView(packet.data.buffer, packet.data.byteOffset));
+            });
+        };
         Scene.prototype.onMessageImpl = function (route, handler) {
             var _this = this;
             var action = function (p) {

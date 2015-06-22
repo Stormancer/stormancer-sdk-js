@@ -428,6 +428,7 @@ declare module Stormancer {
         getHostMetadata(key: string): string;
         addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
         registerRoute<T>(route: string, handler: (message: T) => void): void;
+        registerRouteRaw(route: string, handler: (dataView: DataView) => void): void;
         private onMessageImpl(route, handler);
         sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
         send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
