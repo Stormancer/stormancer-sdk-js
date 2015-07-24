@@ -22,11 +22,47 @@ declare module Stormancer {
     }
 }
 declare module Stormancer {
-    interface Request {
-        lastRefresh: Date;
-        id: number;
-        observer: IObserver<Packet<IConnection>>;
-        deferred: JQueryDeferred<void>;
+    interface ISubscription {
+        unsubscribe(): void;
+    }
+}
+declare module Stormancer {
+    interface IClientPlugin {
+        build(ctx: PluginBuildContext): void;
+    }
+}
+declare module Stormancer {
+    class PluginBuildContext {
+        sceneCreated: ((scene: IScene) => void)[];
+        clientCreated: ((client: IClient) => void)[];
+        sceneConnected: ((scene: IScene) => void)[];
+        sceneDisconnected: ((scene: IScene) => void)[];
+        packetReceived: ((packet: Packet<IConnection>) => void)[];
+    }
+}
+declare module Stormancer {
+    class RpcClientPlugin implements IClientPlugin {
+        static NextRouteName: string;
+        static ErrorRouteName: string;
+        static CompletedRouteName: string;
+        static Version: string;
+        static PluginName: string;
+        static ServiceName: string;
+        build(ctx: PluginBuildContext): void;
+    }
+}
+declare module Stormancer {
+    class RpcService {
+        private _currentRequestId;
+        private _scene;
+        private _pendingRequests;
+        constructor(scene: IScene);
+        RpcRaw(route: string, data: Uint8Array, onNext: (packet: Packet<IScenePeer>) => void, onError?: (error: string) => void, onCompleted?: () => void, priority?: PacketPriority): ISubscription;
+        private reserveId();
+        private getPendingRequest(packet);
+        next(packet: Packet<IScenePeer>): void;
+        error(packet: Packet<IScenePeer>): void;
+        complete(packet: Packet<IScenePeer>): void;
     }
 }
 declare function vblen(b: any): any;
@@ -81,14 +117,18 @@ declare module Stormancer {
         private _serializers;
         private _cts;
         private _metadata;
+        private _pluginCtx;
         applicationName: string;
         _logger: ILogger;
+        id: number;
+        serverTransportType: string;
         constructor(config: Configuration);
         private initialize();
         private transportPacketReceived(packet);
         getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene>;
         getScene(token: string): JQueryPromise<IScene>;
         private getSceneImpl(sceneId, ci);
+        private updateMetadata();
         private sendSystemRequest<T, U>(id, parameter);
         private _systemSerializer;
         private ensureTransportStarted(ci);
@@ -98,8 +138,15 @@ declare module Stormancer {
         disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void>;
         disconnect(): void;
         connectToScene(scene: Scene, token: string, localRoutes: Route[]): JQueryPromise<void>;
-        id: number;
-        serverTransportType: string;
+        lastPing: number;
+        private _offset;
+        private _pingInterval;
+        private syncClockIntervalId;
+        private getCurrentTimestamp();
+        private startAsyncClock();
+        private stopAsyncClock();
+        private syncClockImpl();
+        clock(): number;
     }
 }
 declare module Stormancer {
@@ -109,6 +156,7 @@ declare module Stormancer {
         serverEndpoint: string;
         account: string;
         application: string;
+        plugins: IClientPlugin[];
         getApiEndpoint(): string;
         static forAccount(accountId: string, applicationName: string): Configuration;
         metadata: Map;
@@ -128,11 +176,13 @@ declare module Stormancer {
         id: number;
         connectionDate: Date;
         metadata: Map;
+        registerComponent<T>(componentName: string, component: T): void;
+        getComponent<T>(componenentName: string): T;
         account: string;
         application: string;
         state: ConnectionState;
         close(): void;
-        sendSystem(msgId: number, data: Uint8Array): void;
+        sendSystem(msgId: number, data: Uint8Array, priority?: PacketPriority): void;
         sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
         connectionClosed: ((reason: string) => void)[];
         setApplication(account: string, application: string): void;
@@ -175,12 +225,17 @@ declare module Stormancer {
         connect(): JQueryPromise<void>;
         packetReceived: ((packet: Packet<IConnection>) => void)[];
         host(): IScenePeer;
+        registerComponent<T>(componentName: string, factory: () => T): void;
+        getComponent<T>(componentName: any): T;
+        getRemoteRoutes(): Route[];
     }
 }
 declare module Stormancer {
     interface IScenePeer {
         send(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
         id(): number;
+        getComponent<T>(componentName: string): T;
+        serializer: ISerializer;
     }
 }
 declare module Stormancer {
@@ -245,6 +300,8 @@ declare module Stormancer {
         disconnect(): void;
         id: number;
         serverTransportType: string;
+        clock(): number;
+        lastPing: number;
     }
 }
 declare module Stormancer {
@@ -304,14 +361,6 @@ declare module Stormancer {
     }
 }
 declare module Stormancer {
-    interface IRequest {
-        lastRefresh: Date;
-        id: number;
-        observer: IObserver<Packet<IConnection>>;
-        deferred: JQueryDeferred<void>;
-    }
-}
-declare module Stormancer {
     interface ITransport {
         start(type: string, handler: IConnectionManager, token: Cancellation.token): JQueryPromise<void>;
         isRunning: boolean;
@@ -325,14 +374,20 @@ declare module Stormancer {
 }
 declare module Stormancer {
     class MessageIDTypes {
-        static ID_CONNECT_TO_SCENE: number;
-        static ID_DISCONNECT_FROM_SCENE: number;
-        static ID_GET_SCENE_INFOS: number;
+        static ID_SYSTEM_REQUEST: number;
         static ID_REQUEST_RESPONSE_MSG: number;
         static ID_REQUEST_RESPONSE_COMPLETE: number;
         static ID_REQUEST_RESPONSE_ERROR: number;
         static ID_CONNECTION_RESULT: number;
         static ID_SCENES: number;
+    }
+    class SystemRequestIDTypes {
+        static ID_GET_SCENE_INFOS: number;
+        static ID_CONNECT_TO_SCENE: number;
+        static ID_SET_METADATA: number;
+        static ID_SCENE_READY: number;
+        static ID_PING: number;
+        static ID_DISCONNECT_FROM_SCENE: number;
     }
 }
 declare module Stormancer {
@@ -358,14 +413,15 @@ declare module Stormancer {
         registerProcessor(config: PacketProcessorConfig): void;
         addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => JQueryPromise<void>): void;
         private reserveRequestSlot(observer);
-        sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array): JQueryPromise<Packet<IConnection>>;
+        sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority?: PacketPriority): JQueryPromise<Packet<IConnection>>;
     }
 }
 declare module Stormancer {
     class SceneDispatcher implements IPacketProcessor {
         private _scenes;
+        private _buffers;
         registerProcessor(config: PacketProcessorConfig): void;
-        private handler(sceneHandler, packet);
+        private handler(sceneHandle, packet);
         addScene(scene: Scene): void;
         removeScene(sceneHandle: number): void;
     }
@@ -385,6 +441,7 @@ declare module Stormancer {
         getHostMetadata(key: string): string;
         addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
         registerRoute<T>(route: string, handler: (message: T) => void): void;
+        registerRouteRaw(route: string, handler: (dataView: DataView) => void): void;
         private onMessageImpl(route, handler);
         sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
         send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
@@ -395,6 +452,10 @@ declare module Stormancer {
         private _handlers;
         packetReceived: ((packet: Packet<IConnection>) => void)[];
         host(): IScenePeer;
+        private _registeredComponents;
+        registerComponent<T>(componentName: string, factory: () => T): void;
+        getComponent<T>(componentName: any): T;
+        getRemoteRoutes(): Route[];
     }
 }
 declare module Stormancer {
@@ -412,6 +473,7 @@ declare module Stormancer {
         Expiration: Date;
         UserData: Uint8Array;
         ContentType: string;
+        Version: number;
     }
 }
 declare module Stormancer {
@@ -420,9 +482,11 @@ declare module Stormancer {
         private _sceneHandle;
         private _routeMapping;
         private _scene;
+        serializer: ISerializer;
         id(): number;
         constructor(connection: IConnection, sceneHandle: number, routeMapping: IMap<Route>, scene: IScene);
         send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
+        getComponent<T>(componentName: string): T;
     }
 }
 declare module Stormancer {
@@ -432,7 +496,7 @@ declare module Stormancer {
     }
 }
 interface JQueryStatic {
-    stormancer: (configuration: Stormancer.Configuration) => Stormancer.IClient;
+    stormancer: (configuration: Stormancer.Configuration) => Stormancer.Client;
 }
 declare module Stormancer {
     interface ConnectToSceneMsg {
@@ -470,12 +534,15 @@ declare module Stormancer {
         application: string;
         state: ConnectionState;
         close(): void;
-        sendSystem(msgId: number, data: Uint8Array): void;
+        sendSystem(msgId: number, data: Uint8Array, priority?: PacketPriority): void;
         sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
         connectionClosed: ((reason: string) => void)[];
         setApplication(account: string, application: string): void;
         serializerChosen: boolean;
         serializer: ISerializer;
+        private _registeredComponents;
+        registerComponent<T>(componentName: string, component: T): void;
+        getComponent<T>(componentName: any): T;
     }
 }
 declare module Stormancer {

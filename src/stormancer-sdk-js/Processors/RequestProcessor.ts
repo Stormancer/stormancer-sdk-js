@@ -133,7 +133,7 @@ module Stormancer {
             throw new Error("Unable to create new request: Too many pending requests.");
         }
 
-        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array): JQueryPromise<Packet<IConnection>> {
+        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): JQueryPromise<Packet<IConnection>> {
             var deferred = $.Deferred<Packet<IConnection>>();
 
             var request = this.reserveRequestSlot({
@@ -149,7 +149,7 @@ module Stormancer {
             dataToSend.set([msgId],0);
             dataToSend.set(new Uint8Array(idArray.buffer), 1);
             dataToSend.set(data, 3);
-            peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend);
+            peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend, priority);
 
             return deferred.promise();
         }

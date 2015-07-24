@@ -34,7 +34,7 @@ module Stormancer {
         close(): void;
 
         // Sends a system message to the peer.
-        sendSystem(msgId: number, data: Uint8Array): void;
+        sendSystem(msgId: number, data: Uint8Array, priority?: PacketPriority): void;
  
         // Sends a packet to the target remote scene.
         sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;

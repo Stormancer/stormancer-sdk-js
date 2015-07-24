@@ -21,7 +21,7 @@ module Stormancer {
         // The name of the transport used for connecting to the server.
         serverTransportType: string;
 
-        //// Returns statistics about the connection to the server.
-        //getServerConnectionStatistics(): IConnectionStatistics;
+        clock(): number;
+        lastPing: number;
     }
 }

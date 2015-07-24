@@ -27,8 +27,6 @@ module Stormancer {
         private _accountId: string;
         private _applicationName: string;
 
-        //private _logger: ILogger = Logger.instance;
-
         private _transport: ITransport;
         private _dispatcher: IPacketDispatcher;
 
@@ -51,7 +49,9 @@ module Stormancer {
 
         public _logger: ILogger;
 
+        public id: number;
 
+        public serverTransportType: string;
 
         constructor(config: Configuration) {
             this._accountId = config.account;
@@ -78,7 +78,7 @@ module Stormancer {
             this._metadata["protocol"] = "2";
 
 
-            for (var i = 0; i < config.plugins.length;i++) {
+            for (var i = 0; i < config.plugins.length; i++) {
                 config.plugins[i].build(this._pluginCtx);
             }
 
@@ -116,6 +116,9 @@ module Stormancer {
         private getSceneImpl(sceneId: string, ci: SceneEndpoint): JQueryPromise<IScene> {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
+                if (ci.tokenData.Version > 0) {
+                    this.startAsyncClock();
+                }
                 var parameter: SceneInfosRequestDto = { Metadata: self._serverConnection.metadata, Token: ci.token };
                 return self.sendSystemRequest<SceneInfosRequestDto, SceneInfosDto>(SystemRequestIDTypes.ID_GET_SCENE_INFOS, parameter);
             }).then((result: SceneInfosDto) => {
@@ -138,9 +141,10 @@ module Stormancer {
             });
         }
 
-        private updateMetadata(): JQueryPromise<void> {
-            return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata)).then(packet=> { });
+        private updateMetadata(): JQueryPromise<Packet<IConnection>> {
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata));
         }
+
         private sendSystemRequest<T, U>(id: number, parameter: T): JQueryPromise<U> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
                 .then(packet => this._systemSerializer.deserialize<U>(packet.data));
@@ -180,10 +184,10 @@ module Stormancer {
         public disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
-                    this._scenesDispatcher.removeScene(sceneHandle);
-                    for (var i = 0; i< this._pluginCtx.sceneConnected.length; i++) {
-                        this._pluginCtx.sceneConnected[i](scene);
-                    }
+                this._scenesDispatcher.removeScene(sceneHandle);
+                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                    this._pluginCtx.sceneConnected[i](scene);
+                }
             });
         }
 
@@ -219,8 +223,43 @@ module Stormancer {
             });
         }
 
-        public id: number;
-
-        public serverTransportType: string;
+        public lastPing: number;
+        private _offset: number;
+        private _pingInterval = 5000;
+        private syncClockIntervalId: number;
+        private getCurrentTimestamp(): number {
+            return (window.performance && window.performance.now && window.performance.now()) || Date.now();
+        }
+        private startAsyncClock(): void {
+            this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+        }
+        private stopAsyncClock(): void {
+            clearInterval(this.syncClockIntervalId);
+            this.syncClockIntervalId = null;
+        }
+        private syncClockImpl(): void {
+            try {
+                var timeStart = Math.floor(this.getCurrentTimestamp());
+                var data = new Uint32Array(2);
+                data[0] = timeStart;
+                data[1] = Math.floor(timeStart / Math.pow(2, 32));
+                this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).done(packet => {
+                    var timeEnd = this.getCurrentTimestamp();
+                    var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
+                    var timeRef = 0;
+                    for (var i = 0; i < 8; i++) {
+                         timeRef += (data[i] * Math.pow(2, (i*8)));
+                    }
+                    this.lastPing = timeEnd - timeStart;
+                    this._offset = timeRef - (this.lastPing / 2) - timeStart;
+                });
+            }
+            catch (e) {
+                console.error("ping: Failed to ping server.", e);
+            }
+        }
+        public clock(): number {
+            return Math.floor(this.getCurrentTimestamp()) + this._offset;
+        }
     }
 }

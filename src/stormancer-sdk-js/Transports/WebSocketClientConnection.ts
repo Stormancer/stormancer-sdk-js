@@ -33,7 +33,7 @@ module Stormancer {
         }
 
         // Sends a system message to the peer.
-        public sendSystem(msgId: number, data: Uint8Array): void {
+        public sendSystem(msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): void {
             var bytes = new Uint8Array(data.length + 1);
             bytes[0] = msgId;
             bytes.set(data, 1);

@@ -11,7 +11,7 @@ module Stormancer {
 }
 
 interface JQueryStatic {
-    stormancer: (configuration: Stormancer.Configuration) => Stormancer.IClient;
+    stormancer: (configuration: Stormancer.Configuration) => Stormancer.Client;
 }
 
 (function ($, window) {

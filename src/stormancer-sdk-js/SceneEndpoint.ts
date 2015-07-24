@@ -22,5 +22,7 @@ module Stormancer {
         public UserData: Uint8Array;
 
         public ContentType: string;
+
+        public Version: number;
     }
 }
