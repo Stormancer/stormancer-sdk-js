@@ -10,7 +10,7 @@ module Stormancer {
             this.plugins.push(new RpcClientPlugin());
         }
 
-        static apiEndpoint: string = "http://api1.stormancer.com/";
+        static apiEndpoint: string = "https://api.stormancer.com/";
 
         
         
