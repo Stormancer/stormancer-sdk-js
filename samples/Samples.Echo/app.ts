@@ -4,10 +4,9 @@
     receivedSpan: HTMLElement;
     timerToken: number;
     scene;
+    connected: boolean = false;
 
     constructor(element: HTMLElement) {
-
-
         this.element = element;
 
         this.element.innerHTML += "The time is: ";
@@ -26,50 +25,73 @@
     }
 
     start() {
+        console.log("start!");
+
         ///Local debug test configuration
         //var sceneName = "test-scene";
         //var config = Stormancer.Configuration.forAccount("test", "echo");
         //config.serverEndpoint = "http://localhost:8081";
 
         //Online test configuration
-        var sceneName = "scene1";
-        var config = Stormancer.Configuration.forAccount("d9590543-56c3-c94a-f7bf-c394b26deb15", "newtest");
+        var sceneName = "matchmaker";
+        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
         
+        $("#sendButton").click(function (e) {
+            var message = (<any>document.querySelector("#message")).value;
+            console.log("click", message)
+            this.sendMessage("echo.in", message);
+        }.bind(this));
 
         var client = $.stormancer(config);
 
-        var scenePromise = client.getPublicScene(sceneName, "moi");
-        var timeAtConnexion = null;
+        console.log("I want my matchmaker!");
+        client.getPublicScene(sceneName, "moi")
+            .then(matchmaker => {
+            console.log("I have my matchmaker!");
+            return matchmaker.connect().then(() => {
+                console.log("connected to matchmaker!");
+                matchmaker.getComponent<Stormancer.RpcService>("rpcService").RpcRaw("matchmaking.requestScene", new Uint8Array(0), packet => {
+                    var response = msgpack.unpack(packet.data);
 
-        var deferred = $.Deferred<string>();
-        scenePromise.then(scene => {
-            this.scene = scene;
-            scene.registerRoute<string>("echo.out", message => {
-                console.log("Message received :", message);
-                this.receivedSpan.innerHTML = message;
-            });
+                    var scenePromise = client.getScene(response.ConnectionToken);
 
-            return scene.connect().then(() => {
-                timeAtConnexion = performance.now();
-                this.timerToken = setInterval(() => {
-                    var localDateString = new Date().toLocaleString();
-                    this.sentSpan.innerHTML = localDateString;
-                    this.sendMessage("echo.in", localDateString);
-                    console.log("server clock", client.clock());
-                }, 2000);
+                    var timeAtConnexion = null;
+
+                    var deferred = $.Deferred<string>();
+                    scenePromise.then(scene => {
+                        this.scene = scene;
+                        scene.registerRoute<string>("echo.out", message => {
+                            console.log("Message received :", message);
+                            this.receivedSpan.innerHTML = message;
+                        });
+
+                        return scene.connect().then(() => {
+                            this.connected = true;
+                            //this.timerToken = setInterval(() => {
+                            //    var localDateString = new Date().toLocaleString();
+                            //    this.sentSpan.innerHTML = localDateString;
+                            //    this.sendMessage("echo.in", localDateString);
+                            //    console.log("server clock", client.clock());
+                            //}, 2000);
+                        });
+                    });
+                });
             });
         });
+      
     }
 
     sendMessage(routeName, message) {
-        this.scene.send(routeName, message);
-        console.log("Message sent on " + routeName + ":" + message);
+        if (this.scene && this.connected) {
+            this.scene.send(routeName, message);
+            console.log("Message sent on " + routeName + ":" + message);
+        }
     }
 
     messageReceived(packet: Stormancer.Packet<Stormancer.IScenePeer>) {
         console.log("Packet received :", packet);
 
-        this.receivedSpan.innerHTML = msgpack.unpack(packet.data);
+        this.receivedSpan.innerHTML += "<br>"+msgpack.unpack(packet.data);
     }
 
     stop() {

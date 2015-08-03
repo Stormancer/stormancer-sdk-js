@@ -231,7 +231,9 @@ module Stormancer {
             return (window.performance && window.performance.now && window.performance.now()) || Date.now();
         }
         private startAsyncClock(): void {
-            this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+            if (!this.syncClockIntervalId) {
+                this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+            }
         }
         private stopAsyncClock(): void {
             clearInterval(this.syncClockIntervalId);
@@ -248,11 +250,11 @@ module Stormancer {
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
-                         timeRef += (data[i] * Math.pow(2, (i*8)));
+                        timeRef += (data[i] * Math.pow(2,(i * 8)));
                     }
                     this.lastPing = timeEnd - timeStart;
                     this._offset = timeRef - (this.lastPing / 2) - timeStart;
-                });
+                }).fail(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);

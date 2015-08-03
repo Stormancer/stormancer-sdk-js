@@ -12,8 +12,6 @@ module Stormancer {
 
         static apiEndpoint: string = "https://api.stormancer.com/";
 
-        
-        
         // A string containing the target server endpoint.
         // This value overrides the *IsLocalDev* property.
         public serverEndpoint: string;
@@ -28,10 +26,8 @@ module Stormancer {
 
         getApiEndpoint(): string {
             return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
-
         }
 
-        
         // Creates a ClientConfiguration object targeting the public online platform.
         static forAccount(accountId: string, applicationName: string): Configuration {
             var config = new Configuration();
