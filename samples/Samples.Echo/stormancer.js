@@ -1782,4 +1782,3 @@ var Stormancer;
     })();
     Stormancer.WebSocketTransport = WebSocketTransport;
 })(Stormancer || (Stormancer = {}));
-//# sourceMappingURL=stormancer.js.map

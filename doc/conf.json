@@ -1,0 +1,32 @@
+{
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc"]
+    },
+    "source": {
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "plugins": [
+		"plugins/markdown"
+	],
+    "templates": {
+        "cleverLinks": false,
+        "monospaceLinks": false
+    },
+	"source":
+	{
+		"include": [ "src/stormancer-sdk-js/bin/Debug" ],
+		"includePattern": ".+\\.js(doc)?$"
+	},
+	"markdown"  : {
+		"parser"   : "gfm",
+		"hardwrap" : true
+	},
+	"opts":
+	{
+		"encoding": "utf8",
+		"destination": "doc",
+		"recurse"	:"true"
+	}
+}
