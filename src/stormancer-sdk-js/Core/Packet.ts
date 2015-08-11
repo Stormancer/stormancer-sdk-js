@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class Packet<T> {
         constructor(source: T, data: Uint8Array, metadata?: IMap<any>) {

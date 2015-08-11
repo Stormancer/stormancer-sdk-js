@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export interface RouteDto {
         Name: string;

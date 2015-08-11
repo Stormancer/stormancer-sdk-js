@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class WebSocketTransport implements ITransport {
         public name: string = "websocket";

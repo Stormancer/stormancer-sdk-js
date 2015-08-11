@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class Route {
         public handlers: ((packet: Packet<IConnection>) => void)[] = [];

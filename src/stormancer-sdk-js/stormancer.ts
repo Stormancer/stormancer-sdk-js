@@ -1,6 +1,8 @@
 ﻿/// <reference path="Scripts/msgPack.ts" />
 
-// Module
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class jQueryWrapper {
         static $: JQueryStatic;

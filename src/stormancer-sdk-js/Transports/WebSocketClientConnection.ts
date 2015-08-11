@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class WebSocketConnection implements IConnection {
         private _socket: WebSocket;

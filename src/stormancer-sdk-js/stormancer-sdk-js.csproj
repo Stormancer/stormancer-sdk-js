@@ -30,14 +30,14 @@
     <TypeScriptCompile Include="ApiClient.ts" />
     <TypeScriptCompile Include="CancellationTokenSource.ts" />
     <TypeScriptCompile Include="Client.ts" />
-    <TypeScriptCompile Include="Configuration\ClientConfiguration.ts" />
+    <TypeScriptCompile Include="Configuration.ts" />
     <TypeScriptCompile Include="Core\IConnection.ts" />
     <TypeScriptCompile Include="Core\IConnectionStatistics.ts" />
     <TypeScriptCompile Include="Core\ILogger.ts" />
     <TypeScriptCompile Include="Core\IScene.ts" />
     <TypeScriptCompile Include="Core\IScenePeer.ts" />
     <TypeScriptCompile Include="Core\ISerializer.ts" />
-    <TypeScriptCompile Include="Core\Models\RouteDto.ts" />
+    <TypeScriptCompile Include="SystemMessages\RouteDto.ts" />
     <TypeScriptCompile Include="Core\Packet.ts" />
     <TypeScriptCompile Include="Core\PacketPriority.ts" />
     <TypeScriptCompile Include="Core\PacketReliability.ts" />
@@ -47,7 +47,7 @@
     <TypeScriptCompile Include="Infrastructure\DefaultPacketDispatcher.ts" />
     <TypeScriptCompile Include="Infrastructure\IPacketDispatcher.ts" />
     <TypeScriptCompile Include="Infrastructure\ITokenHandler.ts" />
-    <TypeScriptCompile Include="Infrastructure\Modules\IModule.ts" />
+    <TypeScriptCompile Include="Infrastructure\IModule.ts" />
     <TypeScriptCompile Include="Infrastructure\MsgPackSerializer.ts" />
     <TypeScriptCompile Include="IPacketProcessor.ts" />
     <TypeScriptCompile Include="ITransport.ts" />

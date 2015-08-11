@@ -1,4 +1,7 @@
-﻿module Stormancer {
+﻿/**
+@namespace Stormancer
+*/
+module Stormancer {
     export class PluginBuildContext {
         /// <summary>
         /// Event fired when a scene object is created.

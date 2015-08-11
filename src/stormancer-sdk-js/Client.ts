@@ -1,23 +1,33 @@
-///
-
 module Stormancer {
+
+    /**
+    ConnectionHandler
+    */
     export class ConnectionHandler implements IConnectionManager {
         private _current = 0;
 
-        // Generates an unique connection id for this node.
+        /**
+        Generates an unique connection id for this node.
+        */
         public generateNewConnectionId(): number {
             return this._current++;
         }
 
-        // Adds a connection to the manager
+        /**
+        Adds a connection to the manager
+        */
         public newConnection(connection: IConnection): void { }
 
-        // Returns a connection by id.
+        /**
+        Returns a connection by id
+        */
         public getConnection(id: number): IConnection {
             throw new Error("Not implemented.");
         }
 
-        // Closes the target connection.
+        /**
+        Closes the target connection
+        */
         public closeConnection(connection: IConnection, reason: string): void { }
     }
 
@@ -39,7 +49,7 @@ module Stormancer {
 
         private _serializers: IMap<ISerializer> = { "msgpack/map": new MsgPackSerializer() };
 
-        private _cts: Cancellation.tokenSource;
+        private _cts: Cancellation.TokenSource;
 
         private _metadata: Map;
 
@@ -53,6 +63,13 @@ module Stormancer {
 
         public serverTransportType: string;
 
+        /**
+        Creates a client
+        @class Client
+        @classdesc A Stormancer client for connecting to Stormancer server applications.
+        @memberof Stormancer
+        @param {Stormancer.Configuration} config The configuration object for constructing the Client.
+        */
         constructor(config: Configuration) {
             this._accountId = config.account;
             this._applicationName = config.application;
@@ -76,7 +93,6 @@ module Stormancer {
             this._metadata["version"] = "1.0.0a";
             this._metadata["platform"] = "JS";
             this._metadata["protocol"] = "2";
-
 
             for (var i = 0; i < config.plugins.length; i++) {
                 config.plugins[i].build(this._pluginCtx);
@@ -103,6 +119,13 @@ module Stormancer {
             this._dispatcher.dispatchPacket(packet);
         }
 
+        /**
+        Retrieve a scene object from its ID.
+        @method Stormancer.Client#getPublicScene
+        @param {string} sceneId The scene ID
+        @param {object} userData User data to send
+        @return {object} Scene promise
+        */
         public getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
                 .then(ci => this.getSceneImpl(sceneId, ci));
@@ -168,7 +191,7 @@ module Stormancer {
         }
 
         private startTransport(): JQueryPromise<void> {
-            this._cts = new Cancellation.tokenSource();
+            this._cts = new Cancellation.TokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
         }
 
@@ -260,6 +283,12 @@ module Stormancer {
                 console.error("ping: Failed to ping server.", e);
             }
         }
+        
+        /**
+        Get the server clock. Represented by the count of milliseconds since the application started.
+        @method Stormancer.Client#clock
+        @return {number} The number of milliseconds since the application started.
+        */
         public clock(): number {
             return Math.floor(this.getCurrentTimestamp()) + this._offset;
         }

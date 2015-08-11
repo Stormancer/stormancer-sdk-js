@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Client.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Client.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    /**
+    ConnectionHandler
+    */
+    var ConnectionHandler = (function () {
+        function ConnectionHandler() {
+            this._current = 0;
+        }
+        /**
+        Generates an unique connection id for this node.
+        */
+        ConnectionHandler.prototype.generateNewConnectionId = function () {
+            return this._current++;
+        };
+        /**
+        Adds a connection to the manager
+        */
+        ConnectionHandler.prototype.newConnection = function (connection) {
+        };
+        /**
+        Returns a connection by id
+        */
+        ConnectionHandler.prototype.getConnection = function (id) {
+            throw new Error("Not implemented.");
+        };
+        /**
+        Closes the target connection
+        */
+        ConnectionHandler.prototype.closeConnection = function (connection, reason) {
+        };
+        return ConnectionHandler;
+    })();
+    Stormancer.ConnectionHandler = ConnectionHandler;
+    var Client = (function () {
+        /**
+        Creates a client
+        @class Client
+        @classdesc A Stormancer client for connecting to Stormancer server applications.
+        @memberof Stormancer
+        @param {Stormancer.Configuration} config The configuration object for constructing the Client.
+        */
+        function Client(config) {
+            this._tokenHandler = new Stormancer.TokenHandler();
+            this._serializers = { "msgpack/map": new Stormancer.MsgPackSerializer() };
+            this._pluginCtx = new Stormancer.PluginBuildContext();
+            this._systemSerializer = new Stormancer.MsgPackSerializer();
+            this._pingInterval = 5000;
+            this._accountId = config.account;
+            this._applicationName = config.application;
+            this._apiClient = new Stormancer.ApiClient(config, this._tokenHandler);
+            this._transport = config.transport;
+            this._dispatcher = config.dispatcher;
+            this._requestProcessor = new Stormancer.RequestProcessor(this._logger, []);
+            this._scenesDispatcher = new Stormancer.SceneDispatcher();
+            this._dispatcher.addProcessor(this._requestProcessor);
+            this._dispatcher.addProcessor(this._scenesDispatcher);
+            this._metadata = config.metadata;
+            for (var i = 0; i &lt; config.serializers.length; i++) {
+                var serializer = config.serializers[i];
+                this._serializers[serializer.name] = serializer;
+            }
+            this._metadata["serializers"] = Stormancer.Helpers.mapKeys(this._serializers).join(',');
+            this._metadata["transport"] = this._transport.name;
+            this._metadata["version"] = "1.0.0a";
+            this._metadata["platform"] = "JS";
+            this._metadata["protocol"] = "2";
+            for (var i = 0; i &lt; config.plugins.length; i++) {
+                config.plugins[i].build(this._pluginCtx);
+            }
+            for (var i = 0; i &lt; this._pluginCtx.clientCreated.length; i++) {
+                this._pluginCtx.clientCreated[i](this);
+            }
+            this.initialize();
+        }
+        Client.prototype.initialize = function () {
+            var _this = this;
+            if (!this._initialized) {
+                this._initialized = true;
+                this._transport.packetReceived.push(function (packet) { return _this.transportPacketReceived(packet); });
+            }
+        };
+        Client.prototype.transportPacketReceived = function (packet) {
+            for (var i = 0; i &lt; this._pluginCtx.packetReceived.length; i++) {
+                this._pluginCtx.packetReceived[i](packet);
+            }
+            this._dispatcher.dispatchPacket(packet);
+        };
+        /**
+        Retrieve a scene object from its ID.
+        @method Stormancer.Client#getPublicScene
+        @param {string} sceneId The scene ID
+        @param {object} userData User data to send
+        @return {object} Scene promise
+        */
+        Client.prototype.getPublicScene = function (sceneId, userData) {
+            var _this = this;
+            return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData).then(function (ci) { return _this.getSceneImpl(sceneId, ci); });
+        };
+        Client.prototype.getScene = function (token) {
+            var ci = this._tokenHandler.decodeToken(token);
+            return this.getSceneImpl(ci.tokenData.SceneId, ci);
+        };
+        Client.prototype.getSceneImpl = function (sceneId, ci) {
+            var _this = this;
+            var self = this;
+            return this.ensureTransportStarted(ci).then(function () {
+                if (ci.tokenData.Version > 0) {
+                    _this.startAsyncClock();
+                }
+                var parameter = { Metadata: self._serverConnection.metadata, Token: ci.token };
+                return self.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_GET_SCENE_INFOS, parameter);
+            }).then(function (result) {
+                if (!self._serverConnection.serializerChosen) {
+                    if (!result.SelectedSerializer) {
+                        throw new Error("No serializer selected.");
+                    }
+                    self._serverConnection.serializer = self._serializers[result.SelectedSerializer];
+                    self._serverConnection.metadata["serializer"] = result.SelectedSerializer;
+                    self._serverConnection.serializerChosen = true;
+                }
+                return self.updateMetadata().then(function (_) { return result; });
+            }).then(function (r) {
+                var scene = new Stormancer.Scene(self._serverConnection, self, sceneId, ci.token, r);
+                for (var i = 0; i &lt; _this._pluginCtx.sceneCreated.length; i++) {
+                    _this._pluginCtx.sceneCreated[i](scene);
+                }
+                return scene;
+            });
+        };
+        Client.prototype.updateMetadata = function () {
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata));
+        };
+        Client.prototype.sendSystemRequest = function (id, parameter) {
+            var _this = this;
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter)).then(function (packet) { return _this._systemSerializer.deserialize(packet.data); });
+        };
+        Client.prototype.ensureTransportStarted = function (ci) {
+            var self = this;
+            return Stormancer.Helpers.promiseIf(self._serverConnection == null, function () {
+                return Stormancer.Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self).then(function () {
+                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name]).then(function (c) {
+                        self.registerConnection(c);
+                        return self.updateMetadata();
+                    });
+                });
+            }, self);
+        };
+        Client.prototype.startTransport = function () {
+            this._cts = new Cancellation.TokenSource();
+            return this._transport.start("client", new ConnectionHandler(), this._cts.token);
+        };
+        Client.prototype.registerConnection = function (connection) {
+            this._serverConnection = connection;
+            for (var key in this._metadata) {
+                this._serverConnection.metadata[key] = this._metadata[key];
+            }
+        };
+        Client.prototype.disconnectScene = function (scene, sceneHandle) {
+            var _this = this;
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () {
+                _this._scenesDispatcher.removeScene(sceneHandle);
+                for (var i = 0; i &lt; _this._pluginCtx.sceneConnected.length; i++) {
+                    _this._pluginCtx.sceneConnected[i](scene);
+                }
+            });
+        };
+        Client.prototype.disconnect = function () {
+            if (this._serverConnection) {
+                this._serverConnection.close();
+            }
+        };
+        Client.prototype.connectToScene = function (scene, token, localRoutes) {
+            var _this = this;
+            var parameter = {
+                Token: token,
+                Routes: [],
+                ConnectionMetadata: this._serverConnection.metadata
+            };
+            for (var i = 0; i &lt; localRoutes.length; i++) {
+                var r = localRoutes[i];
+                parameter.Routes.push({
+                    Handle: r.index,
+                    Metadata: r.metadata,
+                    Name: r.name
+                });
+            }
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
+                scene.completeConnectionInitialization(result);
+                _this._scenesDispatcher.addScene(scene);
+                for (var i = 0; i &lt; _this._pluginCtx.sceneConnected.length; i++) {
+                    _this._pluginCtx.sceneConnected[i](scene);
+                }
+            });
+        };
+        Client.prototype.getCurrentTimestamp = function () {
+            return (window.performance &amp;&amp; window.performance.now &amp;&amp; window.performance.now()) || Date.now();
+        };
+        Client.prototype.startAsyncClock = function () {
+            if (!this.syncClockIntervalId) {
+                this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+            }
+        };
+        Client.prototype.stopAsyncClock = function () {
+            clearInterval(this.syncClockIntervalId);
+            this.syncClockIntervalId = null;
+        };
+        Client.prototype.syncClockImpl = function () {
+            var _this = this;
+            try {
+                var timeStart = Math.floor(this.getCurrentTimestamp());
+                var data = new Uint32Array(2);
+                data[0] = timeStart;
+                data[1] = Math.floor(timeStart / Math.pow(2, 32));
+                this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), Stormancer.PacketPriority.IMMEDIATE_PRIORITY).done(function (packet) {
+                    var timeEnd = _this.getCurrentTimestamp();
+                    var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
+                    var timeRef = 0;
+                    for (var i = 0; i &lt; 8; i++) {
+                        timeRef += (data[i] * Math.pow(2, (i * 8)));
+                    }
+                    _this.lastPing = timeEnd - timeStart;
+                    _this._offset = timeRef - (_this.lastPing / 2) - timeStart;
+                }).fail(function (e) { return console.error("ping: Failed to ping server.", e); });
+            }
+            catch (e) {
+                console.error("ping: Failed to ping server.", e);
+            }
+        };
+        /**
+        Get the server clock. Represented by the count of milliseconds since the application started.
+        @method Stormancer.Client#clock
+        @return {number} The number of milliseconds since the application started.
+        */
+        Client.prototype.clock = function () {
+            return Math.floor(this.getCurrentTimestamp()) + this._offset;
+        };
+        return Client;
+    })();
+    Stormancer.Client = Client;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=Client.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Tue Aug 11 2015 18:34:43 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

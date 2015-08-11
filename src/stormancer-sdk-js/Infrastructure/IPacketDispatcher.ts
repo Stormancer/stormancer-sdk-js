@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export interface IPacketDispatcher {
         dispatchPacket(packet: Packet<IConnection>): void;

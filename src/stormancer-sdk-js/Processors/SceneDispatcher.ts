@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class SceneDispatcher implements IPacketProcessor {
         private _scenes: Scene[] = [];

@@ -17,6 +17,11 @@ var Greeter = (function () {
     Greeter.prototype.start = function () {
         var _this = this;
         console.log("start!");
+        ///Local debug test configuration
+        //var sceneName = "test-scene";
+        //var config = Stormancer.Configuration.forAccount("test", "echo");
+        //config.serverEndpoint = "http://localhost:8081";
+        //Online test configuration
         var sceneName = "matchmaker";
         var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
         $("#sendButton").click(function (e) {
@@ -43,6 +48,12 @@ var Greeter = (function () {
                         });
                         return scene.connect().then(function () {
                             _this.connected = true;
+                            //this.timerToken = setInterval(() => {
+                            //    var localDateString = new Date().toLocaleString();
+                            //    this.sentSpan.innerHTML = localDateString;
+                            //    this.sendMessage("echo.in", localDateString);
+                            //    console.log("server clock", client.clock());
+                            //}, 2000);
                         });
                     });
                 });
@@ -69,3 +80,4 @@ window.onload = function () {
     var greeter = new Greeter(el);
     greeter.start();
 };
+//# sourceMappingURL=app.js.map

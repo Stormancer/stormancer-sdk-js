@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export class DefaultPacketDispatcher implements IPacketDispatcher {
         private _handlers: IMap<(packet: Packet<IConnection>) => boolean> = {};

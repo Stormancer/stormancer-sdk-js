@@ -1,3 +1,6 @@
+/**
+@namespace Stormancer
+*/
 module Stormancer {
     export interface ConnectionResult {
         SceneHandle: number;
