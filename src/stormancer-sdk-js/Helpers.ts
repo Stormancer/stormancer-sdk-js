@@ -38,13 +38,13 @@ module Stormancer {
             return result;
         }
 
-        static promiseFromResult<T>(result: T): JQueryPromise<T> {
+        static promiseFromResult<T>(result: T): IPromise<T> {
             var deferred = jQuery.Deferred();
             deferred.resolve(result);
             return deferred.promise();
         }
 
-        static promiseIf(condition: boolean, action: () => JQueryPromise<void>, context?: any): JQueryPromise<void> {
+        static promiseIf(condition: boolean, action: () => IPromise<void>, context?: any): IPromise<void> {
             if (condition) {
                 if (context) {
                     return action.call(context);

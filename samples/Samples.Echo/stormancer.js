@@ -727,9 +727,8 @@ var Stormancer;
         }
         ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
             var _this = this;
-            var serializer = new Stormancer.MsgPackSerializer();
             var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
-            return $.ajax({
+            return $http(url).post({}, {
                 type: "POST",
                 url: url,
                 headers: {
@@ -739,9 +738,7 @@ var Stormancer;
                 dataType: "json",
                 contentType: "application/json",
                 data: JSON.stringify(userData)
-            }).then(function (result) {
-                return _this._tokenHandler.decodeToken(result);
-            });
+            }).then(function (result) { return _this._tokenHandler.decodeToken(result); }).catch(function (error) { return console.log("error", error); });
         };
         return ApiClient;
     })();

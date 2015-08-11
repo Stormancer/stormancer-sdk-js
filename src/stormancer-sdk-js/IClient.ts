@@ -7,10 +7,10 @@ module Stormancer {
         _logger: ILogger;
 
         // Returns a public scene (accessible without authentication)
-        getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene>;
+        getPublicScene<T>(sceneId: string, userData: T): Promise<IScene>;
 
         // Returns a private scene (requires a token obtained from strong authentication with the Stormancer API.
-        getScene(token: string): JQueryPromise<IScene>;
+        getScene(token: string): Promise<IScene>;
 
         // Disconnects the client.
         disconnect(): void;

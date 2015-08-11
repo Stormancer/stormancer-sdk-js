@@ -97,7 +97,7 @@ module Stormancer {
         }
 
         // Connects the scene to the server.
-        public connect(): JQueryPromise<void> {
+        public connect(): Promise<void> {
             return this._client.connectToScene(this, this._token, Helpers.mapValues(this._localRoutesMap))
                 .then(() => {
                 this.connected = true;
@@ -105,7 +105,7 @@ module Stormancer {
         }
 
         // Disconnects the scene.
-        public disconnect(): JQueryPromise<void> {
+        public disconnect(): Promise<void> {
             return this._client.disconnectScene(this, this.handle);
         }
 

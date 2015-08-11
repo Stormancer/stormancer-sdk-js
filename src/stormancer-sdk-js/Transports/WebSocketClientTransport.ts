@@ -21,7 +21,7 @@ module Stormancer {
         public connectionClosed: ((connection: IConnection) => void)[] = [];
         
         // Starts the transport
-        public start(type: string, handler: IConnectionManager, token: Cancellation.token): JQueryPromise<void> {
+        public start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void> {
             this._type = name;
             this._connectionManager = handler;
 
@@ -29,9 +29,7 @@ module Stormancer {
 
             token.onCancelled(this.stop);
 
-            var deferred = $.Deferred<void>();
-            deferred.resolve();
-            return deferred.promise();
+            return Promise.resolve<void>();
         }
 
         private stop() {
@@ -43,7 +41,7 @@ module Stormancer {
         }
         
         // Connects the transport to a remote host.
-        public connect(endpoint: string): JQueryPromise<IConnection> {
+        public connect(endpoint: string): Promise<IConnection> {
             if (!this._socket && !this._connecting) {
                 this._connecting = true;
 
@@ -54,8 +52,12 @@ module Stormancer {
 
                 this._socket = socket;
 
-                var result = $.Deferred<IConnection>();
+                var promise = new Promise<IConnection>(function () { });
+                socket.onclose = args => this.onClose(result, args);
+                socket.onopen = () => this.onOpen(result);
+                return promise;
 
+                var result = $.Deferred<IConnection>();
                 socket.onclose = args => this.onClose(result, args);
                 socket.onopen = () => this.onOpen(result);
                 return result.promise();

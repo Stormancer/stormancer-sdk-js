@@ -2,13 +2,13 @@ module Stormancer {
     // A Stormancer network transport
     export interface ITransport {
         // Starts the transport
-        start(type: string, handler: IConnectionManager, token: Cancellation.token): JQueryPromise<void>;
+        start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
 
         // Gets a boolean indicating if the transport is currently running.
         isRunning: boolean;
 
         // Connects the transport to a remote host.
-        connect(endpoint: string): JQueryPromise<IConnection>;
+        connect(endpoint: string): Promise<IConnection>;
 
         // Fires when the transport recieves new packets.
         packetReceived: ((packet: Packet<IConnection>) => void)[];

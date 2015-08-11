@@ -103,17 +103,17 @@ module Stormancer {
             this._dispatcher.dispatchPacket(packet);
         }
 
-        public getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene> {
+        public getPublicScene(sceneId: string, userData: any): IPromise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
                 .then(ci => this.getSceneImpl(sceneId, ci));
         }
 
-        public getScene(token: string): JQueryPromise<IScene> {
+        public getScene(token: string): IPromise<IScene> {
             var ci = this._tokenHandler.decodeToken(token);
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
         }
 
-        private getSceneImpl(sceneId: string, ci: SceneEndpoint): JQueryPromise<IScene> {
+        private getSceneImpl(sceneId: string, ci: SceneEndpoint): IPromise<IScene> {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
                 if (ci.tokenData.Version > 0) {
@@ -141,18 +141,18 @@ module Stormancer {
             });
         }
 
-        private updateMetadata(): JQueryPromise<Packet<IConnection>> {
+        private updateMetadata(): IPromise<Packet<IConnection>> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata));
         }
 
-        private sendSystemRequest<T, U>(id: number, parameter: T): JQueryPromise<U> {
+        private sendSystemRequest<T, U>(id: number, parameter: T): IPromise<U> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
                 .then(packet => this._systemSerializer.deserialize<U>(packet.data));
         }
 
         private _systemSerializer: ISerializer = new MsgPackSerializer();
 
-        private ensureTransportStarted(ci: SceneEndpoint): JQueryPromise<void> {
+        private ensureTransportStarted(ci: SceneEndpoint): IPromise<void> {
             var self = this;
             return Helpers.promiseIf(self._serverConnection == null,() => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
@@ -167,7 +167,7 @@ module Stormancer {
             }, self);
         }
 
-        private startTransport(): JQueryPromise<void> {
+        private startTransport(): IPromise<void> {
             this._cts = new Cancellation.tokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
         }
@@ -181,7 +181,7 @@ module Stormancer {
 
         private _serverConnection: IConnection;
 
-        public disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void> {
+        public disconnectScene(scene: IScene, sceneHandle: number): IPromise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
                 this._scenesDispatcher.removeScene(sceneHandle);
@@ -197,7 +197,7 @@ module Stormancer {
             }
         }
 
-        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): JQueryPromise<void> {
+        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): IPromise<void> {
             var parameter: ConnectToSceneMsg = {
                 Token: token,
                 Routes: [],

@@ -11,7 +11,7 @@ module Stormancer {
         private _pendingRequests: IMap<SystemRequest> = {};
         private _logger: ILogger;
         private _isRegistered: boolean = false;
-        private _handlers: IMap<(context: RequestContext) => JQueryPromise<void>> = {};
+        private _handlers: IMap<(context: RequestContext) => Promise<void>> = {};
 
         constructor(logger: ILogger, modules: IRequestModule[]) {
             this._pendingRequests = {};
@@ -111,7 +111,7 @@ module Stormancer {
             });
         }
 
-        public addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => JQueryPromise<void>): void {
+        public addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => Promise<void>): void {
             if (this._isRegistered) {
                 throw new Error("Can only add handler before 'registerProcessor' is called.");
             }
@@ -133,7 +133,7 @@ module Stormancer {
             throw new Error("Unable to create new request: Too many pending requests.");
         }
 
-        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): JQueryPromise<Packet<IConnection>> {
+        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): Promise<Packet<IConnection>> {
             var deferred = $.Deferred<Packet<IConnection>>();
 
             var request = this.reserveRequestSlot({
