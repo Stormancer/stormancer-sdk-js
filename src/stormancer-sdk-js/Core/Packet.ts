@@ -1,41 +1,68 @@
 module Stormancer {
+
     export class Packet<T> {
+        
+        /**
+        A packet sent by a remote peer to the running peer.
+        @class Packet
+        @classdesc A packet sent by a remote peer to the running peer.
+        @memberof Stormancer
+        */
         constructor(source: T, data: Uint8Array, metadata?: IMap<any>) {
             this.connection = source;
             this.data = data;
-            this._metadata = metadata;
+            this.metadata = metadata;
         }
-
-        // Data contained in the packet.
+        
+        /**
+        Data contained in the packet.
+        @member Stormancer.Packet#data
+        @type {Uint8Array}
+        */
         public data: Uint8Array;
-
-        private _metadata: IMap<any>;
+        
+        /**
+        Metadata stored by the packet.
+        @member Stormancer.Packet#metadata
+        @type {object.<string, object>}
+        */
+        private metadata: IMap<any> = {};
 
         public setMetadata(metadata: IMap<any>) {
-            this._metadata = metadata;
+            this.metadata = metadata;
         }
 
         public getMetadata(): IMap<any> {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            return this._metadata;
+            return this.metadata;
         }
 
         public setMetadataValue(key: string, value): void {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            this._metadata[key] = value;
+            this.metadata[key] = value;
         }
-
+        
+        /**
+        Returns metadata
+        @param {string} key
+        @return {string} Key associated object
+        */
         public getMetadataValue(key: string): any {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            return this._metadata[key];
+            return this.metadata[key];
         }
-
+        
+        /**
+        A byte representing the index of the scene for this peer.
+        @member Stormancer.Packet#handle
+        @type {number}
+        */
         public connection: T;
     }
 }

@@ -5,7 +5,7 @@ module Stormancer {
         /**
         Creates a Configuration. Prefer the **Configuration.forAccount** method instead of this constructor.
         @class Configuration
-        @classdesc Represents the configuration of a Stormancer client. Use the static method **Configuration#forAccount** for creating a Configuration with an account ID and an application name.
+        @classdesc Represents the configuration of a Stormancer client. Use the static method **Configuration.forAccount** for creating a Configuration with an account ID and an application name.
         @memberof Stormancer
         */
         constructor() {
@@ -14,41 +14,6 @@ module Stormancer {
             this.serializers = [];
             this.serializers.push(new MsgPackSerializer());
             this.plugins.push(new RpcClientPlugin());
-        }
-
-        /**
-        API Endpoint URI
-        @member Stormancer.Configuration#apiEndpoint
-        */
-        static apiEndpoint: string = "https://api.stormancer.com/";
-
-        /**
-        A string containing the target server endpoint.
-        This value overrides the *apiEndpoint* property.
-        */
-        public serverEndpoint: string;
-
-        /**
-        A string containing the account name of the application.
-        */
-        public account: string;
-
-        /**
-        A string containing the name of the application.
-        */
-        public application: string;
-
-        /**
-        The plugins list
-        */
-        public plugins: IClientPlugin[] = [];
-
-        /**
-        Returns the API Endpoint URI to use.
-        @return {string} API Endpoint URI
-        */
-        getApiEndpoint(): string {
-            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
         }
 
         /**
@@ -63,6 +28,46 @@ module Stormancer {
             config.account = accountId;
             config.application = applicationName;
             return config;
+        }
+
+        /**
+        API Endpoint URI
+        */
+        static apiEndpoint: string = "https://api.stormancer.com/";
+
+        /**
+        A string containing the target server endpoint.
+        This value overrides the *apiEndpoint* property.
+        @member Stormancer.Configuration#serverEndpoint
+        @type {string}
+        */
+        public serverEndpoint: string = "";
+
+        /**
+        A string containing the account name of the application.
+        @member Stormancer.Configuration#account
+        @type {string}
+        */
+        public account: string = "";
+
+        /**
+        A string containing the name of the application.
+        @member Stormancer.Configuration#application
+        @type {string}
+        */
+        public application: string = "";
+
+        /**
+        The plugins list
+        */
+        public plugins: IClientPlugin[] = [];
+
+        /**
+        Returns the API Endpoint URI to use.
+        @return {string} API Endpoint URI
+        */
+        getApiEndpoint(): string {
+            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
         }
 
         /**
@@ -83,18 +88,24 @@ module Stormancer {
 
         /**
         Gets or Sets the dispatcher to be used by the client.
+        @member Stormancer.Configuration#dispatcher
+        @type {object}
         */
-        public dispatcher: IPacketDispatcher;
+        public dispatcher: IPacketDispatcher = null;
 
         /**
         Gets or sets the transport to be used by the client.
+        @member Stormancer.Configuration#transport
+        @type {object}
         */
-        public transport: ITransport;
+        public transport: ITransport = null;
 
         /**
         List of available serializers for the client.
         When negotiating which serializer should be used for a given remote peer, the first compatible serializer in the list is the one prefered.
+        @member Stormancer.Configuration#serializers
+        @type {object[]}
         */
-        public serializers: ISerializer[];
+        public serializers: ISerializer[] = [];
     }
 }

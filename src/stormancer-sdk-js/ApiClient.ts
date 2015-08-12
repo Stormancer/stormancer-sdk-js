@@ -2,11 +2,6 @@ module Stormancer {
 
     export class ApiClient {
 
-        /**
-        @class ApiClient
-        @param {object} config Configuration object
-        @param {object} tokenHandler Token handler
-        */
         constructor(config: Configuration, tokenHandler: ITokenHandler) {
             this._config = config;
             this._tokenHandler = tokenHandler;
@@ -18,13 +13,6 @@ module Stormancer {
 
         private _tokenHandler: ITokenHandler;
 
-        /**
-        Get a scene endpoint
-        @param {string} accountId Account ID
-        @param {string} applicationName Application name
-        @param {string} sceneId Scene ID
-        @param {object} userData Some user data sent at connection
-        */
         public getSceneEndpoint<T>(accountId: string, applicationName: string, sceneId: string, userData: T): JQueryPromise<SceneEndpoint> {
             var serializer = new MsgPackSerializer();
             //var data: Uint8Array = serializer.serialize(userData);

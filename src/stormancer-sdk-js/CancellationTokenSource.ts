@@ -1,7 +1,7 @@
 ﻿module Cancellation {
 
     /**
-    @class TokenSource
+    TokenSource
     */
     export class TokenSource {
 
@@ -42,13 +42,12 @@
     }
     
     /**
-    @class Token
+    Token
     */
     export class token {
         
         /**
         Constructor
-        @param {sourceData} data Source data for creating the cancellation token.
         */
         constructor(data: sourceData) {
             this.data = data;
@@ -58,7 +57,6 @@
         
         /**
         To know if the token has been cancelled.
-        @return {boolean} token is cancelled.
         */
         public isCancelled(): boolean {
             return this.data.isCancelled;
@@ -75,7 +73,6 @@
 
         /**
         Call a function when the token is cancelled.
-        @param {function} callBack with a reason as parameter.
         */
         public onCancelled(callBack: (reason: string) => void) {
             if (this.isCancelled()) {
@@ -89,7 +86,7 @@
     }
 
     /**
-    @interface sourceData
+    sourceData
     */
     export interface sourceData {
 

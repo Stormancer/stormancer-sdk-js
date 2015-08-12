@@ -1,19 +1,46 @@
 module Stormancer {
 
     export class Scene implements IScene {
+
+        /**
+        A string representing the unique ID of the scene.
+        @member Stormancer.Scene#id
+        @type {string}
+        */
         public id: string;
         
-        // A byte representing the index of the scene for this peer.
-        public handle: number;
-
-        // A boolean representing whether the scene is connected or not.
-        public connected: boolean;
+        /**
+        A byte representing the index of the scene for this peer.
+        @member Stormancer.Scene#handle
+        @type {number}
+        */
+        public handle: number = null;
+        
+        /**
+        A boolean representing whether the scene is connected or not.
+        @member Stormancer.Scene#connected
+        @type {boolean}
+        */
+        public connected: boolean = false;
 
         public hostConnection: IConnection;
+        
+        /**
+        Returns a list of the routes registered on the local peer.
+        @member Stormancer.Scene#localRoutes
+        @type {Object.<string, object>}
+        */
+        public localRoutes: IMap<Route> = {};
+        
+        /**
+        Returns a list of the routes available on the remote peer.
+        @member Stormancer.Scene#remoteRoutes
+        @type {Object.<string, object>}
+        */
+        public remoteRoutes: IMap<Route> = {};
+
         private _token: string;
         private _metadata: Map;
-        private _remoteRoutesMap: IMap<Route> = {};
-        private _localRoutesMap: IMap<Route> = {};
         private _client: Client;
         
         /**
@@ -31,11 +58,15 @@ module Stormancer {
 
             for (var i = 0; i < dto.Routes.length; i++) {
                 var route = dto.Routes[i];
-                this._remoteRoutesMap[route.Name] = new Route(this, route.Name, route.Handle, route.Metadata);
+                this.remoteRoutes[route.Name] = new Route(this, route.Name, route.Handle, route.Metadata);
             }
         }
 
-        // Returns metadata informations for the remote scene host.
+        /**
+        Returns metadata informations for the remote scene host.
+        @param {string} key
+        @return {string} Key associated value
+        */
         getHostMetadata(key: string): string {
             return this._metadata[key];
         }
@@ -50,10 +81,10 @@ module Stormancer {
                 throw new Error("You cannot register handles once the scene is connected.");
             }
 
-            var routeObj = this._localRoutesMap[route];
+            var routeObj = this.localRoutes[route];
             if (!routeObj) {
                 routeObj = new Route(this, route, 0, metadata);
-                this._localRoutesMap[route] = routeObj;
+                this.localRoutes[route] = routeObj;
             }
 
             this.onMessageImpl(routeObj, handler);
@@ -92,7 +123,14 @@ module Stormancer {
             route.handlers.push(p => action(p));
         }
 
-        // Sends a binary packet to the scene.
+        /**
+        Sends a binary packet to the scene.
+        @method Stormancer.Scene#sendPacket
+        @param {string} route The route name.
+        @param {Uint8Array} data The data to send.
+        @param {number} priority The packet priority on the stormancer network.
+        @param {number} reliability The packet reliability on the stormancer network.
+        */
         public sendPacket(route: string, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
             if (!route) {
                 throw new Error("route is null or undefined!");
@@ -104,14 +142,22 @@ module Stormancer {
                 throw new Error("The scene must be connected to perform this operation.");
             }
 
-            var routeObj = this._remoteRoutesMap[route];
+            var routeObj = this.remoteRoutes[route];
             if (!routeObj) {
                 throw new Error("The route " + route + " doesn't exist on the scene.");
             }
 
-            this.hostConnection.sendToScene(this.handle, routeObj.index, data, priority, reliability);
+            this.hostConnection.sendToScene(this.handle, routeObj.handle, data, priority, reliability);
         }
 
+        /**
+        Sends an object to the scene.
+        @method Stormancer.Scene#send
+        @param {string} route The route name.
+        @param {object} data The data to send.
+        @param {number} priority The packet priority on the stormancer network.
+        @param {number} reliability The packet reliability on the stormancer network.
+        */
         public send<T>(route: string, data: T, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
             return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
         }
@@ -122,7 +168,7 @@ module Stormancer {
         @return {Promise} A promise which complete when the Scene is connected.
         */
         public connect(): JQueryPromise<void> {
-            return this._client.connectToScene(this, this._token, Helpers.mapValues(this._localRoutesMap))
+            return this._client.connectToScene(this, this._token, Helpers.mapValues(this.localRoutes))
                 .then(() => {
                 this.connected = true;
             });
@@ -157,10 +203,10 @@ module Stormancer {
         public completeConnectionInitialization(cr: ConnectionResult): void {
             this.handle = cr.SceneHandle;
 
-            for (var key in this._localRoutesMap) {
-                var route = this._localRoutesMap[key];
-                route.index = cr.RouteMappings[key];
-                this._handlers[route.index] = route.handlers;
+            for (var key in this.localRoutes) {
+                var route = this.localRoutes[key];
+                route.handle = cr.RouteMappings[key];
+                this._handlers[route.handle] = route.handlers;
             }
         }
 
@@ -169,11 +215,17 @@ module Stormancer {
         /**
         Pool of functions called when a packet is received.
         @member Stormancer.Scene#packetReceived
+        @type {function[]}
         */
         public packetReceived: ((packet: Packet<IConnection>) => void)[] = [];
-
+        
+        /**
+        Returns an Scene peer object that represents the scene host.
+        @method Stormancer.Scene#host
+        @return {object} A Scene peer object.
+        */
         public host(): IScenePeer {
-            return new ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
+            return new ScenePeer(this.hostConnection, this.handle, this.remoteRoutes, this);
         }
         
         private _registeredComponents: IMap<() => any> = {}
@@ -200,8 +252,8 @@ module Stormancer {
         getRemoteRoutes(): Route[] {
             var result: Route[] = [];
 
-            for (var key in this._remoteRoutesMap) {
-                result.push(this._remoteRoutesMap[key]);
+            for (var key in this.remoteRoutes) {
+                result.push(this.remoteRoutes[key]);
             }
             return result;
         }

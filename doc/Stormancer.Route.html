@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: Stormancer</title>
+    <title>JSDoc: Class: Route</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: Stormancer</h1>
+    <h1 class="page-title">Class: Route</h1>
 
     
 
@@ -29,8 +29,12 @@
 <header>
     
         <h2>
-        Stormancer
+            <span class="ancestors"><a href="Stormancer.html">Stormancer</a>.</span>
+        
+        Route
         </h2>
+        
+            <div class="class-description"><p>Represents a Route on a Scene.</p></div>
         
     
 </header>
@@ -40,114 +44,32 @@
     
         
 
-        
+    
+    <h2>Constructor</h2>
+    
 
-
-<dl class="details">
+    <h4 class="name" id="Route"><span class="type-signature"></span>new Route<span class="signature">(scene, name, handle, metadata)</span><span class="type-signature"></span></h4>
 
     
 
+
+
+<div class="description">
+    <p>Creates a new route instance.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
     
 
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2088">line 2088</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Stormancer.Client.html">Client</a></dt>
-            <dd></dd>
-        
-            <dt><a href="Stormancer.Configuration.html">Configuration</a></dt>
-            <dd></dd>
-        
-            <dt><a href="Stormancer.Packet.html">Packet</a></dt>
-            <dd></dd>
-        
-            <dt><a href="Stormancer.Route.html">Route</a></dt>
-            <dd></dd>
-        
-            <dt><a href="Stormancer.Scene.html">Scene</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-     
-
-    
-
-    
-        <h3 class="subsection-title">Members</h3>
-
-        
-            
-<h4 class="name" id=".ConnectionState"><span class="type-signature">(static) </span>ConnectionState<span class="type-signature"> :number</span></h4>
-
-
-
-
-
-
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-    <h5 class="subsection-title">Properties:</h5>
-
-    
-
-<table class="props">
+<table class="params">
     <thead>
     <tr>
         
@@ -169,13 +91,13 @@
 
         <tr>
             
-                <td class="name"><code>Disconnected</code></td>
+                <td class="name"><code>scene</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type"><a href="Stormancer.Scene.html">Stormancer.Scene</a></span>
 
 
             
@@ -185,20 +107,20 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>The scene instance</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>Connecting</code></td>
+                <td class="name"><code>name</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">string</span>
 
 
             
@@ -208,14 +130,14 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>The route name.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>Connected</code></td>
+                <td class="name"><code>handle</code></td>
             
 
             <td class="type">
@@ -231,12 +153,37 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>Handle of the route (16 bits unsigned integer).</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>metadata</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object.&lt;string, string></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Metadata attached to this route.</p></td>
         </tr>
 
     
     </tbody>
 </table>
+
+
 
 
 
@@ -270,7 +217,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line495">line 495</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line594">line 594</a>
     </li></ul></dd>
     
 
@@ -286,7 +233,29 @@
 
 
 
-        
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
     
 
     

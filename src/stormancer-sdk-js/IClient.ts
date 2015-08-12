@@ -4,7 +4,7 @@ module Stormancer {
         applicationName: string;
 
         // An user specified logger.
-        _logger: ILogger;
+        logger: ILogger;
 
         // Returns a public scene (accessible without authentication)
         getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene>;
@@ -22,6 +22,6 @@ module Stormancer {
         serverTransportType: string;
 
         clock(): number;
-        lastPing: number;
+        serverPing: number;
     }
 }

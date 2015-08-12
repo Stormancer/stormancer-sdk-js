@@ -24,7 +24,7 @@ module Stormancer {
             if (!r) {
                 throw new Error("The route " + route + " is not declared on the server.");
             }
-            this._connection.sendToScene(this._sceneHandle, r.index, data, priority, reliability);
+            this._connection.sendToScene(this._sceneHandle, r.handle, data, priority, reliability);
         }
 
         public getComponent<T>(componentName: string): T {

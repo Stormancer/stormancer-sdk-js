@@ -34,7 +34,7 @@
         Configuration
         </h2>
         
-            <div class="class-description"><p>Represents the configuration of a Stormancer client. Use the static method <strong>Configuration#forAccount</strong> for creating a Configuration with an account ID and an application name.</p></div>
+            <div class="class-description"><p>Represents the configuration of a Stormancer client. Use the static method <strong>Configuration.forAccount</strong> for creating a Configuration with an account ID and an application name.</p></div>
         
     
 </header>
@@ -99,7 +99,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1200">line 1200</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line391">line 391</a>
     </li></ul></dd>
     
 
@@ -143,16 +143,26 @@
 
         
             
-<h4 class="name" id="apiEndpoint"><span class="type-signature"></span>apiEndpoint<span class="type-signature"></span></h4>
+<h4 class="name" id="account"><span class="type-signature"></span>account<span class="type-signature"> :string</span></h4>
 
 
 
 
 <div class="description">
-    <p>API Endpoint URI</p>
+    <p>A string containing the account name of the application.</p>
 </div>
 
 
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
 
 
 
@@ -187,7 +197,369 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1251">line 1251</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line405">line 405</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="application"><span class="type-signature"></span>application<span class="type-signature"> :string</span></h4>
+
+
+
+
+<div class="description">
+    <p>A string containing the name of the application.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line411">line 411</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="dispatcher"><span class="type-signature"></span>dispatcher<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    <p>Gets or Sets the dispatcher to be used by the client.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line425">line 425</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="serializers"><span class="type-signature"></span>serializers<span class="type-signature"> :Array.&lt;object></span></h4>
+
+
+
+
+<div class="description">
+    <p>List of available serializers for the client.
+            When negotiating which serializer should be used for a given remote peer, the first compatible serializer in the list is the one prefered.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;object></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line437">line 437</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="serverEndpoint"><span class="type-signature"></span>serverEndpoint<span class="type-signature"> :string</span></h4>
+
+
+
+
+<div class="description">
+    <p>A string containing the target server endpoint.
+            This value overrides the <em>apiEndpoint</em> property.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line398">line 398</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="transport"><span class="type-signature"></span>transport<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    <p>Gets or sets the transport to be used by the client.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line431">line 431</a>
     </li></ul></dd>
     
 
@@ -337,7 +709,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1228">line 1228</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line450">line 450</a>
     </li></ul></dd>
     
 
@@ -401,13 +773,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ApiClient.html">ApiClient</a></li><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.Scene.html">Scene</a></li><li><a href="Token.html">Token</a></li><li><a href="TokenSource.html">TokenSource</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Wed Aug 12 2015 12:10:19 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Wed Aug 12 2015 18:29:43 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

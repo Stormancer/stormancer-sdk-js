@@ -1,5 +1,17 @@
 module Stormancer {
 
+    /**
+    @alias ConnectionState
+    @enum {number}
+    @memberof Stormancer
+    */
+    var _ = // Fake object for jsdoc enum ConnectionState
+        {
+            Disconnected: 0,
+            Connecting: 1,
+            Connected: 2
+        };
+
     export enum ConnectionState {
         Disconnected,
         Connecting,

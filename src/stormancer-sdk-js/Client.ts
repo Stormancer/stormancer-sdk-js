@@ -51,17 +51,32 @@ module Stormancer {
 
         private _cts: Cancellation.TokenSource;
 
-        private _metadata: Map;
+        private _metadata: Map = {};
 
         private _pluginCtx: PluginBuildContext = new PluginBuildContext();
+        
+        /**
+        The name of the Stormancer server application the client is connected to.
+        @member Stormancer.Client#applicationName
+        @type {string}
+        */
+        public applicationName: string = null;
+        
+        /**
+        An user specified logger.
+        @member Stormancer.Client#logger
+        @type {object}
+        */
+        public logger: ILogger = null;
+        
+        /**
+        The client's unique stormancer ID. Returns null if the ID has not been acquired yet (connection still in progress).
+        @member Stormancer.Client#id
+        @type {string}
+        */
+        public id: number = null;
 
-        public applicationName: string;
-
-        public _logger: ILogger;
-
-        public id: number;
-
-        public serverTransportType: string;
+        public serverTransportType: string = null;
 
         /**
         Creates a client. You need to construct a configuration before using this method.
@@ -76,7 +91,7 @@ module Stormancer {
             this._apiClient = new ApiClient(config, this._tokenHandler);
             this._transport = config.transport;
             this._dispatcher = config.dispatcher;
-            this._requestProcessor = new RequestProcessor(this._logger, []);
+            this._requestProcessor = new RequestProcessor(this.logger, []);
 
             this._scenesDispatcher = new SceneDispatcher();
             this._dispatcher.addProcessor(this._requestProcessor);
@@ -120,17 +135,23 @@ module Stormancer {
         }
 
         /**
-        Retrieve a scene object from its ID.
+        Retrieve a public scene object from its ID.
         @method Stormancer.Client#getPublicScene
         @param {string} sceneId The scene ID
         @param {object} userData User data to send
-        @return {object} Scene promise
+        @return {Promise} Promise which complete when the scene is ready to connect.
         */
         public getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
                 .then(ci => this.getSceneImpl(sceneId, ci));
         }
-
+        
+        /**
+        Retrieve a scene object from its ID.
+        @method Stormancer.Client#getScene
+        @param {string} token Scene token
+        @return {Promise} Promise which complete when the scene is ready to connect.
+        */
         public getScene(token: string): JQueryPromise<IScene> {
             var ci = this._tokenHandler.decodeToken(token);
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
@@ -213,7 +234,11 @@ module Stormancer {
                 }
             });
         }
-
+        
+        /**
+        Disconnects the client.
+        @method Stormancer.Client#disconnect
+        */
         public disconnect(): void {
             if (this._serverConnection) {
                 this._serverConnection.close();
@@ -230,7 +255,7 @@ module Stormancer {
             for (var i = 0; i < localRoutes.length; i++) {
                 var r = localRoutes[i];
                 parameter.Routes.push({
-                    Handle: r.index,
+                    Handle: r.handle,
                     Metadata: r.metadata,
                     Name: r.name
                 });
@@ -246,7 +271,13 @@ module Stormancer {
             });
         }
 
-        public lastPing: number;
+        /**
+        The server connection's ping in milliseconds.
+        @member Stormancer.Client#serverPing
+        @type {number}
+        */
+        public serverPing: number = null;
+
         private _offset: number;
         private _pingInterval = 5000;
         private syncClockIntervalId: number;
@@ -275,8 +306,8 @@ module Stormancer {
                     for (var i = 0; i < 8; i++) {
                         timeRef += (data[i] * Math.pow(2,(i * 8)));
                     }
-                    this.lastPing = timeEnd - timeStart;
-                    this._offset = timeRef - (this.lastPing / 2) - timeStart;
+                    this.serverPing = timeEnd - timeStart;
+                    this._offset = timeRef - (this.serverPing / 2) - timeStart;
                 }).fail(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
