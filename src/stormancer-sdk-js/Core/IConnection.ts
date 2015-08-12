@@ -1,7 +1,5 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
+
     export enum ConnectionState {
         Disconnected,
         Connecting,

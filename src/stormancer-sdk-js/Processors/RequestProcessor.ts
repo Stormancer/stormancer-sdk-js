@@ -1,8 +1,5 @@
 ///<reference path="../MessageIDTypes.ts"/>
 
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     interface SystemRequest {
         lastRefresh: Date;

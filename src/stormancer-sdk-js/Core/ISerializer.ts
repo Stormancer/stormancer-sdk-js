@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     // Contract for the binary serializers used by Stormancer applications.
     export interface ISerializer {

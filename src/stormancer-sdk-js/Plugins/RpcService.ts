@@ -1,7 +1,4 @@
-﻿/**
-@namespace Stormancer
-*/
-module Stormancer {
+﻿module Stormancer {
     interface RpcRequest {
         observer: IObserver<Packet<IScenePeer>>;
         deferred: JQueryDeferred<void>;

@@ -1,7 +1,4 @@
-﻿/**
-@namespace Stormancer
-*/
-module Stormancer {
+﻿module Stormancer {
     export interface ISubscription {
         unsubscribe(): void;
     }

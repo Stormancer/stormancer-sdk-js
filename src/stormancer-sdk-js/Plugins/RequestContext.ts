@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     export class RequestContext {
         private _packet: Packet<IConnection>;

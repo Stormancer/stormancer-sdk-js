@@ -1,6 +1,7 @@
 module Stormancer {
+
     export class Scene implements IScene {
-        public id: string;        
+        public id: string;
         
         // A byte representing the index of the scene for this peer.
         public handle: number;
@@ -14,6 +15,13 @@ module Stormancer {
         private _remoteRoutesMap: IMap<Route> = {};
         private _localRoutesMap: IMap<Route> = {};
         private _client: Client;
+        
+        /**
+        A Scene should not be created by the user. Get a Scene by using **Client#getPublicScene** or **Client#getScene**.
+        @class Scene
+        @classdesc A Stormancer scene. Peers connected to a Scene can interact between themself.
+        @memberof Stormancer
+        */
         constructor(connection: IConnection, client: Client, id: string, token: string, dto: SceneInfosDto) {
             this.id = id;
             this.hostConnection = connection;
@@ -50,7 +58,13 @@ module Stormancer {
 
             this.onMessageImpl(routeObj, handler);
         }
-
+        
+        /**
+        Allows to receive messages on a route. A route is an easy way to get messages of only one type.
+        @method Stormancer.Scene#registerRoute
+        @param {string} route The route name
+        @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
+        */
         public registerRoute<T>(route: string, handler: (message: T) => void): void {
             this.addRoute(route,(packet: Packet<IScenePeer>) => {
                 var message = this.hostConnection.serializer.deserialize<T>(packet.data);
@@ -58,6 +72,12 @@ module Stormancer {
             });
         }
         
+        /**
+        Allows to receive messages on a route without using any built-in serializers. Use this method for serialize and deserialize data by yourself.
+        @method Stormancer.Scene#registerRouteRaw
+        @param {string} route The route name
+        @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
+        */
         public registerRouteRaw(route: string, handler: (dataView: DataView) => void): void {
             this.addRoute(route,(packet: Packet<IScenePeer>) => {
                 handler(new DataView(packet.data.buffer, packet.data.byteOffset));
@@ -95,16 +115,24 @@ module Stormancer {
         public send<T>(route: string, data: T, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
             return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
         }
-
-        // Connects the scene to the server.
+        
+        /**
+        Connect the Scene to the Stormancer application scene.
+        @method Stormancer.Scene#connect
+        @return {Promise} A promise which complete when the Scene is connected.
+        */
         public connect(): JQueryPromise<void> {
             return this._client.connectToScene(this, this._token, Helpers.mapValues(this._localRoutesMap))
                 .then(() => {
                 this.connected = true;
             });
         }
-
-        // Disconnects the scene.
+        
+        /**
+        Disconnect the Scene.
+        @method Stormancer.Scene#disconnect
+        @return {Promise} A promise which complete when the Scene is disconnected.
+        */
         public disconnect(): JQueryPromise<void> {
             return this._client.disconnectScene(this, this.handle);
         }
@@ -137,21 +165,35 @@ module Stormancer {
         }
 
         private _handlers: IMap<((packet: Packet<IConnection>) => void)[]> = {};
-
-        // Fires when packet are received on the scene.
-        packetReceived: ((packet: Packet<IConnection>) => void)[];
+        
+        /**
+        Pool of functions called when a packet is received.
+        @member Stormancer.Scene#packetReceived
+        */
+        public packetReceived: ((packet: Packet<IConnection>) => void)[] = [];
 
         public host(): IScenePeer {
             return new ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
         }
-
+        
         private _registeredComponents: IMap<() => any> = {}
-
+        
+        /**
+        Registers a component and provide a factory for getting it.
+        @method Stormancer.Scene#registerComponent
+        @param {string} componentName The component game.
+        @param {function} factory The factory function for getting the component.
+        */
         public registerComponent<T>(componentName: string, factory: () => T): void {
             this._registeredComponents[componentName] = factory;
         }
-
-        getComponent<T>(componentName): T {
+        
+        /**
+        Returns a specific registered component.
+        @method Stormancer.Scene#getComponent
+        @return {object} The wanted object.
+        */
+        public getComponent<T>(componentName): T {
             return this._registeredComponents[componentName]();
         }
 

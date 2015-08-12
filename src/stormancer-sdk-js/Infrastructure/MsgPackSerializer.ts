@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     export class MsgPackSerializer implements ISerializer {
         public serialize<T>(data: T): Uint8Array {

@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     // Available packet priorities
     export enum PacketPriority {

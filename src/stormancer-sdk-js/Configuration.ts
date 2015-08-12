@@ -5,7 +5,7 @@ module Stormancer {
         /**
         Creates a Configuration. Prefer the **Configuration.forAccount** method instead of this constructor.
         @class Configuration
-        @classdesc Represents the configuration of a Stormancer client. Use the static method **Configuration.forAccount** for creating a Configuration with an account ID and an application name.
+        @classdesc Represents the configuration of a Stormancer client. Use the static method **Configuration#forAccount** for creating a Configuration with an account ID and an application name.
         @memberof Stormancer
         */
         constructor() {

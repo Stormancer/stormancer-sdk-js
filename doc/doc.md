@@ -15,4 +15,4 @@ npm install jsdoc
 
 run windows cmd and type:
 cd C:\Users\<username>\stormancer-sdk-js
-C:\Users\<username>\node_modules\.bin\jsdoc src\stormancer-sdk-js\bin\Debug -r -c doc\conf.json -d doc
+C:\Users\<username>\node_modules\.bin\jsdoc -c doc\conf.json

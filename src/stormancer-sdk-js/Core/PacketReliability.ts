@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     /// Different available reliability levels when sending a packet.
     export enum PacketReliability {

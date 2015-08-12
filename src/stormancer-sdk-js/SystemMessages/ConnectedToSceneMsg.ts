@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     export interface ConnectToSceneMsg {
         Token: string;

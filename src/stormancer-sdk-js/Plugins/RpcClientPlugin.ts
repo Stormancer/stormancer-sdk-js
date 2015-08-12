@@ -1,7 +1,4 @@
-﻿/**
-@namespace Stormancer
-*/
-module Stormancer {
+﻿module Stormancer {
     export class RpcClientPlugin implements IClientPlugin {
         static NextRouteName = "stormancer.rpc.next";
         static ErrorRouteName = "stormancer.rpc.error";

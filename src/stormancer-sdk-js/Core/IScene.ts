@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     export interface IScene {
         // Represents a Stormancer scene.

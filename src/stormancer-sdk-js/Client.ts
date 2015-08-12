@@ -64,7 +64,7 @@ module Stormancer {
         public serverTransportType: string;
 
         /**
-        Creates a client
+        Creates a client. You need to construct a configuration before using this method.
         @class Client
         @classdesc A Stormancer client for connecting to Stormancer server applications.
         @memberof Stormancer
@@ -285,7 +285,7 @@ module Stormancer {
         }
         
         /**
-        Get the server clock. Represented by the count of milliseconds since the application started.
+        Get the server clock. Represented by the count of milliseconds since the cluster started.
         @method Stormancer.Client#clock
         @return {number} The number of milliseconds since the application started.
         */

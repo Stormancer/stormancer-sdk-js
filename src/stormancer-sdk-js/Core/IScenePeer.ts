@@ -1,6 +1,3 @@
-/**
-@namespace Stormancer
-*/
 module Stormancer {
     // A remote scene.
     export interface IScenePeer {
