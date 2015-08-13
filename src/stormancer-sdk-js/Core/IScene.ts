@@ -1,49 +1,40 @@
+/**
+Represents a Stormancer scene.
+@interface IScene
+@memberof Stormancer
+*/
+/**
+Gets a string representing the scene id.
+@member Stormancer.IScene#id
+@type {string}
+*/
+/**
+True if the instance is an host. False if it's a client.
+@member Stormancer.IScene#isHost
+@type {boolean}
+*/
+/**
+Gets a component registered in the scene.
+@method Stormancer.IScene#getComponent
+@param {string} componentName The name of the component.
+@return {object} The requested component.
+*/
+/**
+Gets a component registered in the scene for a type
+@method Stormancer.IScene#registerComponent
+@param {string} componentName The component to register.
+@param {function} factory The component factory to get an instance of the requested component.
+*/
+
 module Stormancer {
     export interface IScene {
-        // Represents a Stormancer scene.
+
         id: string;
 
-        // Returns metadata informations for the remote scene host.
-        getHostMetadata(key: string): string;
+        isHost: boolean;
 
-        // A byte representing the index of the scene for this peer.
-        handle: number;
+        getComponent<T>(componentName: string): T;
 
-        // A boolean representing whether the scene is connected or not.
-        connected: boolean;
-
-        hostConnection: IConnection;
-
-        // Adds a route on the local scene, handling packets.
-        addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata?: Map): void;
-
-        // Registers a route on the local scene, handling deserialized messages.
-        registerRoute<T>(route: string, handler: (message: T) => void): void;
-
-        // Sends a binary packet to the scene.
-        sendPacket(route: string, data: Uint8Array, priority?: PacketPriority, reliability?: PacketReliability): void;
-
-        // Serialize and sends an object to the scene
-        send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
-
-        // Disconnects the scene.
-        disconnect(): JQueryPromise<void>;
-
-        // Connects the scene to the server.
-        connect(): JQueryPromise<void>;
-
-        // Fires when packet are received on the scene.
-        packetReceived: ((packet: Packet<IConnection>) => void)[];
-
-        host(): IScenePeer;
-
-        //Registers a component to the scene
         registerComponent<T>(componentName: string, factory: () => T): void;
-
-        //Gets a registered comonent from the scene
-        getComponent<T>(componentName): T;
-
-        //Gets the list of declared remote routes
-        getRemoteRoutes(): Route[];
     }
 }

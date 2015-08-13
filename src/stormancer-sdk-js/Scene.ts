@@ -10,6 +10,13 @@ module Stormancer {
         public id: string;
         
         /**
+        True if the instance is an host. False if it's a client.
+        @member Stormancer.Scene#isHost
+        @type {boolean}
+        */
+        public isHost: boolean = false;
+        
+        /**
         A byte representing the index of the scene for this peer.
         @member Stormancer.Scene#handle
         @type {number}
@@ -64,6 +71,7 @@ module Stormancer {
 
         /**
         Returns metadata informations for the remote scene host.
+        @method Stormancer.Scene#getHostMetadata
         @param {string} key
         @return {string} Key associated value
         */
@@ -71,7 +79,13 @@ module Stormancer {
             return this._metadata[key];
         }
         
-        // Registers a route on the local peer.
+        /**
+        Registers a route on the local peer.
+        @method Stormancer.Scene#addRoute
+        @param {string} route The route name
+        @param {function} handler Function for handling the received messages. This function is called any time a Packet is received by the server on this route.
+        @param {object.<string, string>} metadata Some metadata attached to this route.
+        */
         public addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata: Map = {}): void {
             if (route[0] === `@`) {
                 throw new Error("A route cannot start with the @ character.");
@@ -227,8 +241,8 @@ module Stormancer {
         public host(): IScenePeer {
             return new ScenePeer(this.hostConnection, this.handle, this.remoteRoutes, this);
         }
-        
-        private _registeredComponents: IMap<() => any> = {}
+        a: IMap<string>;
+        private _registeredComponents: IMap<() => any> = {};
         
         /**
         Registers a component and provide a factory for getting it.
@@ -245,17 +259,8 @@ module Stormancer {
         @method Stormancer.Scene#getComponent
         @return {object} The wanted object.
         */
-        public getComponent<T>(componentName): T {
+        public getComponent<T>(componentName: string): T {
             return this._registeredComponents[componentName]();
-        }
-
-        getRemoteRoutes(): Route[] {
-            var result: Route[] = [];
-
-            for (var key in this.remoteRoutes) {
-                result.push(this.remoteRoutes[key]);
-            }
-            return result;
         }
     }
 }

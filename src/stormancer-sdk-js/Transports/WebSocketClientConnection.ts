@@ -27,6 +27,8 @@ module Stormancer {
         // State of the connection.
         public state: ConnectionState;
 
+        public ping: number = null;
+
         // Close the connection
         public close(): void {
             this._socket.close();

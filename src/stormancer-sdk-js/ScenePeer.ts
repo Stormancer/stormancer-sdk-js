@@ -5,19 +5,18 @@ module Stormancer {
         private _routeMapping: IMap<Route>;
         private _scene: IScene;
 
-        serializer: ISerializer;
-
-        public id(): number {
-            return this._connection.id;
-        }
-
         public constructor(connection: IConnection, sceneHandle: number, routeMapping: IMap<Route>, scene: IScene) {
             this._connection = connection;
             this._sceneHandle = sceneHandle;
             this._routeMapping = routeMapping;
             this._scene = scene;
             this.serializer = connection.serializer;
+            this.id = this._connection.id;
         }
+
+        public serializer: ISerializer;
+
+        public id: number = null;
 
         public send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability) {
             var r = this._routeMapping[route];

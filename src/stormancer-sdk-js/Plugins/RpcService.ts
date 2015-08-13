@@ -8,10 +8,10 @@
 
     export class RpcService {
         private _currentRequestId: number = 0;
-        private _scene: IScene;
+        private _scene: Scene;
         private _pendingRequests: IMap<RpcRequest> = {};
 
-        constructor(scene: IScene) {
+        constructor(scene: Scene) {
             this._scene = scene;
         }
 
@@ -21,10 +21,10 @@
             onCompleted: () => void = () => { },
             priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): ISubscription {
 
-            var remoteRoutes = this._scene.getRemoteRoutes();
+            var remoteRoutes = this._scene.remoteRoutes;
             var relevantRoute: Route;
 
-            for (var i = 0; i < remoteRoutes.length; i++) {
+            for (var i in remoteRoutes) {
                 if (remoteRoutes[i].name == route) {
                     relevantRoute = remoteRoutes[i];
                     break;

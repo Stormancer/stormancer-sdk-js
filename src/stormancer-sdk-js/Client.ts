@@ -13,6 +13,8 @@ module Stormancer {
             return this._current++;
         }
 
+        public connectionCount: number = null;
+
         /**
         Adds a connection to the manager
         */

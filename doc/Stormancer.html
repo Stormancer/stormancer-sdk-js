@@ -72,7 +72,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2088">line 2088</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2545">line 2545</a>
     </li></ul></dd>
     
 
@@ -102,7 +102,19 @@
             <dt><a href="Stormancer.Configuration.html">Configuration</a></dt>
             <dd></dd>
         
+            <dt><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></dt>
+            <dd></dd>
+        
             <dt><a href="Stormancer.Packet.html">Packet</a></dt>
+            <dd></dd>
+        
+            <dt><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></dt>
+            <dd></dd>
+        
+            <dt><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></dt>
+            <dd></dd>
+        
+            <dt><a href="Stormancer.RequestContext.html">RequestContext</a></dt>
             <dd></dd>
         
             <dt><a href="Stormancer.Route.html">Route</a></dt>
@@ -185,7 +197,7 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>0</p></td>
         </tr>
 
     
@@ -208,7 +220,7 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>1</p></td>
         </tr>
 
     
@@ -231,7 +243,7 @@
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>2</p></td>
         </tr>
 
     
@@ -270,7 +282,1135 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line495">line 495</a>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1424">line 1424</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".LogLevel"><span class="type-signature">(static) </span>LogLevel<span class="type-signature"> :number</span></h4>
+
+
+
+
+<div class="description">
+    <p>Available log levels</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">number</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fatal</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>0 - Fatal error. The application crashed.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>1 - Error. The application may crash.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>warn</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>2 - Warning. Something went wrong but dealt.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>info</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>3 - Information. Significant information.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debug</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>4 - Debug. Can be useful for debugging.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>trace</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>5 - Trace. Only for deep debug.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1460">line 1460</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".MessageIDTypes"><span class="type-signature">(static) </span>MessageIDTypes<span class="type-signature"> :number</span></h4>
+
+
+
+
+<div class="description">
+    <p>Message types understood by the agent.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">number</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_SYSTEM_REQUEST</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>134 - System request</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_REQUEST_RESPONSE_MSG</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>137 - Sends a reponse to a system request</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_REQUEST_RESPONSE_COMPLETE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>138 - Sends a &quot;request complete&quot; message to close a system request channel</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_REQUEST_RESPONSE_ERROR</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>139 - Sends an error as aresponse to a system request and close the request channel</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_CONNECTION_RESULT</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>140 - Identifies a response to a connect to scene message</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_SCENES</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>141 - First id for scene handles</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1973">line 1973</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".PacketPriority"><span class="type-signature">(static) </span>PacketPriority<span class="type-signature"> :number</span></h4>
+
+
+
+
+<div class="description">
+    <p>Available packet priorities</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">number</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>IMMEDIATE_PRIORITY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>0 - The packet is sent immediately without aggregation.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>HIGH_PRIORITY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>1 - The packet is sent at high priority level.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>MEDIUM_PRIORITY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>2 - The packet is sent at medium priority level.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>LOW_PRIORITY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>3 - The packet is sent at low priority level.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1620">line 1620</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".PacketReliability"><span class="type-signature">(static) </span>PacketReliability<span class="type-signature"> :number</span></h4>
+
+
+
+
+<div class="description">
+    <p>Different available reliability levels when sending a packet.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">number</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>UNRELIABLE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>0 - The packet may be lost, or arrive out of order. There are no guarantees whatsoever.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>UNRELIABLE_SEQUENCED</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>1 - The packets arrive in order, but may be lost. If a packet arrives out of order, it is discarded.
+        The last packet may also never arrive.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>RELIABLE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>2 - The packets always reach destination, but may do so out of order.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>RELIABLE_ORDERED</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>3 - The packets always reach destination and in order.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>RELIABLE_SEQUENCED</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>4 - The packets arrive at destination in order. If a packet arrive out of order, it is ignored.
+        That mean that packets may disappear, but the last one always reach destination.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1646">line 1646</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id=".SystemRequestIDTypes"><span class="type-signature">(static) </span>SystemRequestIDTypes<span class="type-signature"> :number</span></h4>
+
+
+
+
+<div class="description">
+    <p>Message types understood by the agent.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">number</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_CONNECT_TO_SCENE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>134 - Connects the user to a scene</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_DISCONNECT_FROM_SCENE</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>135 - Used to disconnect the user from a scene</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_GET_SCENE_INFOS</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>136 - Retrives runtime informations about a scene</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_SET_METADATA</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>0 - Set metadata</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_SCENE_READY</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>1 - Scene is ready</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ID_PING</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>2 - Ping request</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line1993">line 1993</a>
     </li></ul></dd>
     
 
@@ -304,13 +1444,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Wed Aug 12 2015 18:29:43 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Aug 13 2015 18:36:27 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

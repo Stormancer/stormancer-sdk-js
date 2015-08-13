@@ -8,7 +8,7 @@
         static ServiceName = "rpcService";
 
         public build(ctx: PluginBuildContext): void {
-            ctx.sceneCreated.push((scene: IScene) => {
+            ctx.sceneCreated.push((scene: Scene) => {
                 var rpcParams = scene.getHostMetadata(RpcClientPlugin.PluginName);
 
                 if (rpcParams == RpcClientPlugin.Version) {
