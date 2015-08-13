@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: PluginBuildContext</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: PluginBuildContext</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="Stormancer.html">Stormancer</a>.</span>
+        
+        PluginBuildContext
+        </h2>
+        
+            <div class="class-description"><p>Object passed to the Build method of plugins to register to the available Stormancer client events.</p></div>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+    <h2>Constructor</h2>
+    
+
+    <h4 class="name" id="PluginBuildContext"><span class="type-signature"></span>new PluginBuildContext<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>Initializes a new instance of the PluginBuildContext class.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line62">line 62</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="clientCreated"><span class="type-signature"></span>clientCreated<span class="type-signature"> :Array.&lt;function()></span></h4>
+
+
+
+
+<div class="description">
+    <p>Event fired when a client object is created. That's an array of functions which are called and have the scene instance as first parameter.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;function()></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line75">line 75</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="packetReceived"><span class="type-signature"></span>packetReceived<span class="type-signature"> :Array.&lt;function()></span></h4>
+
+
+
+
+<div class="description">
+    <p>Event fired when a packet is received from a remote peer. That's an array of functions which are called and have the scene instance as first parameter.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;function()></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line93">line 93</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="sceneConnected"><span class="type-signature"></span>sceneConnected<span class="type-signature"> :Array.&lt;function()></span></h4>
+
+
+
+
+<div class="description">
+    <p>Event fired when a a scene is connected to the server. That's an array of functions which are called and have the scene instance as first parameter.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;function()></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line81">line 81</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="sceneCreated"><span class="type-signature"></span>sceneCreated<span class="type-signature"> :Array.&lt;function()></span></h4>
+
+
+
+
+<div class="description">
+    <p>Event fired when a scene object is created. That's an array of functions which are called and have the scene instance as first parameter.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;function()></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line69">line 69</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="sceneDisconnected"><span class="type-signature"></span>sceneDisconnected<span class="type-signature"> :Array.&lt;function()></span></h4>
+
+
+
+
+<div class="description">
+    <p>Event fired when a scene is disconnected. That's an array of functions which are called and have the scene instance as first parameter.</p>
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Array.&lt;function()></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line87">line 87</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Aug 13 2015 18:36:27 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
