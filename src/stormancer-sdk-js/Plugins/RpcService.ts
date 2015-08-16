@@ -62,7 +62,7 @@
             this._pendingRequests[id] = request;
 
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set([i & 255, i >>> 8]);
+            dataToSend.set(<any>[i & 255, i >>> 8]);
             dataToSend.set(data, 2);
 
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);

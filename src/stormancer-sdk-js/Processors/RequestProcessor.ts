@@ -147,7 +147,7 @@ module Stormancer {
 
             var dataToSend = new Uint8Array(3 + data.length);
             var idArray = new Uint16Array([request.id]);
-            dataToSend.set([msgId],0);
+            dataToSend.set(<any>[msgId],0);
             dataToSend.set(new Uint8Array(idArray.buffer), 1);
             dataToSend.set(data, 3);
             peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend, priority);
