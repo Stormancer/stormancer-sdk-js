@@ -11,7 +11,7 @@
             ctx.sceneCreated.push((scene: Scene) => {
                 var rpcParams = scene.getHostMetadata(RpcClientPlugin.PluginName);
 
-                if (rpcParams == RpcClientPlugin.Version) {
+                if (rpcParams) {
                     var processor = new RpcService(scene);
                     scene.registerComponent(RpcClientPlugin.ServiceName, () => processor);
                     scene.addRoute(RpcClientPlugin.NextRouteName, p => {
