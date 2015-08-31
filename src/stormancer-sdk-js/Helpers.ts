@@ -38,13 +38,7 @@ module Stormancer {
             return result;
         }
 
-        static promiseFromResult<T>(result: T): IPromise<T> {
-            var deferred = jQuery.Deferred();
-            deferred.resolve(result);
-            return deferred.promise();
-        }
-
-        static promiseIf(condition: boolean, action: () => IPromise<void>, context?: any): IPromise<void> {
+        static promiseIf(condition: boolean, action: () => Promise<void>, context?: any): Promise<void> {
             if (condition) {
                 if (context) {
                     return action.call(context);
@@ -53,7 +47,7 @@ module Stormancer {
                     return action();
                 }
             } else {
-                return Helpers.promiseFromResult(null);
+                return Promise.resolve();
             }
         }
     }
@@ -62,5 +56,37 @@ module Stormancer {
         onCompleted(): void;
         onError(error: any): void;
         onNext(value: T): void;
+    }
+
+    export class Deferred<T> {
+        constructor() {
+            this._promise = new Promise<T>((resolve, reject) => {
+                this._resolve = resolve;
+                this._reject = reject;
+            });
+        }
+
+        private _promise: Promise<T>;
+        public promise(): Promise<T> {
+            return this._promise;
+        }
+
+        private _state: string = "pending";
+        public state(): string {
+            return this._state;
+        }
+
+        private _resolve: any;
+        private _reject: any;
+
+        public resolve(value?: T) {
+            this._resolve(value);
+            this._state = "resolved";
+        }
+
+        public reject(error?: any) {
+            this._reject(error);
+            this._state = "rejected";
+        }
     }
 }

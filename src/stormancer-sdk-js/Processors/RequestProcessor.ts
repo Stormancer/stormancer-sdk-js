@@ -4,7 +4,7 @@ module Stormancer {
         lastRefresh: Date;
         id: number;
         observer: IObserver<Packet<IConnection>>;
-        deferred: JQueryDeferred<void>;
+        deferred: Deferred<void>;
     }
 
     export class RequestProcessor implements IPacketProcessor {
@@ -26,7 +26,7 @@ module Stormancer {
             this._isRegistered = true;
             for (var key in this._handlers) {
                 var handler = this._handlers[key];
-                config.addProcessor(key,(p: Packet<IConnection>) => {
+                config.addProcessor(key, (p: Packet<IConnection>) => {
                     var context = new RequestContext(p);
 
                     var continuation = (fault: any) => {
@@ -41,8 +41,8 @@ module Stormancer {
                     };
 
                     handler(context)
-                        .done(() => continuation(null))
-                        .fail(error => continuation(error));
+                        .then(() => continuation(null))
+                        .catch(error => continuation(error));
 
                     return true;
                 });
@@ -80,7 +80,7 @@ module Stormancer {
 
                 delete this._pendingRequests[id];
                 if (p.data[3]) {
-                    request.deferred.promise().always(() => request.observer.onCompleted());
+                    request.deferred.promise().then(() => request.observer.onCompleted(), () => request.observer.onCompleted());
                 }
                 else {
                     request.observer.onCompleted();
@@ -123,7 +123,7 @@ module Stormancer {
             (<any>this).toto = 1;
             while (id < 65535) {
                 if (!this._pendingRequests[id]) {
-                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred<void>() };
+                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: new Deferred<void>() };
                     this._pendingRequests[id] = request;
                     return request;
                 }
@@ -134,7 +134,7 @@ module Stormancer {
         }
 
         public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): Promise<Packet<IConnection>> {
-            var deferred = $.Deferred<Packet<IConnection>>();
+            var deferred = new Deferred<Packet<IConnection>>();
 
             var request = this.reserveRequestSlot({
                 onNext(packet) { deferred.resolve(packet); },
@@ -146,7 +146,7 @@ module Stormancer {
 
             var dataToSend = new Uint8Array(3 + data.length);
             var idArray = new Uint16Array([request.id]);
-            dataToSend.set([msgId],0);
+            dataToSend.set(<any>[msgId], 0);
             dataToSend.set(new Uint8Array(idArray.buffer), 1);
             dataToSend.set(data, 3);
             peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend, priority);

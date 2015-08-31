@@ -27,10 +27,10 @@ module Stormancer {
         send<T>(route: string, data: T, priority?: PacketPriority, reliability?: PacketReliability): void;
 
         // Disconnects the scene.
-        disconnect(): IPromise<void>;
+        disconnect(): Promise<void>;
 
         // Connects the scene to the server.
-        connect(): IPromise<void>;
+        connect(): Promise<void>;
 
         // Fires when packet are received on the scene.
         packetReceived: ((packet: Packet<IConnection>) => void)[];

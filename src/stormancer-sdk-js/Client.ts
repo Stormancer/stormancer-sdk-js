@@ -1,4 +1,4 @@
-///
+/// <reference path="Scripts/promise.d.ts" />
 
 module Stormancer {
     export class ConnectionHandler implements IConnectionManager {
@@ -103,17 +103,17 @@ module Stormancer {
             this._dispatcher.dispatchPacket(packet);
         }
 
-        public getPublicScene(sceneId: string, userData: any): IPromise<IScene> {
+        public getPublicScene(sceneId: string, userData: any): Promise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
                 .then(ci => this.getSceneImpl(sceneId, ci));
         }
 
-        public getScene(token: string): IPromise<IScene> {
+        public getScene(token: string): Promise<IScene> {
             var ci = this._tokenHandler.decodeToken(token);
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
         }
 
-        private getSceneImpl(sceneId: string, ci: SceneEndpoint): IPromise<IScene> {
+        private getSceneImpl(sceneId: string, ci: SceneEndpoint): Promise<IScene> {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
                 if (ci.tokenData.Version > 0) {
@@ -141,18 +141,18 @@ module Stormancer {
             });
         }
 
-        private updateMetadata(): IPromise<Packet<IConnection>> {
+        private updateMetadata(): Promise<Packet<IConnection>> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata));
         }
 
-        private sendSystemRequest<T, U>(id: number, parameter: T): IPromise<U> {
+        private sendSystemRequest<T, U>(id: number, parameter: T): Promise<U> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
                 .then(packet => this._systemSerializer.deserialize<U>(packet.data));
         }
 
         private _systemSerializer: ISerializer = new MsgPackSerializer();
 
-        private ensureTransportStarted(ci: SceneEndpoint): IPromise<void> {
+        private ensureTransportStarted(ci: SceneEndpoint): Promise<void> {
             var self = this;
             return Helpers.promiseIf(self._serverConnection == null,() => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
@@ -167,7 +167,7 @@ module Stormancer {
             }, self);
         }
 
-        private startTransport(): IPromise<void> {
+        private startTransport(): Promise<void> {
             this._cts = new Cancellation.tokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
         }
@@ -181,7 +181,7 @@ module Stormancer {
 
         private _serverConnection: IConnection;
 
-        public disconnectScene(scene: IScene, sceneHandle: number): IPromise<void> {
+        public disconnectScene(scene: IScene, sceneHandle: number): Promise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
                 this._scenesDispatcher.removeScene(sceneHandle);
@@ -197,7 +197,7 @@ module Stormancer {
             }
         }
 
-        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): IPromise<void> {
+        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): Promise<void> {
             var parameter: ConnectToSceneMsg = {
                 Token: token,
                 Routes: [],
@@ -245,7 +245,7 @@ module Stormancer {
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
-                this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).done(packet => {
+                this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).then(packet => {
                     var timeEnd = this.getCurrentTimestamp();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
@@ -254,7 +254,7 @@ module Stormancer {
                     }
                     this.lastPing = timeEnd - timeStart;
                     this._offset = timeRef - (this.lastPing / 2) - timeStart;
-                }).fail(e => console.error("ping: Failed to ping server.", e));
+                }).catch(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);

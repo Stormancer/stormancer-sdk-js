@@ -16,6 +16,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Helpers.ts" />
@@ -60,7 +61,6 @@
     <TypeScriptCompile Include="ScenePeer.ts" />
     <TypeScriptCompile Include="Scripts\promise.d.ts" />
     <TypeScriptCompile Include="stormancer.ts" />
-    <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\msgpack\msgpack.d.ts" />
     <TypeScriptCompile Include="SystemMessages\ConnectedToSceneMsg.ts" />
     <TypeScriptCompile Include="SystemMessages\ConnectionResult.ts" />
@@ -69,8 +69,7 @@
     <TypeScriptCompile Include="Transports\WebSocketClientTransport.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Scripts\ajax.js" />
-    <Content Include="packages.config" />
+    <TypeScriptCompile Include="Scripts\ajax.ts" />
     <Content Include="Scripts\es6-promise.min.js" />
   </ItemGroup>
   <PropertyGroup>

@@ -30,7 +30,7 @@ module Stormancer {
             //    return this._tokenHandler.decodeToken(result);
             //});
 
-            return $http(url).post({}, {
+            return $http(url).post<SceneEndpoint>({}, {
                 type: "POST",
                 url: url,
                 headers: {

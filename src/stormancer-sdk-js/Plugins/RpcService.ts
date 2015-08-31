@@ -1,7 +1,7 @@
 ﻿module Stormancer {
     interface RpcRequest {
         observer: IObserver<Packet<IScenePeer>>;
-        deferred: JQueryDeferred<void>;
+        deferred: Deferred<void>;
         receivedMessages: number;
         id: number;
     }
@@ -38,7 +38,7 @@
                 throw new Error("The target remote route does not support the plugin RPC version " + RpcClientPlugin.Version);
             }
 
-            var deferred = jQuery.Deferred<void>();
+            var deferred = new Deferred<void>();
             var observer: IObserver<Packet<IScenePeer>> = {
                 onNext: onNext,
                 onError(error) {
@@ -62,7 +62,7 @@
             this._pendingRequests[id] = request;
 
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set([i & 255, i >>> 8]);
+            dataToSend.set(<any>[i & 255, i >>> 8]);
             dataToSend.set(data, 2);
 
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);
@@ -123,7 +123,7 @@
             var request = this.getPendingRequest(packet);
             if (request) {
                 if (messageSent) {
-                    request.deferred.then(() => {
+                    request.deferred.promise().then(() => {
                         request.observer.onCompleted();
                         delete this._pendingRequests[request.id];
                     });

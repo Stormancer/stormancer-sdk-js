@@ -57,7 +57,7 @@ module Stormancer {
                 socket.onopen = () => this.onOpen(result);
                 return promise;
 
-                var result = $.Deferred<IConnection>();
+                var result = new Deferred<IConnection>();
                 socket.onclose = args => this.onClose(result, args);
                 socket.onopen = () => this.onOpen(result);
                 return result.promise();
@@ -72,7 +72,7 @@ module Stormancer {
             return new WebSocketConnection(cid, socket);
         }
 
-        private onOpen(deferred: JQueryDeferred<IConnection>) {
+        private onOpen(deferred: Deferred<IConnection>) {
             this._connecting = false;
 
             var connection = this.createNewConnection(this._socket);
@@ -104,7 +104,7 @@ module Stormancer {
             }
         }
 
-        private onClose(deferred: JQueryDeferred<IConnection>, closeEvent: CloseEvent) {
+        private onClose(deferred: Deferred<IConnection>, closeEvent: CloseEvent) {
             if (!this._connection) {
                 this._connecting = false;
 
