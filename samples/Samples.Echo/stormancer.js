@@ -117,7 +117,7 @@ var Stormancer;
         RpcClientPlugin.NextRouteName = "stormancer.rpc.next";
         RpcClientPlugin.ErrorRouteName = "stormancer.rpc.error";
         RpcClientPlugin.CompletedRouteName = "stormancer.rpc.completed";
-        RpcClientPlugin.Version = "1.0.0";
+        RpcClientPlugin.Version = "1.1.0";
         RpcClientPlugin.PluginName = "stormancer.plugins.rpc";
         RpcClientPlugin.ServiceName = "rpcService";
         return RpcClientPlugin;

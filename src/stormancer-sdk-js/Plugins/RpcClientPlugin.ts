@@ -3,7 +3,7 @@
         static NextRouteName = "stormancer.rpc.next";
         static ErrorRouteName = "stormancer.rpc.error";
         static CompletedRouteName = "stormancer.rpc.completed";
-        static Version = "1.0.0";
+        static Version = "1.1.0";
         static PluginName = "stormancer.plugins.rpc";
         static ServiceName = "rpcService";
 
