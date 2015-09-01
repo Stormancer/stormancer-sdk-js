@@ -51,22 +51,15 @@ module Stormancer {
                 socket.onmessage = args => this.onMessage(args.data);
 
                 this._socket = socket;
-
-                var promise = new Promise<IConnection>(function () { });
-                socket.onclose = args => this.onClose(result, args);
-                socket.onopen = () => this.onOpen(result);
-                return promise;
-
-                var result = new Deferred<IConnection>();
-                socket.onclose = args => this.onClose(result, args);
-                socket.onopen = () => this.onOpen(result);
-                return result.promise();
+                
+                var deferred = new Deferred<IConnection>();
+                socket.onclose = args => this.onClose(deferred, args);
+                socket.onopen = () => this.onOpen(deferred);
+                return deferred.promise();
             }
             throw new Error("This transport is already connected.");
         }
-
-
-
+        
         private createNewConnection(socket: WebSocket): WebSocketConnection {
             var cid = this._connectionManager.generateNewConnectionId();
             return new WebSocketConnection(cid, socket);

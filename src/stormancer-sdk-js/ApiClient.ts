@@ -41,8 +41,8 @@ module Stormancer {
                 contentType: "application/json",
                 data: JSON.stringify(userData)
             })
-                .then(result => this._tokenHandler.decodeToken(result))
-                .catch(error => console.log("error", error));
+                .catch(error => console.log("get token error:" + error))
+                .then(result => this._tokenHandler.decodeToken(result.replace(/"/, '')));
         }
     }
 }

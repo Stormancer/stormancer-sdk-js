@@ -1,7 +1,7 @@
 ﻿declare class Promise<T> {
     constructor(f?: any);
-    then(onFulfilled?: any, onRejected?: any): Promise<T>;
-    catch(onRejected?: any): Promise<T>;
+    then<U>(onFulfilled?: any, onRejected?: any): Promise<U>;
+    catch(onRejected?: any): Promise<void>;
 
     static all<T>(iterable?: any[]): Promise<T>;
     static race<T>(iterable?: any[]): Promise<T>;

@@ -105,7 +105,7 @@ module Stormancer {
 
         public getPublicScene(sceneId: string, userData: any): Promise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
-                .then(ci => this.getSceneImpl(sceneId, ci));
+                .then<IScene>(ci => this.getSceneImpl(sceneId, ci));
         }
 
         public getScene(token: string): Promise<IScene> {
@@ -154,16 +154,15 @@ module Stormancer {
 
         private ensureTransportStarted(ci: SceneEndpoint): Promise<void> {
             var self = this;
-            return Helpers.promiseIf(self._serverConnection == null,() => {
+            return Helpers.promiseIf(self._serverConnection == null, () => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
                     .then(() => {
-                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
-                        .then(c => {
-                        self.registerConnection(c);
-                        return self.updateMetadata();
+                        return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
+                            .then(c => {
+                                self.registerConnection(c);
+                                return self.updateMetadata();
+                            });
                     });
-
-                });
             }, self);
         }
 
@@ -184,11 +183,11 @@ module Stormancer {
         public disconnectScene(scene: IScene, sceneHandle: number): Promise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
-                this._scenesDispatcher.removeScene(sceneHandle);
-                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
-                    this._pluginCtx.sceneConnected[i](scene);
-                }
-            });
+                    this._scenesDispatcher.removeScene(sceneHandle);
+                    for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                        this._pluginCtx.sceneConnected[i](scene);
+                    }
+                });
         }
 
         public disconnect(): void {
@@ -215,12 +214,12 @@ module Stormancer {
 
             return this.sendSystemRequest<ConnectToSceneMsg, ConnectionResult>(SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter)
                 .then(result => {
-                scene.completeConnectionInitialization(result);
-                this._scenesDispatcher.addScene(scene);
-                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
-                    this._pluginCtx.sceneConnected[i](scene);
-                }
-            });
+                    scene.completeConnectionInitialization(result);
+                    this._scenesDispatcher.addScene(scene);
+                    for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                        this._pluginCtx.sceneConnected[i](scene);
+                    }
+                });
         }
 
         public lastPing: number;
@@ -250,7 +249,7 @@ module Stormancer {
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
-                        timeRef += (data[i] * Math.pow(2,(i * 8)));
+                        timeRef += (data[i] * Math.pow(2, (i * 8)));
                     }
                     this.lastPing = timeEnd - timeStart;
                     this._offset = timeRef - (this.lastPing / 2) - timeStart;
