@@ -25,7 +25,7 @@
     }
 
     start() {
-        console.log("start");
+        console.log("start!");
 
         ///Local debug test configuration
         //var sceneName = "test-scene";
@@ -33,8 +33,8 @@
         //config.serverEndpoint = "http://localhost:8081";
 
         //Online test configuration
-        var sceneName = "main";
-        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "hello-world-tutorial");
+        var sceneName = "matchmaker";
+        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
 
         $("#sendButton").click(function (e) {
             var message = (<any>document.querySelector("#message")).value;
@@ -42,17 +42,43 @@
             this.sendMessage("echo.in", message);
         }.bind(this));
 
-        var client = new Stormancer.Client(config);
+        var client = $.stormancer(config);
 
-        console.log("get");
+        console.log("I want my matchmaker!");
         client.getPublicScene(sceneName, "moi")
-            .then(scene => {
-                console.log("got");
-                console.log("connect");
-                return scene.connect().then(() => {
-                    console.log("connected");
+            .then(matchmaker => {
+                console.log("I have my matchmaker!");
+                return matchmaker.connect().then(() => {
+                    console.log("connected to matchmaker!");
+                    matchmaker.getComponent<Stormancer.RpcService>("rpcService").RpcRaw("matchmaking.requestScene", new Uint8Array(0), packet => {
+                        var response = msgpack.unpack(packet.data);
+
+                        var scenePromise = client.getScene(response.ConnectionToken);
+
+                        var timeAtConnexion = null;
+
+                        var deferred = $.Deferred<string>();
+                        scenePromise.then(scene => {
+                            this.scene = scene;
+                            scene.registerRoute<string>("echo.out", message => {
+                                console.log("Message received :", message);
+                                this.receivedSpan.innerHTML = message;
+                            });
+
+                            return scene.connect().then(() => {
+                                this.connected = true;
+                                //this.timerToken = setInterval(() => {
+                                //    var localDateString = new Date().toLocaleString();
+                                //    this.sentSpan.innerHTML = localDateString;
+                                //    this.sendMessage("echo.in", localDateString);
+                                //    console.log("server clock", client.clock());
+                                //}, 2000);
+                            });
+                        });
+                    });
                 });
             });
+
     }
 
     sendMessage(routeName, message) {

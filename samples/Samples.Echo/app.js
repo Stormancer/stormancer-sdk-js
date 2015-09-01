@@ -15,21 +15,37 @@ var Greeter = (function () {
         receivedDiv.appendChild(this.receivedSpan);
     }
     Greeter.prototype.start = function () {
-        console.log("start");
-        var sceneName = "main";
-        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "hello-world-tutorial");
+        var _this = this;
+        console.log("start!");
+        var sceneName = "matchmaker";
+        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
         $("#sendButton").click(function (e) {
             var message = document.querySelector("#message").value;
             console.log("click", message);
             this.sendMessage("echo.in", message);
         }.bind(this));
-        var client = new Stormancer.Client(config);
-        console.log("get");
-        client.getPublicScene(sceneName, "moi").then(function (scene) {
-            console.log("got");
-            console.log("connect");
-            return scene.connect().then(function () {
-                console.log("connected");
+        var client = $.stormancer(config);
+        console.log("I want my matchmaker!");
+        client.getPublicScene(sceneName, "moi").then(function (matchmaker) {
+            console.log("I have my matchmaker!");
+            return matchmaker.connect().then(function () {
+                console.log("connected to matchmaker!");
+                matchmaker.getComponent("rpcService").RpcRaw("matchmaking.requestScene", new Uint8Array(0), function (packet) {
+                    var response = msgpack.unpack(packet.data);
+                    var scenePromise = client.getScene(response.ConnectionToken);
+                    var timeAtConnexion = null;
+                    var deferred = $.Deferred();
+                    scenePromise.then(function (scene) {
+                        _this.scene = scene;
+                        scene.registerRoute("echo.out", function (message) {
+                            console.log("Message received :", message);
+                            _this.receivedSpan.innerHTML = message;
+                        });
+                        return scene.connect().then(function () {
+                            _this.connected = true;
+                        });
+                    });
+                });
             });
         });
     };

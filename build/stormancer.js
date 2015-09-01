@@ -759,7 +759,7 @@ var Stormancer;
                 dataType: "json",
                 contentType: "application/json",
                 data: JSON.stringify(userData)
-            }).catch(function (error) { return console.log("get token error:" + error); }).then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/, '')); });
+            }).catch(function (error) { return console.log("get token error:" + error); }).then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
         };
         return ApiClient;
     })();
@@ -1590,6 +1590,9 @@ var Stormancer;
             this._registeredComponents[componentName] = factory;
         };
         Scene.prototype.getComponent = function (componentName) {
+            if (!this._registeredComponents[componentName]) {
+                throw new Error("Component not found");
+            }
             return this._registeredComponents[componentName]();
         };
         Scene.prototype.getRemoteRoutes = function () {

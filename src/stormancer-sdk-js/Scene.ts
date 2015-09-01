@@ -152,6 +152,9 @@ module Stormancer {
         }
 
         getComponent<T>(componentName): T {
+            if (!this._registeredComponents[componentName]) {
+                throw new Error("Component not found");
+            }
             return this._registeredComponents[componentName]();
         }
 
