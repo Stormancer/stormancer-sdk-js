@@ -21,7 +21,7 @@ module Stormancer {
         public connectionClosed: ((connection: IConnection) => void)[] = [];
         
         // Starts the transport
-        public start(type: string, handler: IConnectionManager, token: Cancellation.token): JQueryPromise<void> {
+        public start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void> {
             this._type = name;
             this._connectionManager = handler;
 
@@ -29,9 +29,7 @@ module Stormancer {
 
             token.onCancelled(this.stop);
 
-            var deferred = $.Deferred<void>();
-            deferred.resolve();
-            return deferred.promise();
+            return Promise.resolve<void>();
         }
 
         private stop() {
@@ -43,7 +41,7 @@ module Stormancer {
         }
         
         // Connects the transport to a remote host.
-        public connect(endpoint: string): JQueryPromise<IConnection> {
+        public connect(endpoint: string): Promise<IConnection> {
             if (!this._socket && !this._connecting) {
                 this._connecting = true;
 
@@ -53,24 +51,21 @@ module Stormancer {
                 socket.onmessage = args => this.onMessage(args.data);
 
                 this._socket = socket;
-
-                var result = $.Deferred<IConnection>();
-
-                socket.onclose = args => this.onClose(result, args);
-                socket.onopen = () => this.onOpen(result);
-                return result.promise();
+                
+                var deferred = new Deferred<IConnection>();
+                socket.onclose = args => this.onClose(deferred, args);
+                socket.onopen = () => this.onOpen(deferred);
+                return deferred.promise();
             }
             throw new Error("This transport is already connected.");
         }
-
-
-
+        
         private createNewConnection(socket: WebSocket): WebSocketConnection {
             var cid = this._connectionManager.generateNewConnectionId();
             return new WebSocketConnection(cid, socket);
         }
 
-        private onOpen(deferred: JQueryDeferred<IConnection>) {
+        private onOpen(deferred: Deferred<IConnection>) {
             this._connecting = false;
 
             var connection = this.createNewConnection(this._socket);
@@ -102,7 +97,7 @@ module Stormancer {
             }
         }
 
-        private onClose(deferred: JQueryDeferred<IConnection>, closeEvent: CloseEvent) {
+        private onClose(deferred: Deferred<IConnection>, closeEvent: CloseEvent) {
             if (!this._connection) {
                 this._connecting = false;
 

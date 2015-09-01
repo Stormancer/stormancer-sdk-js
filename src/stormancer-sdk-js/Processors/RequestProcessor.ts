@@ -5,14 +5,14 @@ module Stormancer {
         lastRefresh: Date;
         id: number;
         observer: IObserver<Packet<IConnection>>;
-        deferred: JQueryDeferred<void>;
+        deferred: Deferred<void>;
     }
 
     export class RequestProcessor implements IPacketProcessor {
         private _pendingRequests: IMap<SystemRequest> = {};
         private _logger: ILogger;
         private _isRegistered: boolean = false;
-        private _handlers: IMap<(context: RequestContext) => JQueryPromise<void>> = {};
+        private _handlers: IMap<(context: RequestContext) => Promise<void>> = {};
 
         constructor(logger: ILogger, modules: IRequestModule[]) {
             this._pendingRequests = {};
@@ -27,7 +27,7 @@ module Stormancer {
             this._isRegistered = true;
             for (var key in this._handlers) {
                 var handler = this._handlers[key];
-                config.addProcessor(key,(p: Packet<IConnection>) => {
+                config.addProcessor(key, (p: Packet<IConnection>) => {
                     var context = new RequestContext(p);
 
                     var continuation = (fault: any) => {
@@ -42,8 +42,8 @@ module Stormancer {
                     };
 
                     handler(context)
-                        .done(() => continuation(null))
-                        .fail(error => continuation(error));
+                        .then(() => continuation(null))
+                        .catch(error => continuation(error));
 
                     return true;
                 });
@@ -81,7 +81,7 @@ module Stormancer {
 
                 delete this._pendingRequests[id];
                 if (p.data[3]) {
-                    request.deferred.promise().always(() => request.observer.onCompleted());
+                    request.deferred.promise().then(() => request.observer.onCompleted(), () => request.observer.onCompleted());
                 }
                 else {
                     request.observer.onCompleted();
@@ -112,7 +112,7 @@ module Stormancer {
             });
         }
 
-        public addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => JQueryPromise<void>): void {
+        public addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => Promise<void>): void {
             if (this._isRegistered) {
                 throw new Error("Can only add handler before 'registerProcessor' is called.");
             }
@@ -124,7 +124,7 @@ module Stormancer {
             (<any>this).toto = 1;
             while (id < 65535) {
                 if (!this._pendingRequests[id]) {
-                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred<void>() };
+                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: new Deferred<void>() };
                     this._pendingRequests[id] = request;
                     return request;
                 }
@@ -134,8 +134,8 @@ module Stormancer {
             throw new Error("Unable to create new request: Too many pending requests.");
         }
 
-        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): JQueryPromise<Packet<IConnection>> {
-            var deferred = $.Deferred<Packet<IConnection>>();
+        public sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): Promise<Packet<IConnection>> {
+            var deferred = new Deferred<Packet<IConnection>>();
 
             var request = this.reserveRequestSlot({
                 onNext(packet) { deferred.resolve(packet); },
@@ -147,7 +147,7 @@ module Stormancer {
 
             var dataToSend = new Uint8Array(3 + data.length);
             var idArray = new Uint16Array([request.id]);
-            dataToSend.set([msgId],0);
+            dataToSend.set(<any>[msgId], 0);
             dataToSend.set(new Uint8Array(idArray.buffer), 1);
             dataToSend.set(data, 3);
             peer.sendSystem(MessageIDTypes.ID_SYSTEM_REQUEST, dataToSend, priority);

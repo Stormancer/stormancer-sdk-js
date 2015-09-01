@@ -1,3 +1,5 @@
+/// <reference path="Scripts/promise.d.ts" />
+
 module Stormancer {
 
     /**
@@ -135,7 +137,7 @@ module Stormancer {
             }
             this._dispatcher.dispatchPacket(packet);
         }
-
+        
         /**
         Retrieve a public scene object from its ID.
         @method Stormancer.Client#getPublicScene
@@ -143,9 +145,9 @@ module Stormancer {
         @param {object} userData User data to send
         @return {Promise} Promise which complete when the scene is ready to connect.
         */
-        public getPublicScene<T>(sceneId: string, userData: T): JQueryPromise<IScene> {
+        public getPublicScene(sceneId: string, userData: any): Promise<IScene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
-                .then(ci => this.getSceneImpl(sceneId, ci));
+                .then<IScene>(ci => this.getSceneImpl(sceneId, ci));
         }
         
         /**
@@ -154,12 +156,12 @@ module Stormancer {
         @param {string} token Scene token
         @return {Promise} Promise which complete when the scene is ready to connect.
         */
-        public getScene(token: string): JQueryPromise<IScene> {
+        public getScene(token: string): Promise<IScene> {
             var ci = this._tokenHandler.decodeToken(token);
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
         }
 
-        private getSceneImpl(sceneId: string, ci: SceneEndpoint): JQueryPromise<IScene> {
+        private getSceneImpl(sceneId: string, ci: SceneEndpoint): Promise<IScene> {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
                 if (ci.tokenData.Version > 0) {
@@ -187,33 +189,32 @@ module Stormancer {
             });
         }
 
-        private updateMetadata(): JQueryPromise<Packet<IConnection>> {
+        private updateMetadata(): Promise<Packet<IConnection>> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_SET_METADATA, this._systemSerializer.serialize(this._serverConnection.metadata));
         }
 
-        private sendSystemRequest<T, U>(id: number, parameter: T): JQueryPromise<U> {
+        private sendSystemRequest<T, U>(id: number, parameter: T): Promise<U> {
             return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
                 .then(packet => this._systemSerializer.deserialize<U>(packet.data));
         }
 
         private _systemSerializer: ISerializer = new MsgPackSerializer();
 
-        private ensureTransportStarted(ci: SceneEndpoint): JQueryPromise<void> {
+        private ensureTransportStarted(ci: SceneEndpoint): Promise<void> {
             var self = this;
-            return Helpers.promiseIf(self._serverConnection == null,() => {
+            return Helpers.promiseIf(self._serverConnection == null, () => {
                 return Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
                     .then(() => {
-                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
-                        .then(c => {
-                        self.registerConnection(c);
-                        return self.updateMetadata();
+                        return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
+                            .then(c => {
+                                self.registerConnection(c);
+                                return self.updateMetadata();
+                            });
                     });
-
-                });
             }, self);
         }
-
-        private startTransport(): JQueryPromise<void> {
+        
+        private startTransport(): Promise<void> {
             this._cts = new Cancellation.TokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
         }
@@ -227,14 +228,14 @@ module Stormancer {
 
         private _serverConnection: IConnection;
 
-        public disconnectScene(scene: IScene, sceneHandle: number): JQueryPromise<void> {
+        public disconnectScene(scene: IScene, sceneHandle: number): Promise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
-                this._scenesDispatcher.removeScene(sceneHandle);
-                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
-                    this._pluginCtx.sceneConnected[i](scene);
-                }
-            });
+                    this._scenesDispatcher.removeScene(sceneHandle);
+                    for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                        this._pluginCtx.sceneConnected[i](scene);
+                    }
+                });
         }
         
         /**
@@ -247,7 +248,7 @@ module Stormancer {
             }
         }
 
-        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): JQueryPromise<void> {
+        public connectToScene(scene: Scene, token: string, localRoutes: Route[]): Promise<void> {
             var parameter: ConnectToSceneMsg = {
                 Token: token,
                 Routes: [],
@@ -265,12 +266,12 @@ module Stormancer {
 
             return this.sendSystemRequest<ConnectToSceneMsg, ConnectionResult>(SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter)
                 .then(result => {
-                scene.completeConnectionInitialization(result);
-                this._scenesDispatcher.addScene(scene);
-                for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
-                    this._pluginCtx.sceneConnected[i](scene);
-                }
-            });
+                    scene.completeConnectionInitialization(result);
+                    this._scenesDispatcher.addScene(scene);
+                    for (var i = 0; i < this._pluginCtx.sceneConnected.length; i++) {
+                        this._pluginCtx.sceneConnected[i](scene);
+                    }
+                });
         }
 
         /**
@@ -301,16 +302,16 @@ module Stormancer {
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
-                this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).done(packet => {
+                this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).then(packet => {
                     var timeEnd = this.getCurrentTimestamp();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
-                        timeRef += (data[i] * Math.pow(2,(i * 8)));
+                        timeRef += (data[i] * Math.pow(2, (i * 8)));
                     }
                     this.serverPing = timeEnd - timeStart;
                     this._offset = timeRef - (this.serverPing / 2) - timeStart;
-                }).fail(e => console.error("ping: Failed to ping server.", e));
+                }).catch(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);

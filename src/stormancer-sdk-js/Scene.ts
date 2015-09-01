@@ -111,7 +111,7 @@ module Stormancer {
         @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
         */
         public registerRoute<T>(route: string, handler: (message: T) => void): void {
-            this.addRoute(route,(packet: Packet<IScenePeer>) => {
+            this.addRoute(route, (packet: Packet<IScenePeer>) => {
                 var message = this.hostConnection.serializer.deserialize<T>(packet.data);
                 handler(message);
             });
@@ -124,7 +124,7 @@ module Stormancer {
         @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
         */
         public registerRouteRaw(route: string, handler: (dataView: DataView) => void): void {
-            this.addRoute(route,(packet: Packet<IScenePeer>) => {
+            this.addRoute(route, (packet: Packet<IScenePeer>) => {
                 handler(new DataView(packet.data.buffer, packet.data.byteOffset));
             });
         }
@@ -181,19 +181,19 @@ module Stormancer {
         @method Stormancer.Scene#connect
         @return {Promise} A promise which complete when the Scene is connected.
         */
-        public connect(): JQueryPromise<void> {
+        public connect(): Promise<void> {
             return this._client.connectToScene(this, this._token, Helpers.mapValues(this.localRoutes))
                 .then(() => {
-                this.connected = true;
-            });
+                    this.connected = true;
+                });
         }
-        
+
         /**
         Disconnect the Scene.
         @method Stormancer.Scene#disconnect
         @return {Promise} A promise which complete when the Scene is disconnected.
         */
-        public disconnect(): JQueryPromise<void> {
+        public disconnect(): Promise<void> {
             return this._client.disconnectScene(this, this.handle);
         }
 
@@ -260,6 +260,9 @@ module Stormancer {
         @return {object} The wanted object.
         */
         public getComponent<T>(componentName: string): T {
+            if (!this._registeredComponents[componentName]) {
+                throw new Error("Component not found");
+            }
             return this._registeredComponents[componentName]();
         }
     }

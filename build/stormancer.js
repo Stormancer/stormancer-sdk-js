@@ -34,11 +34,6 @@ var Stormancer;
             }
             return result;
         };
-        Helpers.promiseFromResult = function (result) {
-            var deferred = jQuery.Deferred();
-            deferred.resolve(result);
-            return deferred.promise();
-        };
         Helpers.promiseIf = function (condition, action, context) {
             if (condition) {
                 if (context) {
@@ -49,12 +44,38 @@ var Stormancer;
                 }
             }
             else {
-                return Helpers.promiseFromResult(null);
+                return Promise.resolve();
             }
         };
         return Helpers;
     })();
     Stormancer.Helpers = Helpers;
+    var Deferred = (function () {
+        function Deferred() {
+            var _this = this;
+            this._state = "pending";
+            this._promise = new Promise(function (resolve, reject) {
+                _this._resolve = resolve;
+                _this._reject = reject;
+            });
+        }
+        Deferred.prototype.promise = function () {
+            return this._promise;
+        };
+        Deferred.prototype.state = function () {
+            return this._state;
+        };
+        Deferred.prototype.resolve = function (value) {
+            this._resolve(value);
+            this._state = "resolved";
+        };
+        Deferred.prototype.reject = function (error) {
+            this._reject(error);
+            this._state = "rejected";
+        };
+        return Deferred;
+    })();
+    Stormancer.Deferred = Deferred;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
@@ -118,9 +139,9 @@ var Stormancer;
             if (onCompleted === void 0) { onCompleted = function () {
             }; }
             if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            var remoteRoutes = this._scene.getRemoteRoutes();
+            var remoteRoutes = this._scene.remoteRoutes;
             var relevantRoute;
-            for (var i = 0; i < remoteRoutes.length; i++) {
+            for (var i in remoteRoutes) {
                 if (remoteRoutes[i].name == route) {
                     relevantRoute = remoteRoutes[i];
                     break;
@@ -132,7 +153,7 @@ var Stormancer;
             if (relevantRoute.metadata[Stormancer.RpcClientPlugin.PluginName] != Stormancer.RpcClientPlugin.Version) {
                 throw new Error("The target remote route does not support the plugin RPC version " + Stormancer.RpcClientPlugin.Version);
             }
-            var deferred = jQuery.Deferred();
+            var deferred = new Stormancer.Deferred();
             var observer = {
                 onNext: onNext,
                 onError: function (error) {
@@ -202,7 +223,7 @@ var Stormancer;
             var request = this.getPendingRequest(packet);
             if (request) {
                 if (messageSent) {
-                    request.deferred.then(function () {
+                    request.deferred.promise().then(function () {
                         request.observer.onCompleted();
                         delete _this._pendingRequests[request.id];
                     });
@@ -400,7 +421,7 @@ this.msgpack || (function (globalScope) {
                             }
                             ++size;
                             encode(rv, i, depth);
-                            if ($.inArray(i, settings.byteProperties) != -1) {
+                            if (settings.byteProperties.indexOf(i) != -1) {
                                 encode(rv, mix[i], depth, settings, true);
                             }
                             else {
@@ -525,7 +546,7 @@ this.msgpack || (function (globalScope) {
                     }
                     _idx = i;
                     key = _toString.apply(null, ary);
-                    if ($.inArray(key, settings.byteProperties) != -1) {
+                    if (settings.byteProperties.indexOf(key) != -1) {
                         hash[key] = decode(settings, true);
                     }
                     else {
@@ -727,9 +748,8 @@ var Stormancer;
         }
         ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
             var _this = this;
-            var serializer = new Stormancer.MsgPackSerializer();
             var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
-            return $.ajax({
+            return $http(url).post({}, {
                 type: "POST",
                 url: url,
                 headers: {
@@ -739,9 +759,7 @@ var Stormancer;
                 dataType: "json",
                 contentType: "application/json",
                 data: JSON.stringify(userData)
-            }).then(function (result) {
-                return _this._tokenHandler.decodeToken(result);
-            });
+            }).catch(function (error) { return console.log("get token error:" + error); }).then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
         };
         return ApiClient;
     })();
@@ -749,8 +767,8 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Cancellation;
 (function (Cancellation) {
-    var tokenSource = (function () {
-        function tokenSource() {
+    var TokenSource = (function () {
+        function TokenSource() {
             this.data = {
                 reason: null,
                 isCancelled: false,
@@ -758,7 +776,7 @@ var Cancellation;
             };
             this.token = new token(this.data);
         }
-        tokenSource.prototype.cancel = function (reason) {
+        TokenSource.prototype.cancel = function (reason) {
             this.data.isCancelled = true;
             reason = reason || 'Operation Cancelled';
             this.data.reason = reason;
@@ -770,9 +788,9 @@ var Cancellation;
                 }
             }, 0);
         };
-        return tokenSource;
+        return TokenSource;
     })();
-    Cancellation.tokenSource = tokenSource;
+    Cancellation.TokenSource = TokenSource;
     var token = (function () {
         function token(data) {
             this.data = data;
@@ -804,6 +822,7 @@ var Stormancer;
     var ConnectionHandler = (function () {
         function ConnectionHandler() {
             this._current = 0;
+            this.connectionCount = null;
         }
         ConnectionHandler.prototype.generateNewConnectionId = function () {
             return this._current++;
@@ -822,15 +841,21 @@ var Stormancer;
         function Client(config) {
             this._tokenHandler = new Stormancer.TokenHandler();
             this._serializers = { "msgpack/map": new Stormancer.MsgPackSerializer() };
+            this._metadata = {};
             this._pluginCtx = new Stormancer.PluginBuildContext();
+            this.applicationName = null;
+            this.logger = null;
+            this.id = null;
+            this.serverTransportType = null;
             this._systemSerializer = new Stormancer.MsgPackSerializer();
+            this.serverPing = null;
             this._pingInterval = 5000;
             this._accountId = config.account;
             this._applicationName = config.application;
             this._apiClient = new Stormancer.ApiClient(config, this._tokenHandler);
             this._transport = config.transport;
             this._dispatcher = config.dispatcher;
-            this._requestProcessor = new Stormancer.RequestProcessor(this._logger, []);
+            this._requestProcessor = new Stormancer.RequestProcessor(this.logger, []);
             this._scenesDispatcher = new Stormancer.SceneDispatcher();
             this._dispatcher.addProcessor(this._requestProcessor);
             this._dispatcher.addProcessor(this._scenesDispatcher);
@@ -919,7 +944,7 @@ var Stormancer;
             }, self);
         };
         Client.prototype.startTransport = function () {
-            this._cts = new Cancellation.tokenSource();
+            this._cts = new Cancellation.TokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
         };
         Client.prototype.registerConnection = function (connection) {
@@ -952,7 +977,7 @@ var Stormancer;
             for (var i = 0; i < localRoutes.length; i++) {
                 var r = localRoutes[i];
                 parameter.Routes.push({
-                    Handle: r.index,
+                    Handle: r.handle,
                     Metadata: r.metadata,
                     Name: r.name
                 });
@@ -984,16 +1009,16 @@ var Stormancer;
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
-                this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), 0 /* IMMEDIATE_PRIORITY */).done(function (packet) {
+                this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), 0 /* IMMEDIATE_PRIORITY */).then(function (packet) {
                     var timeEnd = _this.getCurrentTimestamp();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
                         timeRef += (data[i] * Math.pow(2, (i * 8)));
                     }
-                    _this.lastPing = timeEnd - timeStart;
-                    _this._offset = timeRef - (_this.lastPing / 2) - timeStart;
-                }).fail(function (e) { return console.error("ping: Failed to ping server.", e); });
+                    _this.serverPing = timeEnd - timeStart;
+                    _this._offset = timeRef - (_this.serverPing / 2) - timeStart;
+                }).catch(function (e) { return console.error("ping: Failed to ping server.", e); });
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);
@@ -1010,22 +1035,28 @@ var Stormancer;
 (function (Stormancer) {
     var Configuration = (function () {
         function Configuration() {
+            this.serverEndpoint = "";
+            this.account = "";
+            this.application = "";
             this.plugins = [];
             this.metadata = {};
+            this.dispatcher = null;
+            this.transport = null;
+            this.serializers = [];
             this.transport = new Stormancer.WebSocketTransport();
             this.dispatcher = new Stormancer.DefaultPacketDispatcher();
             this.serializers = [];
             this.serializers.push(new Stormancer.MsgPackSerializer());
             this.plugins.push(new Stormancer.RpcClientPlugin());
         }
-        Configuration.prototype.getApiEndpoint = function () {
-            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
-        };
         Configuration.forAccount = function (accountId, applicationName) {
             var config = new Configuration();
             config.account = accountId;
             config.application = applicationName;
             return config;
+        };
+        Configuration.prototype.getApiEndpoint = function () {
+            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
         };
         Configuration.prototype.Metadata = function (key, value) {
             this.metadata[key] = value;
@@ -1038,6 +1069,11 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var _ = {
+        Disconnected: 0,
+        Connecting: 1,
+        Connected: 2
+    };
     (function (ConnectionState) {
         ConnectionState[ConnectionState["Disconnected"] = 0] = "Disconnected";
         ConnectionState[ConnectionState["Connecting"] = 1] = "Connecting";
@@ -1047,32 +1083,53 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var _ = {
+        fatal: 0,
+        error: 1,
+        warn: 2,
+        info: 3,
+        debug: 4,
+        trace: 5
+    };
+    (function (LogLevel) {
+        LogLevel[LogLevel["fatal"] = 0] = "fatal";
+        LogLevel[LogLevel["error"] = 1] = "error";
+        LogLevel[LogLevel["warn"] = 2] = "warn";
+        LogLevel[LogLevel["info"] = 3] = "info";
+        LogLevel[LogLevel["debug"] = 4] = "debug";
+        LogLevel[LogLevel["trace"] = 5] = "trace";
+    })(Stormancer.LogLevel || (Stormancer.LogLevel = {}));
+    var LogLevel = Stormancer.LogLevel;
+})(Stormancer || (Stormancer = {}));
+var Stormancer;
+(function (Stormancer) {
     var Packet = (function () {
         function Packet(source, data, metadata) {
+            this.metadata = {};
             this.connection = source;
             this.data = data;
-            this._metadata = metadata;
+            this.metadata = metadata;
         }
         Packet.prototype.setMetadata = function (metadata) {
-            this._metadata = metadata;
+            this.metadata = metadata;
         };
         Packet.prototype.getMetadata = function () {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            return this._metadata;
+            return this.metadata;
         };
         Packet.prototype.setMetadataValue = function (key, value) {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            this._metadata[key] = value;
+            this.metadata[key] = value;
         };
         Packet.prototype.getMetadataValue = function (key) {
-            if (!this._metadata) {
-                this._metadata = {};
+            if (!this.metadata) {
+                this.metadata = {};
             }
-            return this._metadata[key];
+            return this.metadata[key];
         };
         return Packet;
     })();
@@ -1080,6 +1137,12 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var _ = {
+        IMMEDIATE_PRIORITY: 0,
+        HIGH_PRIORITY: 1,
+        MEDIUM_PRIORITY: 2,
+        LOW_PRIORITY: 3
+    };
     (function (PacketPriority) {
         PacketPriority[PacketPriority["IMMEDIATE_PRIORITY"] = 0] = "IMMEDIATE_PRIORITY";
         PacketPriority[PacketPriority["HIGH_PRIORITY"] = 1] = "HIGH_PRIORITY";
@@ -1090,6 +1153,13 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var _ = {
+        UNRELIABLE: 0,
+        UNRELIABLE_SEQUENCED: 1,
+        RELIABLE: 2,
+        RELIABLE_ORDERED: 3,
+        RELIABLE_SEQUENCED: 4
+    };
     (function (PacketReliability) {
         PacketReliability[PacketReliability["UNRELIABLE"] = 0] = "UNRELIABLE";
         PacketReliability[PacketReliability["UNRELIABLE_SEQUENCED"] = 1] = "UNRELIABLE_SEQUENCED";
@@ -1102,14 +1172,18 @@ var Stormancer;
 var Stormancer;
 (function (Stormancer) {
     var Route = (function () {
-        function Route(scene, name, index, metadata) {
-            if (index === void 0) { index = 0; }
+        function Route(scene, name, handle, metadata) {
+            if (handle === void 0) { handle = 0; }
             if (metadata === void 0) { metadata = {}; }
+            this.scene = null;
+            this.name = null;
+            this.handle = null;
+            this.metadata = {};
+            this.handlers = [];
             this.scene = scene;
             this.name = name;
-            this.index = index;
+            this.handle = handle;
             this.metadata = metadata;
-            this.handlers = [];
         }
         return Route;
     })();
@@ -1192,9 +1266,9 @@ var Stormancer;
 var Stormancer;
 (function (Stormancer) {
     var PacketProcessorConfig = (function () {
-        function PacketProcessorConfig(handlers, defaultprocessors) {
+        function PacketProcessorConfig(handlers, defaultProcessors) {
             this._handlers = handlers;
-            this._defaultProcessors = defaultprocessors;
+            this._defaultProcessors = defaultProcessors;
         }
         PacketProcessorConfig.prototype.addProcessor = function (msgId, handler) {
             if (this._handlers[msgId]) {
@@ -1211,6 +1285,22 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
+    var _ = {
+        ID_SYSTEM_REQUEST: 134,
+        ID_REQUEST_RESPONSE_MSG: 137,
+        ID_REQUEST_RESPONSE_COMPLETE: 138,
+        ID_REQUEST_RESPONSE_ERROR: 139,
+        ID_CONNECTION_RESULT: 140,
+        ID_SCENES: 141
+    };
+    var _2 = {
+        ID_CONNECT_TO_SCENE: 134,
+        ID_DISCONNECT_FROM_SCENE: 135,
+        ID_GET_SCENE_INFOS: 136,
+        ID_SET_METADATA: 0,
+        ID_SCENE_READY: 1,
+        ID_PING: 2
+    };
     var MessageIDTypes = (function () {
         function MessageIDTypes() {
         }
@@ -1239,12 +1329,12 @@ var Stormancer;
 var Stormancer;
 (function (Stormancer) {
     var RequestContext = (function () {
-        function RequestContext(p) {
+        function RequestContext(packet) {
             this._didSendValues = false;
             this.isComplete = false;
-            this._packet = p;
-            this._requestId = p.data.subarray(0, 2);
-            this.inputData = p.data.subarray(2);
+            this._packet = packet;
+            this._requestId = packet.data.subarray(0, 2);
+            this.inputData = packet.data.subarray(2);
         }
         RequestContext.prototype.send = function (data) {
             if (this.isComplete) {
@@ -1303,7 +1393,7 @@ var Stormancer;
                             }
                         }
                     };
-                    handler(context).done(function () { return continuation(null); }).fail(function (error) { return continuation(error); });
+                    handler(context).then(function () { return continuation(null); }).catch(function (error) { return continuation(error); });
                     return true;
                 });
             }
@@ -1335,7 +1425,7 @@ var Stormancer;
                 }
                 delete _this._pendingRequests[id];
                 if (p.data[3]) {
-                    request.deferred.promise().always(function () { return request.observer.onCompleted(); });
+                    request.deferred.promise().then(function () { return request.observer.onCompleted(); }, function () { return request.observer.onCompleted(); });
                 }
                 else {
                     request.observer.onCompleted();
@@ -1369,7 +1459,7 @@ var Stormancer;
             this.toto = 1;
             while (id < 65535) {
                 if (!this._pendingRequests[id]) {
-                    var request = { lastRefresh: new Date, id: id, observer: observer, deferred: jQuery.Deferred() };
+                    var request = { lastRefresh: new Date, id: id, observer: observer, deferred: new Stormancer.Deferred() };
                     this._pendingRequests[id] = request;
                     return request;
                 }
@@ -1379,7 +1469,7 @@ var Stormancer;
         };
         RequestProcessor.prototype.sendSystemRequest = function (peer, msgId, data, priority) {
             if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            var deferred = $.Deferred();
+            var deferred = new Stormancer.Deferred();
             var request = this.reserveRequestSlot({
                 onNext: function (packet) {
                     deferred.resolve(packet);
@@ -1460,9 +1550,13 @@ var Stormancer;
 (function (Stormancer) {
     var Scene = (function () {
         function Scene(connection, client, id, token, dto) {
-            this._remoteRoutesMap = {};
-            this._localRoutesMap = {};
+            this.isHost = false;
+            this.handle = null;
+            this.connected = false;
+            this.localRoutes = {};
+            this.remoteRoutes = {};
             this._handlers = {};
+            this.packetReceived = [];
             this._registeredComponents = {};
             this.id = id;
             this.hostConnection = connection;
@@ -1471,7 +1565,7 @@ var Stormancer;
             this._metadata = dto.Metadata;
             for (var i = 0; i < dto.Routes.length; i++) {
                 var route = dto.Routes[i];
-                this._remoteRoutesMap[route.Name] = new Stormancer.Route(this, route.Name, route.Handle, route.Metadata);
+                this.remoteRoutes[route.Name] = new Stormancer.Route(this, route.Name, route.Handle, route.Metadata);
             }
         }
         Scene.prototype.getHostMetadata = function (key) {
@@ -1485,10 +1579,10 @@ var Stormancer;
             if (this.connected) {
                 throw new Error("You cannot register handles once the scene is connected.");
             }
-            var routeObj = this._localRoutesMap[route];
+            var routeObj = this.localRoutes[route];
             if (!routeObj) {
                 routeObj = new Stormancer.Route(this, route, 0, metadata);
-                this._localRoutesMap[route] = routeObj;
+                this.localRoutes[route] = routeObj;
             }
             this.onMessageImpl(routeObj, handler);
         };
@@ -1524,11 +1618,11 @@ var Stormancer;
             if (!this.connected) {
                 throw new Error("The scene must be connected to perform this operation.");
             }
-            var routeObj = this._remoteRoutesMap[route];
+            var routeObj = this.remoteRoutes[route];
             if (!routeObj) {
                 throw new Error("The route " + route + " doesn't exist on the scene.");
             }
-            this.hostConnection.sendToScene(this.handle, routeObj.index, data, priority, reliability);
+            this.hostConnection.sendToScene(this.handle, routeObj.handle, data, priority, reliability);
         };
         Scene.prototype.send = function (route, data, priority, reliability) {
             if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
@@ -1537,7 +1631,7 @@ var Stormancer;
         };
         Scene.prototype.connect = function () {
             var _this = this;
-            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this._localRoutesMap)).then(function () {
+            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this.localRoutes)).then(function () {
                 _this.connected = true;
             });
         };
@@ -1559,27 +1653,23 @@ var Stormancer;
         };
         Scene.prototype.completeConnectionInitialization = function (cr) {
             this.handle = cr.SceneHandle;
-            for (var key in this._localRoutesMap) {
-                var route = this._localRoutesMap[key];
-                route.index = cr.RouteMappings[key];
-                this._handlers[route.index] = route.handlers;
+            for (var key in this.localRoutes) {
+                var route = this.localRoutes[key];
+                route.handle = cr.RouteMappings[key];
+                this._handlers[route.handle] = route.handlers;
             }
         };
         Scene.prototype.host = function () {
-            return new Stormancer.ScenePeer(this.hostConnection, this.handle, this._remoteRoutesMap, this);
+            return new Stormancer.ScenePeer(this.hostConnection, this.handle, this.remoteRoutes, this);
         };
         Scene.prototype.registerComponent = function (componentName, factory) {
             this._registeredComponents[componentName] = factory;
         };
         Scene.prototype.getComponent = function (componentName) {
-            return this._registeredComponents[componentName]();
-        };
-        Scene.prototype.getRemoteRoutes = function () {
-            var result = [];
-            for (var key in this._remoteRoutesMap) {
-                result.push(this._remoteRoutesMap[key]);
+            if (!this._registeredComponents[componentName]) {
+                throw new Error("Component not found");
             }
-            return result;
+            return this._registeredComponents[componentName]();
         };
         return Scene;
     })();
@@ -1604,21 +1694,20 @@ var Stormancer;
 (function (Stormancer) {
     var ScenePeer = (function () {
         function ScenePeer(connection, sceneHandle, routeMapping, scene) {
+            this.id = null;
             this._connection = connection;
             this._sceneHandle = sceneHandle;
             this._routeMapping = routeMapping;
             this._scene = scene;
             this.serializer = connection.serializer;
+            this.id = this._connection.id;
         }
-        ScenePeer.prototype.id = function () {
-            return this._connection.id;
-        };
         ScenePeer.prototype.send = function (route, data, priority, reliability) {
             var r = this._routeMapping[route];
             if (!r) {
                 throw new Error("The route " + route + " is not declared on the server.");
             }
-            this._connection.sendToScene(this._sceneHandle, r.index, data, priority, reliability);
+            this._connection.sendToScene(this._sceneHandle, r.handle, data, priority, reliability);
         };
         ScenePeer.prototype.getComponent = function (componentName) {
             return this._connection.getComponent(componentName);
@@ -1629,27 +1718,10 @@ var Stormancer;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
-    var jQueryWrapper = (function () {
-        function jQueryWrapper() {
-        }
-        jQueryWrapper.initWrapper = function (jquery) {
-            jQueryWrapper.$ = jquery;
-        };
-        return jQueryWrapper;
-    })();
-    Stormancer.jQueryWrapper = jQueryWrapper;
-})(Stormancer || (Stormancer = {}));
-(function ($, window) {
-    Stormancer.jQueryWrapper.initWrapper($);
-    $.stormancer = function (configuration) {
-        return new Stormancer.Client(configuration);
-    };
-}(jQuery, window));
-var Stormancer;
-(function (Stormancer) {
     var WebSocketConnection = (function () {
         function WebSocketConnection(id, socket) {
             this.metadata = {};
+            this.ping = null;
             this.serializerChosen = false;
             this.serializer = new Stormancer.MsgPackSerializer();
             this._registeredComponents = { "serializer": this.serializer };
@@ -1707,9 +1779,7 @@ var Stormancer;
             this._connectionManager = handler;
             this.isRunning = true;
             token.onCancelled(this.stop);
-            var deferred = $.Deferred();
-            deferred.resolve();
-            return deferred.promise();
+            return Promise.resolve();
         };
         WebSocketTransport.prototype.stop = function () {
             this.isRunning = false;
@@ -1726,10 +1796,10 @@ var Stormancer;
                 socket.binaryType = "arraybuffer";
                 socket.onmessage = function (args) { return _this.onMessage(args.data); };
                 this._socket = socket;
-                var result = $.Deferred();
-                socket.onclose = function (args) { return _this.onClose(result, args); };
-                socket.onopen = function () { return _this.onOpen(result); };
-                return result.promise();
+                var deferred = new Stormancer.Deferred();
+                socket.onclose = function (args) { return _this.onClose(deferred, args); };
+                socket.onopen = function () { return _this.onOpen(deferred); };
+                return deferred.promise();
             }
             throw new Error("This transport is already connected.");
         };
@@ -1782,3 +1852,70 @@ var Stormancer;
     })();
     Stormancer.WebSocketTransport = WebSocketTransport;
 })(Stormancer || (Stormancer = {}));
+function $http(url, options) {
+    var core = {
+        ajax: function (method, url, args, options) {
+            var promise = new Promise(function (resolve, reject) {
+                var client = new XMLHttpRequest();
+                var uri = url;
+                if (args && (method === 'POST' || method === 'PUT')) {
+                    uri += '?';
+                    var argcount = 0;
+                    for (var key in args) {
+                        if (args.hasOwnProperty(key)) {
+                            if (argcount++) {
+                                uri += '&';
+                            }
+                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                        }
+                    }
+                }
+                client.open(method, uri);
+                var data = null;
+                if (options) {
+                    if (options.contentType) {
+                        client.setRequestHeader("Content-Type", options.contentType);
+                    }
+                    if (options.headers) {
+                        for (var key in options.headers) {
+                            if (options.headers.hasOwnProperty(key)) {
+                                client.setRequestHeader(key, options.headers[key]);
+                            }
+                        }
+                    }
+                    if (options.data) {
+                        data = options.data;
+                    }
+                }
+                client.send(data);
+                client.onload = function () {
+                    if (this.status == 200) {
+                        resolve(this.response);
+                    }
+                    else {
+                        reject(this.statusText);
+                    }
+                };
+                client.onerror = function () {
+                    reject(this.statusText);
+                };
+            });
+            return promise;
+        }
+    };
+    return {
+        'get': function (args, options) {
+            return core.ajax('GET', url, args, options);
+        },
+        'post': function (args, options) {
+            return core.ajax('POST', url, args, options);
+        },
+        'put': function (args, options) {
+            return core.ajax('PUT', url, args, options);
+        },
+        'delete': function (args, options) {
+            return core.ajax('DELETE', url, args, options);
+        }
+    };
+}
+;

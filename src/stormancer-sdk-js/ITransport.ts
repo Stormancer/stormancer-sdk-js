@@ -52,11 +52,13 @@ module Stormancer {
 
     export interface ITransport {
 
-        start(name: string, handler: IConnectionManager, token: Cancellation.token): JQueryPromise<void>;
-
+        // Starts the transport
+        start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
+        
         isRunning: boolean;
-
-        connect(endpoint: string): JQueryPromise<IConnection>;
+        
+        // Connects the transport to a remote host.
+        connect(endpoint: string): Promise<IConnection>;
 
         packetReceived: ((packet: Packet<IConnection>) => void)[];
 

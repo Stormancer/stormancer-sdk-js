@@ -28,9 +28,9 @@ Gets a component registered in the scene for a type
 
 module Stormancer {
     export interface IScene {
-
+        
         id: string;
-
+        
         isHost: boolean;
 
         getComponent<T>(componentName: string): T;
