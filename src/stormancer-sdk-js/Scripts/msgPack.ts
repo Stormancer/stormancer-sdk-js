@@ -19,13 +19,13 @@ this.msgpack || (function (globalScope) {
         worker: "msgpack.js",   // msgpack.worker - WebWorkers script filename
         upload: msgpackupload,  // msgpack.upload(url:String, option:Hash, callback:Function)
         download: msgpackdownload // msgpack.download(url:String, option:Hash, callback:Function)
-    };   
+    };
 
     var _ie = /MSIE/.test(navigator.userAgent),
         _bin2num = {}, // BinaryStringToNumber   { "\00": 0, ... "\ff": 255 }
         _num2bin = {}, // NumberToBinaryString   { 0: "\00", ... 255: "\ff" }
         _num2b64 = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-                       "abcdefghijklmnopqrstuvwxyz0123456789+/").split(""),
+            "abcdefghijklmnopqrstuvwxyz0123456789+/").split(""),
         _buf = [], // decode buffer
         _idx = 0,  // decode buffer[index]
         _error = 0,  // msgpack.pack() error code. 1 = CYCLIC_REFERENCE_ERROR
@@ -46,7 +46,7 @@ this.msgpack || (function (globalScope) {
 
     // msgpack.pack
     function msgpackpack(data,       // @param Mix:
-                         settings?) { // @param Boolean(= false):
+        settings?) { // @param Boolean(= false):
         // @return ByteArray/BinaryString/false:
         //     false is error return
         //  [1][mix to String]    msgpack.pack({}, true) -> "..."
@@ -54,13 +54,13 @@ this.msgpack || (function (globalScope) {
         var toString = false;
         _error = 0;
         if (!settings) {
-            settings = {byteProperties:[]};
+            settings = { byteProperties: [] };
         }
-        var byteArray = encode([], data, 0,settings);
+        var byteArray = encode([], data, 0, settings);
 
         return _error ? false
-                      : toString ? byteArrayToByteString(byteArray)
-                                 : byteArray;
+            : toString ? byteArrayToByteString(byteArray)
+                : byteArray;
     }
 
     // msgpack.unpack
@@ -79,11 +79,11 @@ this.msgpack || (function (globalScope) {
 
     // inner - encoder
     function encode(rv,      // @param ByteArray: result
-                    mix,     // @param Mix: source data
-                    depth,  // @param Number: depth
-                    settings?,  
-                    bytesArray?
-                    ) { 
+        mix,     // @param Mix: source data
+        depth,  // @param Number: depth
+        settings?,
+        bytesArray?
+        ) {
         var size, i, iz, c, pos,        // for UTF8.encode, Array.encode, Hash.encode
             high, low, sign, exp, frac; // for IEEE754
 
@@ -113,14 +113,14 @@ this.msgpack || (function (globalScope) {
                             } else if (mix > -0x80000000) {
                                 mix += 0x100000000;
                                 rv.push(0xd2, mix >>> 24, (mix >> 16) & 0xff,
-                                                          (mix >> 8) & 0xff, mix & 0xff);
+                                    (mix >> 8) & 0xff, mix & 0xff);
                             } else {
                                 high = Math.floor(mix / 0x100000000);
                                 low = mix & 0xffffffff;
                                 rv.push(0xd3, (high >> 24) & 0xff, (high >> 16) & 0xff,
-                                              (high >> 8) & 0xff, high & 0xff,
-                                              (low >> 24) & 0xff, (low >> 16) & 0xff,
-                                              (low >> 8) & 0xff, low & 0xff);
+                                    (high >> 8) & 0xff, high & 0xff,
+                                    (low >> 24) & 0xff, (low >> 16) & 0xff,
+                                    (low >> 8) & 0xff, low & 0xff);
                             }
                         } else {
                             // uint
@@ -132,14 +132,14 @@ this.msgpack || (function (globalScope) {
                                 rv.push(0xcd, mix >> 8, mix & 0xff);
                             } else if (mix < 0x100000000) { // uint 32
                                 rv.push(0xce, mix >>> 24, (mix >> 16) & 0xff,
-                                                          (mix >> 8) & 0xff, mix & 0xff);
+                                    (mix >> 8) & 0xff, mix & 0xff);
                             } else {
                                 high = Math.floor(mix / 0x100000000);
                                 low = mix & 0xffffffff;
                                 rv.push(0xcf, (high >> 24) & 0xff, (high >> 16) & 0xff,
-                                              (high >> 8) & 0xff, high & 0xff,
-                                              (low >> 24) & 0xff, (low >> 16) & 0xff,
-                                              (low >> 8) & 0xff, low & 0xff);
+                                    (high >> 8) & 0xff, high & 0xff,
+                                    (low >> 24) & 0xff, (low >> 16) & 0xff,
+                                    (low >> 8) & 0xff, low & 0xff);
                             }
                         }
                     } else { // double
@@ -173,9 +173,9 @@ this.msgpack || (function (globalScope) {
                         high = ((frac / 0x100000000) & 0xfffff) | (exp << 20);
 
                         rv.push(0xcb, (high >> 24) & 0xff, (high >> 16) & 0xff,
-                                      (high >> 8) & 0xff, high & 0xff,
-                                      (low >> 24) & 0xff, (low >> 16) & 0xff,
-                                      (low >> 8) & 0xff, low & 0xff);
+                            (high >> 8) & 0xff, high & 0xff,
+                            (low >> 24) & 0xff, (low >> 16) & 0xff,
+                            (low >> 8) & 0xff, low & 0xff);
                     }
                     break;
                 case "string":
@@ -194,7 +194,7 @@ this.msgpack || (function (globalScope) {
                             rv.push(((c >>> 6) & 0x1f) | 0xc0, (c & 0x3f) | 0x80);
                         } else if (c < 0x10000) {
                             rv.push(((c >>> 12) & 0x0f) | 0xe0,
-                                    ((c >>> 6) & 0x3f) | 0x80, (c & 0x3f) | 0x80);
+                                ((c >>> 6) & 0x3f) | 0x80, (c & 0x3f) | 0x80);
                         }
                     }
                     size = rv.length - pos - 1;
@@ -205,8 +205,8 @@ this.msgpack || (function (globalScope) {
                         rv.splice(pos, 1, 0xda, size >> 8, size & 0xff);
                     } else if (size < 0x100000000) { // 32
                         rv.splice(pos, 1, 0xdb,
-                                  size >>> 24, (size >> 16) & 0xff,
-                                               (size >> 8) & 0xff, size & 0xff);
+                            size >>> 24, (size >> 16) & 0xff,
+                            (size >> 8) & 0xff, size & 0xff);
                     }
                     break;
                 default: // array or hash
@@ -223,7 +223,7 @@ this.msgpack || (function (globalScope) {
                                 rv.push(0xda, size >> 8, size & 0xff);
                             } else if (size < 0x100000000) { // 32
                                 rv.push(0xdb, size >>> 24, (size >> 16) & 0xff,
-                                                           (size >> 8) & 0xff, size & 0xff);
+                                    (size >> 8) & 0xff, size & 0xff);
                             }
                             for (i = 0; i < size; ++i) {
                                 rv.push(mix[i]);
@@ -237,10 +237,10 @@ this.msgpack || (function (globalScope) {
                                 rv.push(0xdc, size >> 8, size & 0xff);
                             } else if (size < 0x100000000) { // 32
                                 rv.push(0xdd, size >>> 24, (size >> 16) & 0xff,
-                                                           (size >> 8) & 0xff, size & 0xff);
+                                    (size >> 8) & 0xff, size & 0xff);
                             }
                             for (i = 0; i < size; ++i) {
-                                encode(rv, mix[i], depth,settings);
+                                encode(rv, mix[i], depth, settings);
                             }
                         }
                     } else { // hash
@@ -254,11 +254,11 @@ this.msgpack || (function (globalScope) {
                             }
                             ++size;
                             encode(rv, i, depth);
-                            if ($.inArray(i,settings.byteProperties)!=-1) {
-                                encode(rv, mix[i], depth,settings,true);
+                            if (settings.byteProperties.indexOf(i) != -1) {
+                                encode(rv, mix[i], depth, settings, true);
                             }
                             else {
-                                encode(rv, mix[i], depth, settings,false);
+                                encode(rv, mix[i], depth, settings, false);
                             }
                         }
                         if (size < 16) {
@@ -267,8 +267,8 @@ this.msgpack || (function (globalScope) {
                             rv.splice(pos, 1, 0xde, size >> 8, size & 0xff);
                         } else if (size < 0x100000000) { // 32
                             rv.splice(pos, 1, 0xdf,
-                                      size >>> 24, (size >> 16) & 0xff,
-                                                   (size >> 8) & 0xff, size & 0xff);
+                                size >>> 24, (size >> 16) & 0xff,
+                                (size >> 8) & 0xff, size & 0xff);
                         }
                     }
             }
@@ -277,10 +277,10 @@ this.msgpack || (function (globalScope) {
     }
 
     // inner - decoder
-    function decode(settings,rawAsArray?) { // @return Mix:
+    function decode(settings, rawAsArray?) { // @return Mix:
         var size, i, iz, c, num = 0,
             sign, exp, frac, ary, hash,
-            buf = _buf, type = buf[++_idx],key;
+            buf = _buf, type = buf[++_idx], key;
 
         if (type >= 0xe0) {             // Negative FixNum (111x xxxx) (-32 ~ -1)
             return type - 0x100;
@@ -306,7 +306,7 @@ this.msgpack || (function (globalScope) {
             case 0xc3: return true;
             case 0xca:  // float
                 num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                                                (buf[++_idx] << 8) + buf[++_idx];
+                (buf[++_idx] << 8) + buf[++_idx];
                 sign = num & 0x80000000;    //  1bit
                 exp = (num >> 23) & 0xff;   //  8bits
                 frac = num & 0x7fffff;      // 23bits
@@ -317,10 +317,10 @@ this.msgpack || (function (globalScope) {
                     return frac ? NaN : Infinity;
                 }
                 return (sign ? -1 : 1) *
-                            (frac | 0x800000) * Math.pow(2, exp - 127 - 23); // 127: bias
+                    (frac | 0x800000) * Math.pow(2, exp - 127 - 23); // 127: bias
             case 0xcb:  // double
                 num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                                                (buf[++_idx] << 8) + buf[++_idx];
+                (buf[++_idx] << 8) + buf[++_idx];
                 sign = num & 0x80000000;    //  1bit
                 exp = (num >> 20) & 0x7ff;  // 11bits
                 frac = num & 0xfffff;       // 52bits - 32bits (high word)
@@ -333,50 +333,50 @@ this.msgpack || (function (globalScope) {
                     return frac ? NaN : Infinity;
                 }
                 num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                                                (buf[++_idx] << 8) + buf[++_idx];
+                (buf[++_idx] << 8) + buf[++_idx];
                 return (sign ? -1 : 1) *
-                            ((frac | 0x100000) * Math.pow(2, exp - 1023 - 20) // 1023: bias
-                             + num * Math.pow(2, exp - 1023 - 52));
-                // 0xcf: uint64, 0xce: uint32, 0xcd: uint16
+                    ((frac | 0x100000) * Math.pow(2, exp - 1023 - 20) // 1023: bias
+                        + num * Math.pow(2, exp - 1023 - 52));
+            // 0xcf: uint64, 0xce: uint32, 0xcd: uint16
             case 0xcf: num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                                                         (buf[++_idx] << 8) + buf[++_idx];
+                (buf[++_idx] << 8) + buf[++_idx];
                 return num * 0x100000000 +
-                       buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                                                 (buf[++_idx] << 8) + buf[++_idx];
+                    buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
             case 0xce: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xcd: num += buf[++_idx] << 8;
             case 0xcc: return num + buf[++_idx];
-                // 0xd3: int64, 0xd2: int32, 0xd1: int16, 0xd0: int8
+            // 0xd3: int64, 0xd2: int32, 0xd1: int16, 0xd0: int8
             case 0xd3: num = buf[++_idx];
                 if (num & 0x80) { // sign -> avoid overflow
                     return ((num ^ 0xff) * 0x100000000000000 +
-                            (buf[++_idx] ^ 0xff) * 0x1000000000000 +
-                            (buf[++_idx] ^ 0xff) * 0x10000000000 +
-                            (buf[++_idx] ^ 0xff) * 0x100000000 +
-                            (buf[++_idx] ^ 0xff) * 0x1000000 +
-                            (buf[++_idx] ^ 0xff) * 0x10000 +
-                            (buf[++_idx] ^ 0xff) * 0x100 +
-                            (buf[++_idx] ^ 0xff) + 1) * -1;
+                        (buf[++_idx] ^ 0xff) * 0x1000000000000 +
+                        (buf[++_idx] ^ 0xff) * 0x10000000000 +
+                        (buf[++_idx] ^ 0xff) * 0x100000000 +
+                        (buf[++_idx] ^ 0xff) * 0x1000000 +
+                        (buf[++_idx] ^ 0xff) * 0x10000 +
+                        (buf[++_idx] ^ 0xff) * 0x100 +
+                        (buf[++_idx] ^ 0xff) + 1) * -1;
                 }
                 return num * 0x100000000000000 +
-                       buf[++_idx] * 0x1000000000000 +
-                       buf[++_idx] * 0x10000000000 +
-                       buf[++_idx] * 0x100000000 +
-                       buf[++_idx] * 0x1000000 +
-                       buf[++_idx] * 0x10000 +
-                       buf[++_idx] * 0x100 +
-                       buf[++_idx];
+                    buf[++_idx] * 0x1000000000000 +
+                    buf[++_idx] * 0x10000000000 +
+                    buf[++_idx] * 0x100000000 +
+                    buf[++_idx] * 0x1000000 +
+                    buf[++_idx] * 0x10000 +
+                    buf[++_idx] * 0x100 +
+                    buf[++_idx];
             case 0xd2: num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
-                               (buf[++_idx] << 8) + buf[++_idx];
+                (buf[++_idx] << 8) + buf[++_idx];
                 return num < 0x80000000 ? num : num - 0x100000000; // 0x80000000 * 2
             case 0xd1: num = (buf[++_idx] << 8) + buf[++_idx];
                 return num < 0x8000 ? num : num - 0x10000; // 0x8000 * 2
             case 0xd0: num = buf[++_idx];
                 return num < 0x80 ? num : num - 0x100; // 0x80 * 2
-                // 0xdb: raw32, 0xda: raw16, 0xa0: raw ( string ) (or <byte>Array if rawAsArray == true)
+            // 0xdb: raw32, 0xda: raw16, 0xa0: raw ( string ) (or <byte>Array if rawAsArray == true)
             case 0xdb: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xda: num += (buf[++_idx] << 8) + buf[++_idx];
-            case 0xa0:  
+            case 0xa0:
                 if (rawAsArray) {
                     for (ary = [], i = _idx, iz = i + num; i < iz;) {
                         ary.push(buf[++i]);
@@ -389,15 +389,15 @@ this.msgpack || (function (globalScope) {
                     for (ary = [], i = _idx, iz = i + num; i < iz;) {
                         c = buf[++i]; // lead byte
                         ary.push(c < 0x80 ? c : // ASCII(0x00 ~ 0x7f)
-                                 c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
-                                            ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
-                                                              | (buf[++i] & 0x3f)));
+                            c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
+                                ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
+                                    | (buf[++i] & 0x3f)));
                     }
                     _idx = i;
                     return ary.length < 10240 ? _toString.apply(null, ary)
-                                              : byteArrayToByteString(ary);
+                        : byteArrayToByteString(ary);
                 }
-                // 0xdf: map32, 0xde: map16, 0x80: map
+            // 0xdf: map32, 0xde: map16, 0x80: map
             case 0xdf: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xde: num += (buf[++_idx] << 8) + buf[++_idx];
             case 0x80: hash = {};
@@ -408,14 +408,14 @@ this.msgpack || (function (globalScope) {
                     for (ary = [], i = _idx, iz = i + size; i < iz;) {
                         c = buf[++i]; // lead byte
                         ary.push(c < 0x80 ? c : // ASCII(0x00 ~ 0x7f)
-                                 c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
-                                            ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
-                                                              | (buf[++i] & 0x3f)));
+                            c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
+                                ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
+                                    | (buf[++i] & 0x3f)));
                     }
                     _idx = i;
                     key = _toString.apply(null, ary)
-                    if ($.inArray(key, settings.byteProperties) != -1) {
-                        hash[key] = decode(settings,true);
+                    if (settings.byteProperties.indexOf(key) != -1) {
+                        hash[key] = decode(settings, true);
                     }
                     else {
 
@@ -423,12 +423,12 @@ this.msgpack || (function (globalScope) {
                     }
                 }
                 return hash;
-                // 0xdd: array32, 0xdc: array16, 0x90: array
+            // 0xdd: array32, 0xdc: array16, 0x90: array
             case 0xdd: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xdc: num += (buf[++_idx] << 8) + buf[++_idx];
             case 0x90: ary = [];
                 while (num--) {
-                    ary.push(decode(settings,rawAsArray));
+                    ary.push(decode(settings, rawAsArray));
                 }
                 return ary;
         }
@@ -454,12 +454,12 @@ this.msgpack || (function (globalScope) {
 
     // msgpack.download - load from server
     function msgpackdownload(url,        // @param String:
-                             option,     // @param Hash: { worker, timeout, before, after }
-                                         //    option.worker - Boolean(= false): true is use WebWorkers
-                                         //    option.timeout - Number(= 10): timeout sec
-                                         //    option.before  - Function: before(xhr, option)
-                                         //    option.after   - Function: after(xhr, option, { status, ok })
-                             callback) { // @param Function: callback(data, option, { status, ok })
+        option,     // @param Hash: { worker, timeout, before, after }
+        //    option.worker - Boolean(= false): true is use WebWorkers
+        //    option.timeout - Number(= 10): timeout sec
+        //    option.before  - Function: before(xhr, option)
+        //    option.after   - Function: after(xhr, option, { status, ok })
+        callback) { // @param Function: callback(data, option, { status, ok })
         //    data   - Mix/null:
         //    option - Hash:
         //    status - Number: HTTP status code
@@ -471,13 +471,13 @@ this.msgpack || (function (globalScope) {
 
     // msgpack.upload - save to server
     function msgpackupload(url,        // @param String:
-                           option,     // @param Hash: { data, worker, timeout, before, after }
-                                       //    option.data - Mix:
-                                       //    option.worker - Boolean(= false): true is use WebWorkers
-                                       //    option.timeout - Number(= 10): timeout sec
-                                       //    option.before  - Function: before(xhr, option)
-                                       //    option.after   - Function: after(xhr, option, { status, ok })
-                           callback) { // @param Function: callback(data, option, { status, ok })
+        option,     // @param Hash: { data, worker, timeout, before, after }
+        //    option.data - Mix:
+        //    option.worker - Boolean(= false): true is use WebWorkers
+        //    option.timeout - Number(= 10): timeout sec
+        //    option.before  - Function: before(xhr, option)
+        //    option.after   - Function: after(xhr, option, { status, ok })
+        callback) { // @param Function: callback(data, option, { status, ok })
         //    data   - String: responseText
         //    option - Hash:
         //    status - Number: HTTP status code
@@ -502,18 +502,18 @@ this.msgpack || (function (globalScope) {
 
     // inner -
     function ajax(url,        // @param String:
-                  option,     // @param Hash: { data, ifmod, method, timeout,
-                              //                header, binary, before, after, worker }
-                              //    option.data    - Mix: upload data
-                              //    option.ifmod   - Boolean: true is "If-Modified-Since" header
-                              //    option.method  - String: "GET", "POST", "PUT"
-                              //    option.timeout - Number(= 10): timeout sec
-                              //    option.header  - Hash(= {}): { key: "value", ... }
-                              //    option.binary  - Boolean(= false): true is binary data
-                              //    option.before  - Function: before(xhr, option)
-                              //    option.after   - Function: after(xhr, option, { status, ok })
-                              //    option.worker  - Boolean(= false): true is use WebWorkers
-                  callback) { // @param Function: callback(data, option, { status, ok })
+        option,     // @param Hash: { data, ifmod, method, timeout,
+        //                header, binary, before, after, worker }
+        //    option.data    - Mix: upload data
+        //    option.ifmod   - Boolean: true is "If-Modified-Since" header
+        //    option.method  - String: "GET", "POST", "PUT"
+        //    option.timeout - Number(= 10): timeout sec
+        //    option.header  - Hash(= {}): { key: "value", ... }
+        //    option.binary  - Boolean(= false): true is binary data
+        //    option.before  - Function: before(xhr, option)
+        //    option.after   - Function: after(xhr, option, { status, ok })
+        //    option.worker  - Boolean(= false): true is use WebWorkers
+        callback) { // @param Function: callback(data, option, { status, ok })
         //    data   - String/Mix/null:
         //    option - Hash:
         //    status - Number: HTTP status code
@@ -541,7 +541,7 @@ this.msgpack || (function (globalScope) {
                                 return;
                             } else {
                                 byteArray = _ie ? toByteArrayIE(xhr)
-                                                : toByteArray(xhr.responseText);
+                                    : toByteArray(xhr.responseText);
                                 data = msgpackunpack(byteArray);
                             }
                         }
@@ -568,7 +568,7 @@ this.msgpack || (function (globalScope) {
             watchdog && (clearTimeout(watchdog), watchdog = 0);
             xhr = null;
             globalScope.addEventListener &&
-                globalScope.removeEventListener("beforeunload", ng, false);
+            globalScope.removeEventListener("beforeunload", ng, false);
         }
 
         var watchdog = 0,
@@ -578,8 +578,8 @@ this.msgpack || (function (globalScope) {
             after = option.after,
             data = option.data || null,
             xhr = globalScope.XMLHttpRequest ? new XMLHttpRequest() :
-                  globalScope.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") :
-                  null,
+                globalScope.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") :
+                    null,
             run = 0, i,
             overrideMimeType = "overrideMimeType",
             setRequestHeader = "setRequestHeader",
@@ -592,17 +592,17 @@ this.msgpack || (function (globalScope) {
             before && before(xhr, option);
 
             getbinary && xhr[overrideMimeType] &&
-                xhr[overrideMimeType]("text/plain; charset=x-user-defined");
+            xhr[overrideMimeType]("text/plain; charset=x-user-defined");
             data &&
-                xhr[setRequestHeader]("Content-Type",
-                                      "application/x-www-form-urlencoded");
+            xhr[setRequestHeader]("Content-Type",
+                "application/x-www-form-urlencoded");
 
             for (i in header) {
                 xhr[setRequestHeader](i, header[i]);
             }
 
             globalScope.addEventListener &&
-                globalScope.addEventListener("beforeunload", ng, false); // 400: Bad Request
+            globalScope.addEventListener("beforeunload", ng, false); // 400: Bad Request
 
             xhr.send(data);
             watchdog = setTimeout(function () {
@@ -630,9 +630,9 @@ this.msgpack || (function (globalScope) {
         remain = iz >> 3;
         while (remain--) {
             rv.push(bin2num[ary[++i]], bin2num[ary[++i]],
-                    bin2num[ary[++i]], bin2num[ary[++i]],
-                    bin2num[ary[++i]], bin2num[ary[++i]],
-                    bin2num[ary[++i]], bin2num[ary[++i]]);
+                bin2num[ary[++i]], bin2num[ary[++i]],
+                bin2num[ary[++i]], bin2num[ary[++i]],
+                bin2num[ary[++i]], bin2num[ary[++i]]);
         }
         return rv;
     }
@@ -664,9 +664,9 @@ this.msgpack || (function (globalScope) {
             v6 = data[charCodeAt](++i);
             v7 = data[charCodeAt](++i);
             rv.push(v0 & 0xff, v0 >> 8, v1 & 0xff, v1 >> 8,
-                    v2 & 0xff, v2 >> 8, v3 & 0xff, v3 >> 8,
-                    v4 & 0xff, v4 >> 8, v5 & 0xff, v5 >> 8,
-                    v6 & 0xff, v6 >> 8, v7 & 0xff, v7 >> 8);
+                v2 & 0xff, v2 >> 8, v3 & 0xff, v3 >> 8,
+                v4 & 0xff, v4 >> 8, v5 & 0xff, v5 >> 8,
+                v6 & 0xff, v6 >> 8, v7 & 0xff, v7 >> 8);
         }
         iz % 2 && rv.pop();
 
@@ -692,9 +692,9 @@ this.msgpack || (function (globalScope) {
         while (i < iz) {
             c = (data[++i] << 16) | (data[++i] << 8) | (data[++i]); // 24bit
             rv.push(num2b64[(c >> 18) & 0x3f],
-                    num2b64[(c >> 12) & 0x3f],
-                    num2b64[(c >> 6) & 0x3f],
-                    num2b64[c & 0x3f]);
+                num2b64[(c >> 12) & 0x3f],
+                num2b64[(c >> 6) & 0x3f],
+                num2b64[c & 0x3f]);
         }
         pad > 1 && (rv[rv.length - 2] = "=");
         pad > 0 && (rv[rv.length - 1] = "=");
