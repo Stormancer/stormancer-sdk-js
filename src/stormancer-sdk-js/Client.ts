@@ -128,6 +128,7 @@ module Stormancer {
             if (!this._initialized) {
                 this._initialized = true;
                 this._transport.packetReceived.push(packet => this.transportPacketReceived(packet));
+                this._watch.start();
             }
         }
 
@@ -213,7 +214,7 @@ module Stormancer {
                     });
             }, self);
         }
-        
+
         private startTransport(): Promise<void> {
             this._cts = new Cancellation.TokenSource();
             return this._transport.start("client", new ConnectionHandler(), this._cts.token);
@@ -281,29 +282,27 @@ module Stormancer {
         */
         public serverPing: number = null;
 
-        private _offset: number;
+        private _offset: number = 0;
         private _pingInterval = 5000;
-        private syncClockIntervalId: number;
-        private getCurrentTimestamp(): number {
-            return (window.performance && window.performance.now && window.performance.now()) || Date.now();
-        }
+        private _syncClockIntervalId: number;
+        private _watch: Watch = new Watch();
         private startAsyncClock(): void {
-            if (!this.syncClockIntervalId) {
-                this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+            if (!this._syncClockIntervalId) {
+                this._syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
             }
         }
         private stopAsyncClock(): void {
-            clearInterval(this.syncClockIntervalId);
-            this.syncClockIntervalId = null;
+            clearInterval(this._syncClockIntervalId);
+            this._syncClockIntervalId = null;
         }
         private syncClockImpl(): void {
             try {
-                var timeStart = Math.floor(this.getCurrentTimestamp());
+                var timeStart = Math.floor(this._watch.getElapsedTime());
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
                 this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).then(packet => {
-                    var timeEnd = this.getCurrentTimestamp();
+                    var timeEnd = this._watch.getElapsedTime();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
@@ -324,7 +323,23 @@ module Stormancer {
         @return {number} The number of milliseconds since the application started.
         */
         public clock(): number {
-            return Math.floor(this.getCurrentTimestamp()) + this._offset;
+            return Math.floor(this._watch.getElapsedTime()) + this._offset;
+        }
+    }
+
+    class Watch {
+        constructor() {
+            this._baseTime = this.getTime();
+        }
+        private _baseTime: number = 0;
+        public start(): void {
+            this._baseTime = this.getTime();
+        }
+        private getTime(): number {
+            return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
+        }
+        public getElapsedTime(): number {
+            return this.getTime() - this._baseTime;
         }
     }
 }

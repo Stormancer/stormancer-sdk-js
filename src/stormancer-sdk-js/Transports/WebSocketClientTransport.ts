@@ -22,7 +22,7 @@ module Stormancer {
         
         // Starts the transport
         public start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void> {
-            this._type = name;
+            this._type = this.name;
             this._connectionManager = handler;
 
             this.isRunning = true;

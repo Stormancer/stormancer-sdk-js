@@ -35,6 +35,7 @@ this.msgpack || (function (globalScope) {
         _toString = String.fromCharCode, // CharCode/ByteArray to String
         _MAX_DEPTH = 512;
 
+    /*
     // for WebWorkers Code Block
     (<any>self).importScripts && (onmessage = function (event) {
         if (event.data.method === "pack") {
@@ -43,6 +44,7 @@ this.msgpack || (function (globalScope) {
             (<any>window).postMessage(msgpackunpack(event.data.data));
         }
     });
+    */
 
     // msgpack.pack
     function msgpackpack(data,       // @param Mix:

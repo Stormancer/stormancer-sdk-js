@@ -249,14 +249,6 @@ this.msgpack || (function (globalScope) {
     var _ie = /MSIE/.test(navigator.userAgent), _bin2num = {}, _num2bin = {}, _num2b64 = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789+/").split(""), _buf = [], _idx = 0, _error = 0, _isArray = Array.isArray || (function (mix) {
         return Object.prototype.toString.call(mix) === "[object Array]";
     }), _toString = String.fromCharCode, _MAX_DEPTH = 512;
-    self.importScripts && (onmessage = function (event) {
-        if (event.data.method === "pack") {
-            window.postMessage(base64encode(msgpackpack(event.data.data)));
-        }
-        else {
-            window.postMessage(msgpackunpack(event.data.data));
-        }
-    });
     function msgpackpack(data, settings) {
         var toString = false;
         _error = 0;
@@ -849,7 +841,9 @@ var Stormancer;
             this.serverTransportType = null;
             this._systemSerializer = new Stormancer.MsgPackSerializer();
             this.serverPing = null;
+            this._offset = 0;
             this._pingInterval = 5000;
+            this._watch = new Watch();
             this._accountId = config.account;
             this._applicationName = config.application;
             this._apiClient = new Stormancer.ApiClient(config, this._tokenHandler);
@@ -882,6 +876,7 @@ var Stormancer;
             if (!this._initialized) {
                 this._initialized = true;
                 this._transport.packetReceived.push(function (packet) { return _this.transportPacketReceived(packet); });
+                this._watch.start();
             }
         };
         Client.prototype.transportPacketReceived = function (packet) {
@@ -990,27 +985,24 @@ var Stormancer;
                 }
             });
         };
-        Client.prototype.getCurrentTimestamp = function () {
-            return (window.performance && window.performance.now && window.performance.now()) || Date.now();
-        };
         Client.prototype.startAsyncClock = function () {
-            if (!this.syncClockIntervalId) {
-                this.syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
+            if (!this._syncClockIntervalId) {
+                this._syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
             }
         };
         Client.prototype.stopAsyncClock = function () {
-            clearInterval(this.syncClockIntervalId);
-            this.syncClockIntervalId = null;
+            clearInterval(this._syncClockIntervalId);
+            this._syncClockIntervalId = null;
         };
         Client.prototype.syncClockImpl = function () {
             var _this = this;
             try {
-                var timeStart = Math.floor(this.getCurrentTimestamp());
+                var timeStart = Math.floor(this._watch.getElapsedTime());
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
                 this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), 0 /* IMMEDIATE_PRIORITY */).then(function (packet) {
-                    var timeEnd = _this.getCurrentTimestamp();
+                    var timeEnd = _this._watch.getElapsedTime();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
@@ -1025,11 +1017,27 @@ var Stormancer;
             }
         };
         Client.prototype.clock = function () {
-            return Math.floor(this.getCurrentTimestamp()) + this._offset;
+            return Math.floor(this._watch.getElapsedTime()) + this._offset;
         };
         return Client;
     })();
     Stormancer.Client = Client;
+    var Watch = (function () {
+        function Watch() {
+            this._baseTime = 0;
+            this._baseTime = this.getTime();
+        }
+        Watch.prototype.start = function () {
+            this._baseTime = this.getTime();
+        };
+        Watch.prototype.getTime = function () {
+            return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
+        };
+        Watch.prototype.getElapsedTime = function () {
+            return this.getTime() - this._baseTime;
+        };
+        return Watch;
+    })();
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
@@ -1775,7 +1783,7 @@ var Stormancer;
             this.connectionClosed = [];
         }
         WebSocketTransport.prototype.start = function (type, handler, token) {
-            this._type = name;
+            this._type = this.name;
             this._connectionManager = handler;
             this.isRunning = true;
             token.onCancelled(this.stop);
