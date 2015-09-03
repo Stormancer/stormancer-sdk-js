@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/PacketPriority.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,44 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/PacketPriority.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    /**
+    Available packet priorities
+    @alias PacketPriority
+    @enum {number}
+    @memberof Stormancer
+    */
+    var _ = {
+        /** 0 - The packet is sent immediately without aggregation. */
+        IMMEDIATE_PRIORITY: 0,
+        /** 1 - The packet is sent at high priority level. */
+        HIGH_PRIORITY: 1,
+        /** 2 - The packet is sent at medium priority level. */
+        MEDIUM_PRIORITY: 2,
+        /** 3 - The packet is sent at low priority level. */
+        LOW_PRIORITY: 3
+    };
+    (function (PacketPriority) {
+        PacketPriority[PacketPriority["IMMEDIATE_PRIORITY"] = 0] = "IMMEDIATE_PRIORITY";
+        PacketPriority[PacketPriority["HIGH_PRIORITY"] = 1] = "HIGH_PRIORITY";
+        PacketPriority[PacketPriority["MEDIUM_PRIORITY"] = 2] = "MEDIUM_PRIORITY";
+        PacketPriority[PacketPriority["LOW_PRIORITY"] = 3] = "LOW_PRIORITY";
+    })(Stormancer.PacketPriority || (Stormancer.PacketPriority = {}));
+    var PacketPriority = Stormancer.PacketPriority;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=PacketPriority.js.map</code></pre>
+        </article>
+    </section>
 
 
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/Route.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,73 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/Route.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    var Route = (function () {
+        /**
+        Creates a new route instance.
+        @class Route
+        @classdesc Represents a Route on a Scene.
+        @memberof Stormancer
+        @param {Stormancer.Scene} scene The scene instance
+        @param {string} name The route name.
+        @param {number} handle Handle of the route (16 bits unsigned integer).
+        @param {object.&lt;string, string>} metadata Metadata attached to this route.
+        */
+        function Route(scene, name, handle, metadata) {
+            if (handle === void 0) { handle = 0; }
+            if (metadata === void 0) { metadata = {}; }
+            /**
+            The Scene instance which contains this route.
+            @member Stormancer.Route#scene
+            @type {Stormancer.Scene}
+            */
+            this.scene = null;
+            /**
+            A string containing the name of the route.
+            @member Stormancer.Route#name
+            @type {string}
+            */
+            this.name = null;
+            /**
+            Route handle.
+            @member Stormancer.Route#handle
+            @type {number}
+            */
+            this.handle = null;
+            /**
+            Route metadata.
+            @member Stormancer.Route#metadata
+            @type {object.&lt;string, string>}
+            */
+            this.metadata = {};
+            /**
+            Contains the handlers that are run when packets are received.
+            @member Stormancer.Route#handlers
+            @type {function[]}
+            */
+            this.handlers = [];
+            this.scene = scene;
+            this.name = name;
+            this.handle = handle;
+            this.metadata = metadata;
+        }
+        return Route;
+    })();
+    Stormancer.Route = Route;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=Route.js.map</code></pre>
+        </article>
+    </section>
 
 
 

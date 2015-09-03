@@ -80,11 +80,11 @@ module Stormancer {
         }
         
         /**
-        Registers a route on the local peer.
+        Registers a route on the local peer for receiving data packets. See the {Stormancer.Packet} class to know how to get the data.
         @method Stormancer.Scene#addRoute
         @param {string} route The route name
-        @param {function} handler Function for handling the received messages. This function is called any time a Packet is received by the server on this route.
-        @param {object.<string, string>} metadata Some metadata attached to this route.
+        @param {packetHandler} handler Function for handling the received messages. This function is called any time a Packet is received by the server on this route.
+        @param {object.<string, string>} [metadata={}] Some metadata attached to this route.
         */
         public addRoute(route: string, handler: (packet: Packet<IScenePeer>) => void, metadata: Map = {}): void {
             if (route[0] === `@`) {
@@ -103,32 +103,33 @@ module Stormancer {
 
             this.onMessageImpl(routeObj, handler);
         }
+
+        /**
+        This callback handles a received packet.
+        @callback packetHandler
+        @param {Stormancer.Packet} packet The packet containing some data.
+        */
         
         /**
-        Allows to receive messages on a route. A route is an easy way to get messages of only one type.
+        Registers a route on the local peer for receiving deserialised javascript objects. See {Stormancer.Scene.addRoute} to have more flexibility on the data.
         @method Stormancer.Scene#registerRoute
         @param {string} route The route name
-        @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
+        @param {dataHandler} handler Function for handling the received messages. This function is called any time a data is received by the server on this route.
+        @param {object.<string, string>} [metadata={}] Some metadata attached to this route.
         */
-        public registerRoute<T>(route: string, handler: (message: T) => void): void {
+        public registerRoute<T>(route: string, handler: (data: T) => void, metadata: Map = {}): void {
             this.addRoute(route, (packet: Packet<IScenePeer>) => {
-                var message = this.hostConnection.serializer.deserialize<T>(packet.data);
-                handler(message);
-            });
+                var data = this.hostConnection.serializer.deserialize<T>(packet.data);
+                handler(data);
+            }, metadata);
         }
         
         /**
-        Allows to receive messages on a route without using any built-in serializers. Use this method for serialize and deserialize data by yourself.
-        @method Stormancer.Scene#registerRouteRaw
-        @param {string} route The route name
-        @param {function} handler Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.
+        This callback handles a received data object.
+        @callback dataHandler
+        @param {Object} object The data object.
         */
-        public registerRouteRaw(route: string, handler: (dataView: DataView) => void): void {
-            this.addRoute(route, (packet: Packet<IScenePeer>) => {
-                handler(new DataView(packet.data.buffer, packet.data.byteOffset));
-            });
-        }
-
+        
         private onMessageImpl(route: Route, handler: (packet: Packet<IScenePeer>) => void): void {
             var action = (p: Packet<IConnection>) => {
                 var packet = new Packet(this.host(), p.data, p.getMetadata());

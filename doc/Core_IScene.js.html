@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/IScene.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,45 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/IScene.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+Represents a Stormancer scene.
+@interface IScene
+@memberof Stormancer
+*/
+/**
+Gets a string representing the scene id.
+@member Stormancer.IScene#id
+@type {string}
+*/
+/**
+True if the instance is an host. False if it's a client.
+@member Stormancer.IScene#isHost
+@type {boolean}
+*/
+/**
+Gets a component registered in the scene.
+@method Stormancer.IScene#getComponent
+@param {string} componentName The name of the component.
+@return {object} The requested component.
+*/
+/**
+Gets a component registered in the scene for a type
+@method Stormancer.IScene#registerComponent
+@param {string} componentName The component to register.
+@param {function} factory The component factory to get an instance of the requested component.
+*/
+//# sourceMappingURL=IScene.js.map</code></pre>
+        </article>
+    </section>
 
 
 

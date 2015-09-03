@@ -13,25 +13,56 @@ module Stormancer {
             this.data = data;
             this.metadata = metadata;
         }
+
+        /**
+        A byte representing the index of the scene for this peer.
+        @member Stormancer.Packet#connection
+        @type {Object}
+        */
+        public connection: T = null;
         
         /**
         Data contained in the packet.
         @member Stormancer.Packet#data
         @type {Uint8Array}
         */
-        public data: Uint8Array;
+        public data: Uint8Array = null;
         
         /**
-        Metadata stored by the packet.
-        @member Stormancer.Packet#metadata
-        @type {object.<string, object>}
+        Get a DataView on the internal data buffer
+        @method Stormancer.Packet#getDataView
+        @return {DataView}
         */
-        private metadata: IMap<any> = {};
+        public getDataView(): DataView {
+            return new DataView(this.data.buffer, this.data.byteOffset, this.data.byteLength);
+        }
 
+        /**
+        Deserialize the internal data to an object by using MsgPack and return this object.
+        @method Stormancer.Packet#readObject
+        @return {Object}
+        */
+        public readObject(): any {
+            var msgpackSerializer = new MsgPackSerializer();
+            return msgpackSerializer.deserialize<any>(this.data);
+        }
+
+        private metadata: IMap<any> = null;
+
+        /**
+        Set the metadatas of the packet. This action will overwrite the existing metadatas.
+        @method Stormancer.Packet#setMetadata
+        @param {Object} metadata
+        */
         public setMetadata(metadata: IMap<any>) {
             this.metadata = metadata;
         }
 
+        /**
+        Get the metadatas from the packet.
+        @method Stormancer.Packet#getMetadata
+        @return {Object.<string, Object>}
+        */
         public getMetadata(): IMap<any> {
             if (!this.metadata) {
                 this.metadata = {};
@@ -39,6 +70,12 @@ module Stormancer {
             return this.metadata;
         }
 
+        /**
+        Set a metadata in the packet
+        @method Stormancer.Packet#setMetadataValue
+        @param {string} key
+        @param {Object} value
+        */
         public setMetadataValue(key: string, value): void {
             if (!this.metadata) {
                 this.metadata = {};
@@ -48,6 +85,7 @@ module Stormancer {
         
         /**
         Returns metadata
+        @method Stormancer.Packet#getMetadataValue
         @param {string} key
         @return {string} Key associated object
         */
@@ -57,12 +95,5 @@ module Stormancer {
             }
             return this.metadata[key];
         }
-        
-        /**
-        A byte representing the index of the scene for this peer.
-        @member Stormancer.Packet#handle
-        @type {number}
-        */
-        public connection: T;
     }
 }

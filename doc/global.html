@@ -94,40 +94,39 @@
     
 
     
-        <h3 class="subsection-title">Members</h3>
+
+    
+
+    
+        <h3 class="subsection-title">Type Definitions</h3>
 
         
-            
-<h4 class="name" id="triState"><span class="type-signature">(readonly) </span>triState<span class="type-signature"> :number</span></h4>
+                
 
+    
+
+    <h4 class="name" id="dataHandler"><span class="type-signature"></span>dataHandler<span class="signature">(object)</span><span class="type-signature"></span></h4>
+
+    
 
 
 
 <div class="description">
-    <p>Enum for tri-state values.</p>
+    <p>This callback handles a received data object.</p>
 </div>
 
 
 
-    <h5>Type:</h5>
-    <ul>
-        <li>
-            
-<span class="param-type">number</span>
-
-
-        </li>
-    </ul>
 
 
 
 
 
-    <h5 class="subsection-title">Properties:</h5>
 
+    <h5>Parameters:</h5>
     
 
-<table class="props">
+<table class="params">
     <thead>
     <tr>
         
@@ -149,13 +148,13 @@
 
         <tr>
             
-                <td class="name"><code>TRUE</code></td>
+                <td class="name"><code>object</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">number</span>
+<span class="param-type">Object</span>
 
 
             
@@ -165,58 +164,14 @@
 
             
 
-            <td class="description last"><p>The true value</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>FALSE</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>MAYBE</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
+            <td class="description last"><p>The data object.</p></td>
         </tr>
 
     
     </tbody>
 </table>
+
+
 
 
 
@@ -250,7 +205,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line494">line 494</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -266,11 +221,148 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+            
+                
+
+    
+
+    <h4 class="name" id="packetHandler"><span class="type-signature"></span>packetHandler<span class="signature">(packet)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    <p>This callback handles a received packet.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
         
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>packet</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Stormancer.Packet.html">Stormancer.Packet</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>The packet containing some data.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
     
 
     
 
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line90">line 90</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
     
 
     
@@ -284,13 +376,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul><h3>Global</h3><ul><li><a href="global.html#triState">triState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Stormancer.html">Stormancer</a></li></ul><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Wed Aug 12 2015 18:23:17 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 03 2015 16:32:20 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

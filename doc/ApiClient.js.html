@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: ApiClient.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,61 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: ApiClient.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** @module Stormancer */
+var Stormancer;
+(function (Stormancer) {
+    var ApiClient = (function () {
+        function ApiClient(config, tokenHandler) {
+            this.createTokenUri = "{0}/{1}/scenes/{2}/token";
+            this._config = config;
+            this._tokenHandler = tokenHandler;
+        }
+        ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
+            //var serializer = new MsgPackSerializer();
+            //var data: Uint8Array = serializer.serialize(userData);
+            var _this = this;
+            var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
+            //return $.ajax({
+            //    type: "POST",
+            //    url: url,
+            //    headers: {
+            //        "Accept": "application/json",
+            //        "x-version": "1.0.0"
+            //    },
+            //    dataType: "json",
+            //    contentType: "application/json",
+            //    data: JSON.stringify(userData)
+            //}).then(result => {
+            //    return this._tokenHandler.decodeToken(result);
+            //});
+            return $http(url).post({}, {
+                type: "POST",
+                url: url,
+                headers: {
+                    "Accept": "application/json",
+                    "x-version": "1.0.0"
+                },
+                dataType: "json",
+                contentType: "application/json",
+                data: JSON.stringify(userData)
+            }).catch(function (error) { return console.log("get token error:" + error); }).then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
+        };
+        return ApiClient;
+    })();
+    Stormancer.ApiClient = ApiClient;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=ApiClient.js.map</code></pre>
+        </article>
+    </section>
 
 
 

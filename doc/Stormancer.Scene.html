@@ -29,8 +29,6 @@
 <header>
     
         <h2>
-            <span class="ancestors"><a href="Stormancer.html">Stormancer</a>.</span>
-        
         Scene
         </h2>
         
@@ -99,7 +97,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2276">line 2276</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line4">line 4</a>
     </li></ul></dd>
     
 
@@ -197,7 +195,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2295">line 2295</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -269,7 +267,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2289">line 2289</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -341,7 +339,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2283">line 2283</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line11">line 11</a>
     </li></ul></dd>
     
 
@@ -413,7 +411,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2301">line 2301</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -485,7 +483,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2314">line 2314</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line42">line 42</a>
     </li></ul></dd>
     
 
@@ -557,7 +555,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2307">line 2307</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line35">line 35</a>
     </li></ul></dd>
     
 
@@ -584,14 +582,14 @@
 
     
 
-    <h4 class="name" id="addRoute"><span class="type-signature"></span>addRoute<span class="signature">(route, handler, metadata)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="addRoute"><span class="type-signature"></span>addRoute<span class="signature">(route, handler, metadata<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Registers a route on the local peer.</p>
+    <p>Registers a route on the local peer for receiving data packets. See the {Stormancer.Packet} class to know how to get the data.</p>
 </div>
 
 
@@ -615,7 +613,11 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -640,7 +642,19 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>The route name</p></td>
@@ -656,14 +670,26 @@
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="global.html#packetHandler">packetHandler</a></span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>Function for handling the received messages. This function is called any time a Packet is received by the server on this route.</p></td>
@@ -686,7 +712,23 @@
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    {}
+                
+                </td>
             
 
             <td class="description last"><p>Some metadata attached to this route.</p></td>
@@ -730,7 +772,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2340">line 2340</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line68">line 68</a>
     </li></ul></dd>
     
 
@@ -812,7 +854,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2433">line 2433</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line162">line 162</a>
     </li></ul></dd>
     
 
@@ -916,7 +958,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2444">line 2444</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line173">line 173</a>
     </li></ul></dd>
     
 
@@ -1020,7 +1062,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2491">line 2491</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -1173,7 +1215,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2331">line 2331</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line59">line 59</a>
     </li></ul></dd>
     
 
@@ -1277,7 +1319,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2474">line 2474</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line203">line 203</a>
     </li></ul></dd>
     
 
@@ -1453,7 +1495,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2482">line 2482</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line211">line 211</a>
     </li></ul></dd>
     
 
@@ -1484,14 +1526,14 @@
 
     
 
-    <h4 class="name" id="registerRoute"><span class="type-signature"></span>registerRoute<span class="signature">(route, handler)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="registerRoute"><span class="type-signature"></span>registerRoute<span class="signature">(route, handler, metadata<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    <p>Allows to receive messages on a route. A route is an easy way to get messages of only one type.</p>
+    <p>Registers a route on the local peer for receiving deserialised javascript objects. See {Stormancer.Scene.addRoute} to have more flexibility on the data.</p>
 </div>
 
 
@@ -1515,7 +1557,11 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -1540,7 +1586,19 @@
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>The route name</p></td>
@@ -1556,17 +1614,68 @@
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type"><a href="global.html#dataHandler">dataHandler</a></span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Function for handling the received messages. This function is called any time a data is received by the server on this route.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>metadata</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object.&lt;string, string></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    {}
+                
+                </td>
+            
+
+            <td class="description last"><p>Some metadata attached to this route.</p></td>
         </tr>
 
     
@@ -1607,161 +1716,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2362">line 2362</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="registerRouteRaw"><span class="type-signature"></span>registerRouteRaw<span class="signature">(route, handler)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    <p>Allows to receive messages on a route without using any built-in serializers. Use this method for serialize and deserialize data by yourself.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>route</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>The route name</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>handler</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Function for handling the received messages. This function is called any time a data is received by the server on this route. The data is the first parameter of the function.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2375">line 2375</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line95">line 95</a>
     </li></ul></dd>
     
 
@@ -1961,7 +1916,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2420">line 2420</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line149">line 149</a>
     </li></ul></dd>
     
 
@@ -2161,7 +2116,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="stormancer.js.html">stormancer.js</a>, <a href="stormancer.js.html#line2394">line 2394</a>
+        <a href="Scene.js.html">Scene.js</a>, <a href="Scene.js.html#line123">line 123</a>
     </li></ul></dd>
     
 
@@ -2203,13 +2158,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Namespaces</h3><ul><li><a href="Stormancer.html">Stormancer</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Stormancer.html">Stormancer</a></li></ul><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Aug 13 2015 18:36:27 GMT+0200 (Paris, Madrid (heure d’été))
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 03 2015 16:32:20 GMT+0200 (Paris, Madrid (heure d’été))
 </footer>
 
 <script> prettyPrint(); </script>

@@ -130,15 +130,31 @@ var Stormancer;
         function RpcService(scene) {
             this._currentRequestId = 0;
             this._pendingRequests = {};
+            this._msgpackSerializer = new Stormancer.MsgPackSerializer();
             this._scene = scene;
         }
-        RpcService.prototype.RpcRaw = function (route, data, onNext, onError, onCompleted, priority) {
+        RpcService.prototype.rpc = function (route, objectOrData, onNext, onError, onCompleted, priority) {
             var _this = this;
             if (onError === void 0) { onError = function (error) {
             }; }
             if (onCompleted === void 0) { onCompleted = function () {
             }; }
             if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            var data;
+            if (objectOrData instanceof Uint8Array) {
+                data = objectOrData;
+            }
+            else {
+                if (objectOrData instanceof Array || objectOrData instanceof ArrayBuffer) {
+                    data = new Uint8Array(objectOrData);
+                }
+                else if (objectOrData instanceof DataView || objectOrData instanceof Int8Array || objectOrData instanceof Int16Array || objectOrData instanceof Int32Array || objectOrData instanceof Uint16Array || objectOrData instanceof Uint32Array || objectOrData instanceof Float32Array || objectOrData instanceof Float64Array) {
+                    data = new Uint8Array(objectOrData.buffer, objectOrData.byteOffset, objectOrData.byteLength);
+                }
+                else {
+                    data = this._msgpackSerializer.serialize(objectOrData);
+                }
+            }
             var remoteRoutes = this._scene.remoteRoutes;
             var relevantRoute;
             for (var i in remoteRoutes) {
@@ -204,7 +220,7 @@ var Stormancer;
             if (request) {
                 request.receivedMessages++;
                 request.observer.onNext(packet);
-                if (request.deferred.state() == "pending") {
+                if (request.deferred.state() === "pending") {
                     request.deferred.resolve();
                 }
             }
@@ -1113,11 +1129,20 @@ var Stormancer;
 (function (Stormancer) {
     var Packet = (function () {
         function Packet(source, data, metadata) {
-            this.metadata = {};
+            this.connection = null;
+            this.data = null;
+            this.metadata = null;
             this.connection = source;
             this.data = data;
             this.metadata = metadata;
         }
+        Packet.prototype.getDataView = function () {
+            return new DataView(this.data.buffer, this.data.byteOffset, this.data.byteLength);
+        };
+        Packet.prototype.readObject = function () {
+            var msgpackSerializer = new Stormancer.MsgPackSerializer();
+            return msgpackSerializer.deserialize(this.data);
+        };
         Packet.prototype.setMetadata = function (metadata) {
             this.metadata = metadata;
         };
@@ -1594,17 +1619,13 @@ var Stormancer;
             }
             this.onMessageImpl(routeObj, handler);
         };
-        Scene.prototype.registerRoute = function (route, handler) {
+        Scene.prototype.registerRoute = function (route, handler, metadata) {
             var _this = this;
+            if (metadata === void 0) { metadata = {}; }
             this.addRoute(route, function (packet) {
-                var message = _this.hostConnection.serializer.deserialize(packet.data);
-                handler(message);
-            });
-        };
-        Scene.prototype.registerRouteRaw = function (route, handler) {
-            this.addRoute(route, function (packet) {
-                handler(new DataView(packet.data.buffer, packet.data.byteOffset));
-            });
+                var data = _this.hostConnection.serializer.deserialize(packet.data);
+                handler(data);
+            }, metadata);
         };
         Scene.prototype.onMessageImpl = function (route, handler) {
             var _this = this;

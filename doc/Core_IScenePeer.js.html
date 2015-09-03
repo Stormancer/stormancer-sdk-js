@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/IScenePeer.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,47 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/IScenePeer.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+A remote scene.
+@interface IScenePeer
+@memberof Stormancer
+*/
+/**
+Unique id of the peer in the Stormancer cluster
+@member Stormancer.IScenePeer#id
+@type {string}
+*/
+/**
+The serializer to use with the peer.
+@member Stormancer.IScenePeer#getComponent
+@type {Stormancer.ISerializer}
+*/
+/**
+Returns a component registered for the peer.
+@method Stormancer.IScenePeer#getComponent
+@param {string} componentName The name of the component.
+@return {object} The requested component.
+*/
+/**
+Sends a message to the remote peer.
+@method Stormancer.IScenePeer#send
+@param {string} route The route on which the message will be sent.
+@param {Uint8Array} data A method called to write the message.
+@param {PacketPriority} priority The message priority.
+@param {PacketReliability} reliability The message requested reliability.
+*/
+//# sourceMappingURL=IScenePeer.js.map</code></pre>
+        </article>
+    </section>
 
 
 

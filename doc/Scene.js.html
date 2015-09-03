@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Scene.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Scene.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    var Scene = (function () {
+        /**
+        A Scene should not be created by the user. Get a Scene by using **Client#getPublicScene** or **Client#getScene**.
+        @class Scene
+        @classdesc A Stormancer scene. Peers connected to a Scene can interact between themself.
+        @memberof Stormancer
+        */
+        function Scene(connection, client, id, token, dto) {
+            /**
+            True if the instance is an host. False if it's a client.
+            @member Stormancer.Scene#isHost
+            @type {boolean}
+            */
+            this.isHost = false;
+            /**
+            A byte representing the index of the scene for this peer.
+            @member Stormancer.Scene#handle
+            @type {number}
+            */
+            this.handle = null;
+            /**
+            A boolean representing whether the scene is connected or not.
+            @member Stormancer.Scene#connected
+            @type {boolean}
+            */
+            this.connected = false;
+            /**
+            Returns a list of the routes registered on the local peer.
+            @member Stormancer.Scene#localRoutes
+            @type {Object.&lt;string, object>}
+            */
+            this.localRoutes = {};
+            /**
+            Returns a list of the routes available on the remote peer.
+            @member Stormancer.Scene#remoteRoutes
+            @type {Object.&lt;string, object>}
+            */
+            this.remoteRoutes = {};
+            this._handlers = {};
+            /**
+            Pool of functions called when a packet is received.
+            @member Stormancer.Scene#packetReceived
+            @type {function[]}
+            */
+            this.packetReceived = [];
+            this._registeredComponents = {};
+            this.id = id;
+            this.hostConnection = connection;
+            this._token = token;
+            this._client = client;
+            this._metadata = dto.Metadata;
+            for (var i = 0; i &lt; dto.Routes.length; i++) {
+                var route = dto.Routes[i];
+                this.remoteRoutes[route.Name] = new Stormancer.Route(this, route.Name, route.Handle, route.Metadata);
+            }
+        }
+        /**
+        Returns metadata informations for the remote scene host.
+        @method Stormancer.Scene#getHostMetadata
+        @param {string} key
+        @return {string} Key associated value
+        */
+        Scene.prototype.getHostMetadata = function (key) {
+            return this._metadata[key];
+        };
+        /**
+        Registers a route on the local peer for receiving data packets. See the {Stormancer.Packet} class to know how to get the data.
+        @method Stormancer.Scene#addRoute
+        @param {string} route The route name
+        @param {packetHandler} handler Function for handling the received messages. This function is called any time a Packet is received by the server on this route.
+        @param {object.&lt;string, string>} [metadata={}] Some metadata attached to this route.
+        */
+        Scene.prototype.addRoute = function (route, handler, metadata) {
+            if (metadata === void 0) { metadata = {}; }
+            if (route[0] === "@") {
+                throw new Error("A route cannot start with the @ character.");
+            }
+            if (this.connected) {
+                throw new Error("You cannot register handles once the scene is connected.");
+            }
+            var routeObj = this.localRoutes[route];
+            if (!routeObj) {
+                routeObj = new Stormancer.Route(this, route, 0, metadata);
+                this.localRoutes[route] = routeObj;
+            }
+            this.onMessageImpl(routeObj, handler);
+        };
+        /**
+        This callback handles a received packet.
+        @callback packetHandler
+        @param {Stormancer.Packet} packet The packet containing some data.
+        */
+        /**
+        Registers a route on the local peer for receiving deserialised javascript objects. See {Stormancer.Scene.addRoute} to have more flexibility on the data.
+        @method Stormancer.Scene#registerRoute
+        @param {string} route The route name
+        @param {dataHandler} handler Function for handling the received messages. This function is called any time a data is received by the server on this route.
+        @param {object.&lt;string, string>} [metadata={}] Some metadata attached to this route.
+        */
+        Scene.prototype.registerRoute = function (route, handler, metadata) {
+            var _this = this;
+            if (metadata === void 0) { metadata = {}; }
+            this.addRoute(route, function (packet) {
+                var data = _this.hostConnection.serializer.deserialize(packet.data);
+                handler(data);
+            }, metadata);
+        };
+        /**
+        This callback handles a received data object.
+        @callback dataHandler
+        @param {Object} object The data object.
+        */
+        Scene.prototype.onMessageImpl = function (route, handler) {
+            var _this = this;
+            var action = function (p) {
+                var packet = new Stormancer.Packet(_this.host(), p.data, p.getMetadata());
+                handler(packet);
+            };
+            route.handlers.push(function (p) { return action(p); });
+        };
+        /**
+        Sends a binary packet to the scene.
+        @method Stormancer.Scene#sendPacket
+        @param {string} route The route name.
+        @param {Uint8Array} data The data to send.
+        @param {number} priority The packet priority on the stormancer network.
+        @param {number} reliability The packet reliability on the stormancer network.
+        */
+        Scene.prototype.sendPacket = function (route, data, priority, reliability) {
+            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            if (!route) {
+                throw new Error("route is null or undefined!");
+            }
+            if (!data) {
+                throw new Error("data is null or undefind!");
+            }
+            if (!this.connected) {
+                throw new Error("The scene must be connected to perform this operation.");
+            }
+            var routeObj = this.remoteRoutes[route];
+            if (!routeObj) {
+                throw new Error("The route " + route + " doesn't exist on the scene.");
+            }
+            this.hostConnection.sendToScene(this.handle, routeObj.handle, data, priority, reliability);
+        };
+        /**
+        Sends an object to the scene.
+        @method Stormancer.Scene#send
+        @param {string} route The route name.
+        @param {object} data The data to send.
+        @param {number} priority The packet priority on the stormancer network.
+        @param {number} reliability The packet reliability on the stormancer network.
+        */
+        Scene.prototype.send = function (route, data, priority, reliability) {
+            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
+        };
+        /**
+        Connect the Scene to the Stormancer application scene.
+        @method Stormancer.Scene#connect
+        @return {Promise} A promise which complete when the Scene is connected.
+        */
+        Scene.prototype.connect = function () {
+            var _this = this;
+            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this.localRoutes)).then(function () {
+                _this.connected = true;
+            });
+        };
+        /**
+        Disconnect the Scene.
+        @method Stormancer.Scene#disconnect
+        @return {Promise} A promise which complete when the Scene is disconnected.
+        */
+        Scene.prototype.disconnect = function () {
+            return this._client.disconnectScene(this, this.handle);
+        };
+        Scene.prototype.handleMessage = function (packet) {
+            var ev = this.packetReceived;
+            ev &amp;&amp; ev.map(function (value) {
+                value(packet);
+            });
+            // extract the route id
+            var routeId = new DataView(packet.data.buffer, packet.data.byteOffset).getUint16(0, true);
+            packet.data = packet.data.subarray(2);
+            packet.setMetadataValue("routeId", routeId);
+            var observer = this._handlers[routeId];
+            observer &amp;&amp; observer.map(function (value) {
+                value(packet);
+            });
+        };
+        Scene.prototype.completeConnectionInitialization = function (cr) {
+            this.handle = cr.SceneHandle;
+            for (var key in this.localRoutes) {
+                var route = this.localRoutes[key];
+                route.handle = cr.RouteMappings[key];
+                this._handlers[route.handle] = route.handlers;
+            }
+        };
+        /**
+        Returns an Scene peer object that represents the scene host.
+        @method Stormancer.Scene#host
+        @return {object} A Scene peer object.
+        */
+        Scene.prototype.host = function () {
+            return new Stormancer.ScenePeer(this.hostConnection, this.handle, this.remoteRoutes, this);
+        };
+        /**
+        Registers a component and provide a factory for getting it.
+        @method Stormancer.Scene#registerComponent
+        @param {string} componentName The component game.
+        @param {function} factory The factory function for getting the component.
+        */
+        Scene.prototype.registerComponent = function (componentName, factory) {
+            this._registeredComponents[componentName] = factory;
+        };
+        /**
+        Returns a specific registered component.
+        @method Stormancer.Scene#getComponent
+        @return {object} The wanted object.
+        */
+        Scene.prototype.getComponent = function (componentName) {
+            if (!this._registeredComponents[componentName]) {
+                throw new Error("Component not found");
+            }
+            return this._registeredComponents[componentName]();
+        };
+        return Scene;
+    })();
+    Stormancer.Scene = Scene;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=Scene.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Stormancer.html">Stormancer</a></li></ul><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 03 2015 16:32:20 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

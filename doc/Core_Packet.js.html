@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Core/Packet.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Core/Packet.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    var Packet = (function () {
+        /**
+        A packet sent by a remote peer to the running peer.
+        @class Packet
+        @classdesc A packet sent by a remote peer to the running peer.
+        @memberof Stormancer
+        */
+        function Packet(source, data, metadata) {
+            /**
+            A byte representing the index of the scene for this peer.
+            @member Stormancer.Packet#connection
+            @type {Object}
+            */
+            this.connection = null;
+            /**
+            Data contained in the packet.
+            @member Stormancer.Packet#data
+            @type {Uint8Array}
+            */
+            this.data = null;
+            this.metadata = null;
+            this.connection = source;
+            this.data = data;
+            this.metadata = metadata;
+        }
+        /**
+        Get a DataView on the internal data buffer
+        @method Stormancer.Packet#getDataView
+        @return {DataView}
+        */
+        Packet.prototype.getDataView = function () {
+            return new DataView(this.data.buffer, this.data.byteOffset, this.data.byteLength);
+        };
+        /**
+        Deserialize the internal data to an object by using MsgPack and return this object.
+        @method Stormancer.Packet#readObject
+        @return {Object}
+        */
+        Packet.prototype.readObject = function () {
+            var msgpackSerializer = new Stormancer.MsgPackSerializer();
+            return msgpackSerializer.deserialize(this.data);
+        };
+        /**
+        Set the metadatas of the packet. This action will overwrite the existing metadatas.
+        @method Stormancer.Packet#setMetadata
+        @param {Object} metadata
+        */
+        Packet.prototype.setMetadata = function (metadata) {
+            this.metadata = metadata;
+        };
+        /**
+        Get the metadatas from the packet.
+        @method Stormancer.Packet#getMetadata
+        @return {Object.&lt;string, Object>}
+        */
+        Packet.prototype.getMetadata = function () {
+            if (!this.metadata) {
+                this.metadata = {};
+            }
+            return this.metadata;
+        };
+        /**
+        Set a metadata in the packet
+        @method Stormancer.Packet#setMetadataValue
+        @param {string} key
+        @param {Object} value
+        */
+        Packet.prototype.setMetadataValue = function (key, value) {
+            if (!this.metadata) {
+                this.metadata = {};
+            }
+            this.metadata[key] = value;
+        };
+        /**
+        Returns metadata
+        @method Stormancer.Packet#getMetadataValue
+        @param {string} key
+        @return {string} Key associated object
+        */
+        Packet.prototype.getMetadataValue = function (key) {
+            if (!this.metadata) {
+                this.metadata = {};
+            }
+            return this.metadata[key];
+        };
+        return Packet;
+    })();
+    Stormancer.Packet = Packet;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=Packet.js.map</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Stormancer.html">Stormancer</a></li></ul><h3>Classes</h3><ul><li><a href="Stormancer.Client.html">Client</a></li><li><a href="Stormancer.Configuration.html">Configuration</a></li><li><a href="Stormancer.MsgPackSerializer.html">MsgPackSerializer</a></li><li><a href="Stormancer.Packet.html">Packet</a></li><li><a href="Stormancer.PacketProcessorConfig.html">PacketProcessorConfig</a></li><li><a href="Stormancer.PluginBuildContext.html">PluginBuildContext</a></li><li><a href="Stormancer.RequestContext.html">RequestContext</a></li><li><a href="Stormancer.Route.html">Route</a></li><li><a href="Stormancer.Scene.html">Scene</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stormancer.IConnection.html">IConnection</a></li><li><a href="Stormancer.IConnectionManager.html">IConnectionManager</a></li><li><a href="Stormancer.ILogger.html">ILogger</a></li><li><a href="Stormancer.IPacketDispatcher.html">IPacketDispatcher</a></li><li><a href="Stormancer.IPacketProcessor.html">IPacketProcessor</a></li><li><a href="Stormancer.IScene.html">IScene</a></li><li><a href="Stormancer.IScenePeer.html">IScenePeer</a></li><li><a href="Stormancer.ISerializer.html">ISerializer</a></li><li><a href="Stormancer.ITransport.html">ITransport</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 03 2015 16:32:20 GMT+0200 (Paris, Madrid (heure d’été))
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Infrastructure/MsgPackSerializer.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,56 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Infrastructure/MsgPackSerializer.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    var MsgPackSerializer = (function () {
+        /**
+        Creates a new MsgPackSerializer.
+        @class MsgPackSerializer
+        @classdesc Serializer based on MessagePack.
+        @memberof Stormancer
+        */
+        function MsgPackSerializer() {
+            /**
+            The name of the serializer.
+            */
+            this.name = "msgpack/map";
+        }
+        /**
+        Serializes an object into a byte array.
+        @method Stormancer.MsgPackSerializer#serialize
+        @param {object} data The data to serialize.
+        @return {Uint8Array} The byte array.
+        */
+        MsgPackSerializer.prototype.serialize = function (data) {
+            return new Uint8Array(msgpack.pack(data));
+        };
+        /**
+        Deserializes an object from a byte array.
+        @method Stormancer.MsgPackSerializer#deserialize
+        @memberof Stormancer.MsgPackSerializer
+        @param {Uint8Array} bytes The byte array
+        @return {object} The deserialized data.
+        */
+        MsgPackSerializer.prototype.deserialize = function (bytes) {
+            return msgpack.unpack(bytes);
+        };
+        return MsgPackSerializer;
+    })();
+    Stormancer.MsgPackSerializer = MsgPackSerializer;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=MsgPackSerializer.js.map</code></pre>
+        </article>
+    </section>
 
 
 

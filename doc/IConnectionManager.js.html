@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: IConnectionManager.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,50 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: IConnectionManager.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+Manages connections.
+@interface IConnectionManager
+@memberof Stormancer
+*/
+/**
+Number of connections managed by the object.
+@member Stormancer.IConnectionManager#connectionCount
+@type {number}
+*/
+/**
+Generates an unique connection id for this node. Only used on servers.
+@method Stormancer.IConnectionManager#generateNewConnectionId
+@return {number} A number containing an unique ID.
+*/
+/**
+Adds a connection to the manager. This method is called by the infrastructure when a new connection connects to a transport.
+@method Stormancer.IConnectionManager#newConnection
+@param {Stormancer.IConnection} connection The connection object to add.
+*/
+/**
+Closes the target connection.
+@method Stormancer.IConnectionManager#closeConnection
+@param {Stormancer.IConnection} connection The connection to close.
+@param {string} reason The reason why the connection was closed.
+*/
+/**
+Returns a connection by ID.
+@method Stormancer.IConnectionManager#getConnection
+@param {number} id The connection ID.
+@return {Stormancer.IConnection} The connection attached to this ID.
+*/
+//# sourceMappingURL=IConnectionManager.js.map</code></pre>
+        </article>
+    </section>
 
 
 

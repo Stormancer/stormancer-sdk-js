@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: ITransport.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,67 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: ITransport.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+A Stormancer network transport.
+@interface ITransport
+@memberof Stormancer
+*/
+/**
+Fires when a connection to a remote peer is closed.
+@member Stormancer.ITransport#connectionClosed
+@type {function[]}
+*/
+/**
+Fires when a remote peer has opened a connection.
+@member Stormancer.ITransport#connectionOpened
+@type {function[]}
+*/
+/**
+Id of the local peer.
+@member Stormancer.ITransport#id
+@type {number}
+*/
+/**
+Gets a boolean indicating if the transport is currently running.
+@member Stormancer.ITransport#isRunning
+@type {boolean}
+*/
+/**
+The name of the transport.
+@member Stormancer.ITransport#name
+@type {string}
+*/
+/**
+Fires when the transport recieves new packets.
+@member Stormancer.ITransport#packetReceived
+@type {function[]}
+*/
+/**
+Connects the transport to a remote host.
+@method Stormancer.ITransport#connect
+@param {string} endpoint A string containing the target endpoint the expected format is `host:port`.
+@return {Promise&lt;Stormancer.IConnection>} A `Task&lt;IConnection>` object completing with the connection process and returning the corresponding `IConnection`.
+*/
+/**
+Starts the transport.
+@method Stormancer.ITransport#getComponent
+@param {string} name The name of the transport if several are started.
+@param {Stormancer.IConnectionManager} handler The connection handler used by the connection.
+@param {object} token A `CancellationToken`. It will be cancelled when the transport has to be shutdown.
+@return {Promise} A `Task` completing when the transport is started.
+*/
+//# sourceMappingURL=ITransport.js.map</code></pre>
+        </article>
+    </section>
 
 
 

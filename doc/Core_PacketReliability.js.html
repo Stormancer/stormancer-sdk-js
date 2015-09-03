@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/PacketReliability.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,49 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/PacketReliability.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var Stormancer;
+(function (Stormancer) {
+    /**
+    Different available reliability levels when sending a packet.
+    @alias PacketReliability
+    @enum {number}
+    @memberof Stormancer
+    */
+    var _ = {
+        /** 0 - The packet may be lost, or arrive out of order. There are no guarantees whatsoever. */
+        UNRELIABLE: 0,
+        /** 1 - The packets arrive in order, but may be lost. If a packet arrives out of order, it is discarded.
+        The last packet may also never arrive. */
+        UNRELIABLE_SEQUENCED: 1,
+        /** 2 - The packets always reach destination, but may do so out of order. */
+        RELIABLE: 2,
+        /** 3 - The packets always reach destination and in order. */
+        RELIABLE_ORDERED: 3,
+        /** 4 - The packets arrive at destination in order. If a packet arrive out of order, it is ignored.
+        That mean that packets may disappear, but the last one always reach destination. */
+        RELIABLE_SEQUENCED: 4
+    };
+    (function (PacketReliability) {
+        PacketReliability[PacketReliability["UNRELIABLE"] = 0] = "UNRELIABLE";
+        PacketReliability[PacketReliability["UNRELIABLE_SEQUENCED"] = 1] = "UNRELIABLE_SEQUENCED";
+        PacketReliability[PacketReliability["RELIABLE"] = 2] = "RELIABLE";
+        PacketReliability[PacketReliability["RELIABLE_ORDERED"] = 3] = "RELIABLE_ORDERED";
+        PacketReliability[PacketReliability["RELIABLE_SEQUENCED"] = 4] = "RELIABLE_SEQUENCED";
+    })(Stormancer.PacketReliability || (Stormancer.PacketReliability = {}));
+    var PacketReliability = Stormancer.PacketReliability;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=PacketReliability.js.map</code></pre>
+        </article>
+    </section>
 
 
 

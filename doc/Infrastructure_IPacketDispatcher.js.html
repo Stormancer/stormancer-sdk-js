@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Infrastructure/IPacketDispatcher.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,33 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Infrastructure/IPacketDispatcher.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+Interface describing a message dispatcher.
+@interface IPacketDispatcher
+@memberof Stormancer
+*/
+/**
+Adds a packet processor to the dispatcher.
+@method Stormancer.IPacketDispatcher#addProcessor
+@param {Stormancer.IPacketProcessor} processor An `IPacketProcessor` object
+*/
+/**
+Dispatches a packet to the system.
+@method Stormancer.IPacketDispatcher#dispatchPacket
+@param {Stormancer.Packet} packet Packet to dispatch.
+*/
+//# sourceMappingURL=IPacketDispatcher.js.map</code></pre>
+        </article>
+    </section>
 
 
 

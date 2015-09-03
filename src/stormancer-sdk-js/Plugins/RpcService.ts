@@ -10,16 +10,32 @@
         private _currentRequestId: number = 0;
         private _scene: Scene;
         private _pendingRequests: IMap<RpcRequest> = {};
+        private _msgpackSerializer: MsgPackSerializer = new MsgPackSerializer();
 
         constructor(scene: Scene) {
             this._scene = scene;
         }
 
-        public RpcRaw(route: string, data: Uint8Array,
+        public rpc(route: string, objectOrData: any,
             onNext: (packet: Packet<IScenePeer>) => void,
             onError: (error: string) => void = (error) => { },
             onCompleted: () => void = () => { },
             priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): ISubscription {
+            var data: Uint8Array;
+            if (objectOrData instanceof Uint8Array) {
+                data = objectOrData;
+            }
+            else {
+                if (objectOrData instanceof Array || objectOrData instanceof ArrayBuffer) {
+                    data = new Uint8Array(objectOrData);
+                }
+                else if (objectOrData instanceof DataView || objectOrData instanceof Int8Array || objectOrData instanceof Int16Array || objectOrData instanceof Int32Array || objectOrData instanceof Uint16Array || objectOrData instanceof Uint32Array || objectOrData instanceof Float32Array || objectOrData instanceof Float64Array) {
+                    data = new Uint8Array(objectOrData.buffer, objectOrData.byteOffset, objectOrData.byteLength);
+                }
+                else {
+                    data = this._msgpackSerializer.serialize(objectOrData);
+                }
+            }
 
             var remoteRoutes = this._scene.remoteRoutes;
             var relevantRoute: Route;
@@ -60,11 +76,11 @@
             };
 
             this._pendingRequests[id] = request;
-
+            
             var dataToSend = new Uint8Array(2 + data.length);
             dataToSend.set(<any>[i & 255, i >>> 8]);
             dataToSend.set(data, 2);
-
+            
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);
 
             return {
@@ -102,7 +118,7 @@
             if (request) {
                 request.receivedMessages++;
                 request.observer.onNext(packet);
-                if (request.deferred.state() == "pending") {
+                if (request.deferred.state() === "pending") {
                     request.deferred.resolve();
                 }
             }

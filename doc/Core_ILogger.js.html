@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: Core/ILogger.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,63 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: Core/ILogger.js</h1>
 
     
 
 
 
     
-
-
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+Contract for a Logger in Stormancer.
+@interface ILogger
+@memberof Stormancer
+*/
+/**
+Logs a json message.
+@method Stormancer.ILogger#log
+@param {Stormancer.LogLevel} level Log level.
+@param {string} category Log category. Typically where the log was generated.
+@param {string} message Log message. Description of the lof.
+@param {object} data Detailed informations about the log.
+*/
+var Stormancer;
+(function (Stormancer) {
+    /**
+    Available log levels
+    @alias LogLevel
+    @enum {number}
+    @memberof Stormancer
+    */
+    var _ = {
+        /** 0 - Fatal error. The application crashed. */
+        fatal: 0,
+        /** 1 - Error. The application may crash. */
+        error: 1,
+        /** 2 - Warning. Something went wrong but dealt. */
+        warn: 2,
+        /** 3 - Information. Significant information. */
+        info: 3,
+        /** 4 - Debug. Can be useful for debugging. */
+        debug: 4,
+        /** 5 - Trace. Only for deep debug. */
+        trace: 5
+    };
+    (function (LogLevel) {
+        LogLevel[LogLevel["fatal"] = 0] = "fatal";
+        LogLevel[LogLevel["error"] = 1] = "error";
+        LogLevel[LogLevel["warn"] = 2] = "warn";
+        LogLevel[LogLevel["info"] = 3] = "info";
+        LogLevel[LogLevel["debug"] = 4] = "debug";
+        LogLevel[LogLevel["trace"] = 5] = "trace";
+    })(Stormancer.LogLevel || (Stormancer.LogLevel = {}));
+    var LogLevel = Stormancer.LogLevel;
+})(Stormancer || (Stormancer = {}));
+//# sourceMappingURL=ILogger.js.map</code></pre>
+        </article>
+    </section>
 
 
 

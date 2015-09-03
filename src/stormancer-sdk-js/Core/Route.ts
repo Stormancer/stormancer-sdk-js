@@ -21,35 +21,35 @@ module Stormancer {
         
         /**
         The Scene instance which contains this route.
-        @member Stormancer.Packet#scene
+        @member Stormancer.Route#scene
         @type {Stormancer.Scene}
         */
         public scene: IScene = null;
         
         /**
         A string containing the name of the route.
-        @member Stormancer.Packet#name
+        @member Stormancer.Route#name
         @type {string}
         */
         public name: string = null;
         
         /**
         Route handle.
-        @member Stormancer.Packet#handle
+        @member Stormancer.Route#handle
         @type {number}
         */
         public handle: number = null;
         
         /**
         Route metadata.
-        @member Stormancer.Packet#metadata
+        @member Stormancer.Route#metadata
         @type {object.<string, string>}
         */
         public metadata: Map = {};
         
         /**
         Contains the handlers that are run when packets are received.
-        @member Stormancer.Packet#handlers
+        @member Stormancer.Route#handlers
         @type {function[]}
         */
         public handlers: ((packet: Packet<IConnection>) => void)[] = [];
