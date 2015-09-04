@@ -10,6 +10,7 @@
         private _currentRequestId: number = 0;
         private _scene: Scene;
         private _pendingRequests: IMap<RpcRequest> = {};
+        private _runningRequests: IMap<Cancellation.TokenSource> = {};
         private _msgpackSerializer: MsgPackSerializer = new MsgPackSerializer();
 
         constructor(scene: Scene) {
@@ -84,10 +85,35 @@
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);
 
             return {
-                unsubscribe: () => {
+                cancel: () => {
+                    var buffer = new ArrayBuffer(2);
+                    new DataView(buffer).setUint16(0, id, true);
+                    this._scene.sendPacket("stormancer.rpc.cancel", new Uint8Array(buffer));
                     delete this._pendingRequests[id];
                 }
             };
+        }
+
+        public addProcedure(route: string, handler: (ctx: RpcRequestContext) => Promise<void>, ordered: boolean): void {
+            var metadatas: Map = {};
+            metadatas[RpcClientPlugin.PluginName] = RpcClientPlugin.Version;
+            this._scene.addRoute(route, p => {
+                var id = p.getDataView().getUint16(0, true);
+                var cts = new Cancellation.TokenSource();
+                var ctx = new RpcRequestContext(p.connection, this._scene, id, ordered, p.data, cts.token);
+                if (!this._runningRequests[id]) {
+                    handler(ctx).then(t => {
+                        delete this._runningRequests[id];
+                        ctx.sendCompleted();
+                    }).catch(reason => {
+                        delete this._runningRequests[id];
+                        ctx.sendError(reason);
+                    });
+                }
+                else {
+                    throw new Error("Request already exists");
+                }
+            }, metadatas);
         }
 
         private reserveId(): number {
@@ -147,6 +173,22 @@
                 else {
                     request.observer.onCompleted();
                     delete this._pendingRequests[request.id];
+                }
+            }
+        }
+
+        cancel(packet: Packet<IScenePeer>): void {
+            var id = (new DataView(packet.data.buffer, packet.data.byteOffset, packet.data.byteLength)).getUint16(0, true);
+            var cts = this._runningRequests[id];
+            if (cts) {
+                cts.cancel();
+            }
+        }
+
+        disconnected(): void {
+            for (var i in this._runningRequests) {
+                if (this._runningRequests.hasOwnProperty(i)) {
+                    this._runningRequests[i].cancel();
                 }
             }
         }

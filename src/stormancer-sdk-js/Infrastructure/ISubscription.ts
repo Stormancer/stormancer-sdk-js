@@ -1,5 +1,5 @@
 ﻿module Stormancer {
     export interface ISubscription {
-        unsubscribe(): void;
+        cancel(): void;
     }
 }

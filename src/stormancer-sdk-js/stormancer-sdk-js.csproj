@@ -24,6 +24,7 @@
     <TypeScriptCompile Include="Plugins\IClientPlugin.ts" />
     <TypeScriptCompile Include="Plugins\PluginBuildContext.ts" />
     <TypeScriptCompile Include="Plugins\RpcClientPlugin.ts" />
+    <TypeScriptCompile Include="Plugins\RpcRequestContext.ts" />
     <TypeScriptCompile Include="Plugins\RpcService.ts" />
     <TypeScriptCompile Include="Scripts\msgPack.ts" />
   </ItemGroup>
@@ -53,7 +54,7 @@
     <TypeScriptCompile Include="IPacketProcessor.ts" />
     <TypeScriptCompile Include="ITransport.ts" />
     <TypeScriptCompile Include="MessageIDTypes.ts" />
-    <TypeScriptCompile Include="Plugins\RequestContext.ts" />
+    <TypeScriptCompile Include="Processors\RequestContext.ts" />
     <TypeScriptCompile Include="Processors\RequestProcessor.ts" />
     <TypeScriptCompile Include="Processors\SceneDispatcher.ts" />
     <TypeScriptCompile Include="Scene.ts" />
@@ -120,7 +121,7 @@
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
     <TypeScriptModuleKind>None</TypeScriptModuleKind>
-    <TypeScriptOutFile>$(SolutionDir)build\stormancer.js</TypeScriptOutFile>
+    <TypeScriptOutFile>bin\Release\stormancer.js</TypeScriptOutFile>
     <TypeScriptOutDir />
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
@@ -128,4 +129,7 @@
     <TypeScriptSourceRoot />
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>powershell cat "$(SolutionDir)libs\es6-promise.min.js", "$(SolutionDir)src\stormancer-sdk-js\bin\Release\stormancer.js" &gt; "$(SolutionDir)build\stormancer.js"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
