@@ -13,6 +13,7 @@ module Stormancer {
         private _logger: ILogger;
         private _isRegistered: boolean = false;
         private _handlers: IMap<(context: RequestContext) => Promise<void>> = {};
+        private _currentId = 0;
 
         constructor(logger: ILogger, modules: IRequestModule[]) {
             this._pendingRequests = {};
@@ -120,15 +121,15 @@ module Stormancer {
         }
 
         private reserveRequestSlot(observer: IObserver<Packet<IConnection>>) {
-            var id = 0;
-            (<any>this).toto = 1;
-            while (id < 65535) {
-                if (!this._pendingRequests[id]) {
-                    var request: SystemRequest = { lastRefresh: new Date, id: id, observer: observer, deferred: new Deferred<void>() };
-                    this._pendingRequests[id] = request;
+            var i = 0;
+            while (i < 0xFFFF) {
+                i++;
+                this._currentId = (this._currentId + 1) & 0xFFFF;
+                if (!this._pendingRequests[this._currentId]) {
+                    var request: SystemRequest = { lastRefresh: new Date, id: this._currentId, observer: observer, deferred: new Deferred<void>() };
+                    this._pendingRequests[this._currentId] = request;
                     return request;
                 }
-                id++;
             }
 
             throw new Error("Unable to create new request: Too many pending requests.");

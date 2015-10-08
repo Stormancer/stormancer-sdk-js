@@ -26,7 +26,8 @@ var Greeter = (function () {
         }.bind(this));
         var client = $.stormancer(config);
         console.log("I want my matchmaker!");
-        client.getPublicScene(sceneName, "moi").then(function (matchmaker) {
+        client.getPublicScene(sceneName, "moi")
+            .then(function (matchmaker) {
             console.log("I have my matchmaker!");
             return matchmaker.connect().then(function () {
                 console.log("connected to matchmaker!");

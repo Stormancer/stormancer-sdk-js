@@ -13,9 +13,7 @@ var Stormancer;
         function Helpers() {
         }
         Helpers.base64ToByteArray = function (data) {
-            return new Uint8Array(atob(data).split('').map(function (c) {
-                return c.charCodeAt(0);
-            }));
+            return new Uint8Array(atob(data).split('').map(function (c) { return c.charCodeAt(0); }));
         };
         Helpers.stringFormat = function (str) {
             var args = [];
@@ -125,6 +123,10 @@ var Stormancer;
                     });
                 }
             });
+            ctx.sceneDisconnected.push(function (scene) {
+                var processor = scene.getComponent(RpcClientPlugin.ServiceName);
+                processor.disconnected();
+            });
         };
         RpcClientPlugin.NextRouteName = "stormancer.rpc.next";
         RpcClientPlugin.ErrorRouteName = "stormancer.rpc.error";
@@ -169,13 +171,13 @@ var Stormancer;
         };
         RpcRequestContext.prototype.sendValue = function (data, priority) {
             this.writeRequestId(data);
-            this._scene.sendPacket(Stormancer.RpcClientPlugin.NextRouteName, data, priority, (this._ordered ? 3 /* RELIABLE_ORDERED */ : 2 /* RELIABLE */));
+            this._scene.sendPacket(Stormancer.RpcClientPlugin.NextRouteName, data, priority, (this._ordered ? Stormancer.PacketReliability.RELIABLE_ORDERED : Stormancer.PacketReliability.RELIABLE));
             this._msgSent = 1;
         };
         RpcRequestContext.prototype.sendError = function (errorMsg) {
             var data = this._peer.serializer.serialize(errorMsg);
             this.writeRequestId(data);
-            this._scene.sendPacket(Stormancer.RpcClientPlugin.ErrorRouteName, data, 2 /* MEDIUM_PRIORITY */, 3 /* RELIABLE_ORDERED */);
+            this._scene.sendPacket(Stormancer.RpcClientPlugin.ErrorRouteName, data, Stormancer.PacketPriority.MEDIUM_PRIORITY, Stormancer.PacketReliability.RELIABLE_ORDERED);
         };
         RpcRequestContext.prototype.sendCompleted = function () {
             var data = new Uint8Array(0);
@@ -183,7 +185,7 @@ var Stormancer;
             var data2 = new Uint8Array(1 + data.byteLength);
             data2[0] = this._msgSent;
             data2.set(data, 1);
-            this._scene.sendPacket(Stormancer.RpcClientPlugin.CompletedRouteName, data, 2 /* MEDIUM_PRIORITY */, 3 /* RELIABLE_ORDERED */);
+            this._scene.sendPacket(Stormancer.RpcClientPlugin.CompletedRouteName, data, Stormancer.PacketPriority.MEDIUM_PRIORITY, Stormancer.PacketReliability.RELIABLE_ORDERED);
         };
         return RpcRequestContext;
     })();
@@ -201,11 +203,9 @@ var Stormancer;
         }
         RpcService.prototype.rpc = function (route, objectOrData, onNext, onError, onCompleted, priority) {
             var _this = this;
-            if (onError === void 0) { onError = function (error) {
-            }; }
-            if (onCompleted === void 0) { onCompleted = function () {
-            }; }
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (onError === void 0) { onError = function (error) { }; }
+            if (onCompleted === void 0) { onCompleted = function () { }; }
+            if (priority === void 0) { priority = Stormancer.PacketPriority.MEDIUM_PRIORITY; }
             var data;
             if (objectOrData instanceof Uint8Array) {
                 data = objectOrData;
@@ -256,9 +256,9 @@ var Stormancer;
             };
             this._pendingRequests[id] = request;
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set([i & 255, i >>> 8]);
+            dataToSend.set([id & 255, id >>> 8]);
             dataToSend.set(data, 2);
-            this._scene.sendPacket(route, dataToSend, priority, 3 /* RELIABLE_ORDERED */);
+            this._scene.sendPacket(route, dataToSend, priority, Stormancer.PacketReliability.RELIABLE_ORDERED);
             return {
                 cancel: function () {
                     var buffer = new ArrayBuffer(2);
@@ -291,15 +291,15 @@ var Stormancer;
             }, metadatas);
         };
         RpcService.prototype.reserveId = function () {
-            var loop = 0;
-            while (this._pendingRequests[this._currentRequestId]) {
-                loop++;
-                this._currentRequestId = (this._currentRequestId + 1) & 65535;
-                if (loop > 65535) {
-                    throw new Error("Too many requests in progress, unable to start a new one.");
+            var i = 0;
+            while (i <= 0xFFFF) {
+                i++;
+                this._currentRequestId = (this._currentRequestId + 1) & 0xFFFF;
+                if (!this._pendingRequests[this._currentRequestId]) {
+                    return this._currentRequestId;
                 }
             }
-            return this._currentRequestId;
+            throw new Error("Too many requests in progress, unable to start a new one.");
         };
         RpcService.prototype.getPendingRequest = function (packet) {
             var id = packet.data[0] + 256 * packet.data[1];
@@ -359,6 +359,7 @@ var Stormancer;
     })();
     Stormancer.RpcService = RpcService;
 })(Stormancer || (Stormancer = {}));
+/*!{id:msgpack.js,ver:1.05,license:"MIT",author:"uupaa.js@gmail.com"}*/
 this.msgpack || (function (globalScope) {
     globalScope.msgpack = {
         pack: msgpackpack,
@@ -367,7 +368,8 @@ this.msgpack || (function (globalScope) {
         upload: msgpackupload,
         download: msgpackdownload
     };
-    var _ie = /MSIE/.test(navigator.userAgent), _bin2num = {}, _num2bin = {}, _num2b64 = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "abcdefghijklmnopqrstuvwxyz0123456789+/").split(""), _buf = [], _idx = 0, _error = 0, _isArray = Array.isArray || (function (mix) {
+    var _ie = /MSIE/.test(navigator.userAgent), _bin2num = {}, _num2bin = {}, _num2b64 = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "abcdefghijklmnopqrstuvwxyz0123456789+/").split(""), _buf = [], _idx = 0, _error = 0, _isArray = Array.isArray || (function (mix) {
         return Object.prototype.toString.call(mix) === "[object Array]";
     }), _toString = String.fromCharCode, _MAX_DEPTH = 512;
     function msgpackpack(data, settings) {
@@ -377,7 +379,9 @@ this.msgpack || (function (globalScope) {
             settings = { byteProperties: [] };
         }
         var byteArray = encode([], data, 0, settings);
-        return _error ? false : toString ? byteArrayToByteString(byteArray) : byteArray;
+        return _error ? false
+            : toString ? byteArrayToByteString(byteArray)
+                : byteArray;
     }
     function msgpackunpack(data, settings) {
         if (!settings) {
@@ -582,7 +586,8 @@ this.msgpack || (function (globalScope) {
             case 0xc2: return false;
             case 0xc3: return true;
             case 0xca:
-                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
+                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
                 sign = num & 0x80000000;
                 exp = (num >> 23) & 0xff;
                 frac = num & 0x7fffff;
@@ -592,9 +597,11 @@ this.msgpack || (function (globalScope) {
                 if (exp === 0xff) {
                     return frac ? NaN : Infinity;
                 }
-                return (sign ? -1 : 1) * (frac | 0x800000) * Math.pow(2, exp - 127 - 23);
+                return (sign ? -1 : 1) *
+                    (frac | 0x800000) * Math.pow(2, exp - 127 - 23);
             case 0xcb:
-                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
+                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
                 sign = num & 0x80000000;
                 exp = (num >> 20) & 0x7ff;
                 frac = num & 0xfffff;
@@ -606,22 +613,43 @@ this.msgpack || (function (globalScope) {
                     _idx += 4;
                     return frac ? NaN : Infinity;
                 }
-                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
-                return (sign ? -1 : 1) * ((frac | 0x100000) * Math.pow(2, exp - 1023 - 20) + num * Math.pow(2, exp - 1023 - 52));
+                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
+                return (sign ? -1 : 1) *
+                    ((frac | 0x100000) * Math.pow(2, exp - 1023 - 20)
+                        + num * Math.pow(2, exp - 1023 - 52));
             case 0xcf:
-                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
-                return num * 0x100000000 + buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
+                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
+                return num * 0x100000000 +
+                    buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
             case 0xce: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xcd: num += buf[++_idx] << 8;
             case 0xcc: return num + buf[++_idx];
             case 0xd3:
                 num = buf[++_idx];
                 if (num & 0x80) {
-                    return ((num ^ 0xff) * 0x100000000000000 + (buf[++_idx] ^ 0xff) * 0x1000000000000 + (buf[++_idx] ^ 0xff) * 0x10000000000 + (buf[++_idx] ^ 0xff) * 0x100000000 + (buf[++_idx] ^ 0xff) * 0x1000000 + (buf[++_idx] ^ 0xff) * 0x10000 + (buf[++_idx] ^ 0xff) * 0x100 + (buf[++_idx] ^ 0xff) + 1) * -1;
+                    return ((num ^ 0xff) * 0x100000000000000 +
+                        (buf[++_idx] ^ 0xff) * 0x1000000000000 +
+                        (buf[++_idx] ^ 0xff) * 0x10000000000 +
+                        (buf[++_idx] ^ 0xff) * 0x100000000 +
+                        (buf[++_idx] ^ 0xff) * 0x1000000 +
+                        (buf[++_idx] ^ 0xff) * 0x10000 +
+                        (buf[++_idx] ^ 0xff) * 0x100 +
+                        (buf[++_idx] ^ 0xff) + 1) * -1;
                 }
-                return num * 0x100000000000000 + buf[++_idx] * 0x1000000000000 + buf[++_idx] * 0x10000000000 + buf[++_idx] * 0x100000000 + buf[++_idx] * 0x1000000 + buf[++_idx] * 0x10000 + buf[++_idx] * 0x100 + buf[++_idx];
+                return num * 0x100000000000000 +
+                    buf[++_idx] * 0x1000000000000 +
+                    buf[++_idx] * 0x10000000000 +
+                    buf[++_idx] * 0x100000000 +
+                    buf[++_idx] * 0x1000000 +
+                    buf[++_idx] * 0x10000 +
+                    buf[++_idx] * 0x100 +
+                    buf[++_idx];
             case 0xd2:
-                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) + (buf[++_idx] << 8) + buf[++_idx];
+                num = buf[++_idx] * 0x1000000 + (buf[++_idx] << 16) +
+                    (buf[++_idx] << 8) + buf[++_idx];
                 return num < 0x80000000 ? num : num - 0x100000000;
             case 0xd1:
                 num = (buf[++_idx] << 8) + buf[++_idx];
@@ -642,10 +670,14 @@ this.msgpack || (function (globalScope) {
                 else {
                     for (ary = [], i = _idx, iz = i + num; i < iz;) {
                         c = buf[++i];
-                        ary.push(c < 0x80 ? c : c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) : ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6 | (buf[++i] & 0x3f)));
+                        ary.push(c < 0x80 ? c :
+                            c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
+                                ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
+                                    | (buf[++i] & 0x3f)));
                     }
                     _idx = i;
-                    return ary.length < 10240 ? _toString.apply(null, ary) : byteArrayToByteString(ary);
+                    return ary.length < 10240 ? _toString.apply(null, ary)
+                        : byteArrayToByteString(ary);
                 }
             case 0xdf: num += buf[++_idx] * 0x1000000 + (buf[++_idx] << 16);
             case 0xde: num += (buf[++_idx] << 8) + buf[++_idx];
@@ -655,7 +687,10 @@ this.msgpack || (function (globalScope) {
                     size = buf[++_idx] - 0xa0;
                     for (ary = [], i = _idx, iz = i + size; i < iz;) {
                         c = buf[++i];
-                        ary.push(c < 0x80 ? c : c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) : ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6 | (buf[++i] & 0x3f)));
+                        ary.push(c < 0x80 ? c :
+                            c < 0xe0 ? ((c & 0x1f) << 6 | (buf[++i] & 0x3f)) :
+                                ((c & 0x0f) << 12 | (buf[++i] & 0x3f) << 6
+                                    | (buf[++i] & 0x3f)));
                     }
                     _idx = i;
                     key = _toString.apply(null, ary);
@@ -735,7 +770,8 @@ this.msgpack || (function (globalScope) {
                                 return;
                             }
                             else {
-                                byteArray = _ie ? toByteArrayIE(xhr) : toByteArray(xhr.responseText);
+                                byteArray = _ie ? toByteArrayIE(xhr)
+                                    : toByteArray(xhr.responseText);
                                 data = msgpackunpack(byteArray);
                             }
                         }
@@ -758,19 +794,25 @@ this.msgpack || (function (globalScope) {
             abort && xhr && xhr.abort && xhr.abort();
             watchdog && (clearTimeout(watchdog), watchdog = 0);
             xhr = null;
-            globalScope.addEventListener && globalScope.removeEventListener("beforeunload", ng, false);
+            globalScope.addEventListener &&
+                globalScope.removeEventListener("beforeunload", ng, false);
         }
-        var watchdog = 0, method = option.method || "GET", header = option.header || {}, before = option.before, after = option.after, data = option.data || null, xhr = globalScope.XMLHttpRequest ? new XMLHttpRequest() : globalScope.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") : null, run = 0, i, overrideMimeType = "overrideMimeType", setRequestHeader = "setRequestHeader", getbinary = method === "GET" && option.binary;
+        var watchdog = 0, method = option.method || "GET", header = option.header || {}, before = option.before, after = option.after, data = option.data || null, xhr = globalScope.XMLHttpRequest ? new XMLHttpRequest() :
+            globalScope.ActiveXObject ? new ActiveXObject("Microsoft.XMLHTTP") :
+                null, run = 0, i, overrideMimeType = "overrideMimeType", setRequestHeader = "setRequestHeader", getbinary = method === "GET" && option.binary;
         try {
             xhr.onreadystatechange = readyStateChange;
             xhr.open(method, url, true);
             before && before(xhr, option);
-            getbinary && xhr[overrideMimeType] && xhr[overrideMimeType]("text/plain; charset=x-user-defined");
-            data && xhr[setRequestHeader]("Content-Type", "application/x-www-form-urlencoded");
+            getbinary && xhr[overrideMimeType] &&
+                xhr[overrideMimeType]("text/plain; charset=x-user-defined");
+            data &&
+                xhr[setRequestHeader]("Content-Type", "application/x-www-form-urlencoded");
             for (i in header) {
                 xhr[setRequestHeader](i, header[i]);
             }
-            globalScope.addEventListener && globalScope.addEventListener("beforeunload", ng, false);
+            globalScope.addEventListener &&
+                globalScope.addEventListener("beforeunload", ng, false);
             xhr.send(data);
             watchdog = setTimeout(function () {
                 ng(1, 408);
@@ -860,6 +902,8 @@ var Stormancer;
             this._tokenHandler = tokenHandler;
         }
         ApiClient.prototype.getSceneEndpoint = function (accountId, applicationName, sceneId, userData) {
+            //var serializer = new MsgPackSerializer();
+            //var data: Uint8Array = serializer.serialize(userData);
             var _this = this;
             var url = this._config.getApiEndpoint() + Stormancer.Helpers.stringFormat(this.createTokenUri, accountId, applicationName, sceneId);
             return $http(url).post({}, {
@@ -872,7 +916,9 @@ var Stormancer;
                 dataType: "json",
                 contentType: "application/json",
                 data: JSON.stringify(userData)
-            }).catch(function (error) { return console.log("get token error:" + error); }).then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
+            })
+                .catch(function (error) { return console.log("get token error:" + error); })
+                .then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
         };
         return ApiClient;
     })();
@@ -930,6 +976,7 @@ var Cancellation;
     })();
     Cancellation.token = token;
 })(Cancellation || (Cancellation = {}));
+/// <reference path="Scripts/promise.d.ts" />
 var Stormancer;
 (function (Stormancer) {
     var ConnectionHandler = (function () {
@@ -940,13 +987,11 @@ var Stormancer;
         ConnectionHandler.prototype.generateNewConnectionId = function () {
             return this._current++;
         };
-        ConnectionHandler.prototype.newConnection = function (connection) {
-        };
+        ConnectionHandler.prototype.newConnection = function (connection) { };
         ConnectionHandler.prototype.getConnection = function (id) {
             throw new Error("Not implemented.");
         };
-        ConnectionHandler.prototype.closeConnection = function (connection, reason) {
-        };
+        ConnectionHandler.prototype.closeConnection = function (connection, reason) { };
         return ConnectionHandler;
     })();
     Stormancer.ConnectionHandler = ConnectionHandler;
@@ -1008,7 +1053,8 @@ var Stormancer;
         };
         Client.prototype.getPublicScene = function (sceneId, userData) {
             var _this = this;
-            return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData).then(function (ci) { return _this.getSceneImpl(sceneId, ci); });
+            return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
+                .then(function (ci) { return _this.getSceneImpl(sceneId, ci); });
         };
         Client.prototype.getScene = function (token) {
             var ci = this._tokenHandler.decodeToken(token);
@@ -1046,13 +1092,16 @@ var Stormancer;
         };
         Client.prototype.sendSystemRequest = function (id, parameter) {
             var _this = this;
-            return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter)).then(function (packet) { return _this._systemSerializer.deserialize(packet.data); });
+            return this._requestProcessor.sendSystemRequest(this._serverConnection, id, this._systemSerializer.serialize(parameter))
+                .then(function (packet) { return _this._systemSerializer.deserialize(packet.data); });
         };
         Client.prototype.ensureTransportStarted = function (ci) {
             var self = this;
             return Stormancer.Helpers.promiseIf(self._serverConnection == null, function () {
-                return Stormancer.Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self).then(function () {
-                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name]).then(function (c) {
+                return Stormancer.Helpers.promiseIf(!self._transport.isRunning, self.startTransport, self)
+                    .then(function () {
+                    return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
+                        .then(function (c) {
                         self.registerConnection(c);
                         return self.updateMetadata();
                     });
@@ -1071,7 +1120,8 @@ var Stormancer;
         };
         Client.prototype.disconnectScene = function (scene, sceneHandle) {
             var _this = this;
-            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle).then(function () {
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
+                .then(function () {
                 _this._scenesDispatcher.removeScene(sceneHandle);
                 for (var i = 0; i < _this._pluginCtx.sceneConnected.length; i++) {
                     _this._pluginCtx.sceneConnected[i](scene);
@@ -1098,7 +1148,8 @@ var Stormancer;
                     Name: r.name
                 });
             }
-            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter).then(function (result) {
+            return this.sendSystemRequest(Stormancer.SystemRequestIDTypes.ID_CONNECT_TO_SCENE, parameter)
+                .then(function (result) {
                 scene.completeConnectionInitialization(result);
                 _this._scenesDispatcher.addScene(scene);
                 for (var i = 0; i < _this._pluginCtx.sceneConnected.length; i++) {
@@ -1122,7 +1173,7 @@ var Stormancer;
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
-                this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), 0 /* IMMEDIATE_PRIORITY */).then(function (packet) {
+                this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), Stormancer.PacketPriority.IMMEDIATE_PRIORITY).then(function (packet) {
                     var timeEnd = _this._watch.getElapsedTime();
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
                     var timeRef = 0;
@@ -1210,6 +1261,19 @@ var Stormancer;
     })(Stormancer.ConnectionState || (Stormancer.ConnectionState = {}));
     var ConnectionState = Stormancer.ConnectionState;
 })(Stormancer || (Stormancer = {}));
+/**
+Contract for a Logger in Stormancer.
+@interface ILogger
+@memberof Stormancer
+*/
+/**
+Logs a json message.
+@method Stormancer.ILogger#log
+@param {Stormancer.LogLevel} level Log level.
+@param {string} category Log category. Typically where the log was generated.
+@param {string} message Log message. Description of the lof.
+@param {object} data Detailed informations about the log.
+*/
 var Stormancer;
 (function (Stormancer) {
     var _ = {
@@ -1230,6 +1294,84 @@ var Stormancer;
     })(Stormancer.LogLevel || (Stormancer.LogLevel = {}));
     var LogLevel = Stormancer.LogLevel;
 })(Stormancer || (Stormancer = {}));
+/**
+Represents a Stormancer scene.
+@interface IScene
+@memberof Stormancer
+*/
+/**
+Gets a string representing the scene id.
+@member Stormancer.IScene#id
+@type {string}
+*/
+/**
+True if the instance is an host. False if it's a client.
+@member Stormancer.IScene#isHost
+@type {boolean}
+*/
+/**
+Gets a component registered in the scene.
+@method Stormancer.IScene#getComponent
+@param {string} componentName The name of the component.
+@return {object} The requested component.
+*/
+/**
+Gets a component registered in the scene for a type
+@method Stormancer.IScene#registerComponent
+@param {string} componentName The component to register.
+@param {function} factory The component factory to get an instance of the requested component.
+*/
+/**
+A remote scene.
+@interface IScenePeer
+@memberof Stormancer
+*/
+/**
+Unique id of the peer in the Stormancer cluster
+@member Stormancer.IScenePeer#id
+@type {string}
+*/
+/**
+The serializer to use with the peer.
+@member Stormancer.IScenePeer#getComponent
+@type {Stormancer.ISerializer}
+*/
+/**
+Returns a component registered for the peer.
+@method Stormancer.IScenePeer#getComponent
+@param {string} componentName The name of the component.
+@return {object} The requested component.
+*/
+/**
+Sends a message to the remote peer.
+@method Stormancer.IScenePeer#send
+@param {string} route The route on which the message will be sent.
+@param {Uint8Array} data A method called to write the message.
+@param {PacketPriority} priority The message priority.
+@param {PacketReliability} reliability The message requested reliability.
+*/
+/**
+Contract for the binary serializers used by Stormancer applications.
+@interface ISerializer
+@memberof Stormancer
+*/
+/**
+The serializer format.
+@member Stormancer.ISerializer#name
+@type {string}
+*/
+/**
+Serialize an object into a stream.
+@method Stormancer.ISerializer#serialize
+@param {object} data The object to serialize.
+@return {Uint8Array} The byte array.
+*/
+/**
+Deserialize an object from a stream.
+@method Stormancer.ISerializer#deserialize
+@param {Uint8Array} bytes The byte array to deserialize.
+@return {object} The deserialized object.
+*/
 var Stormancer;
 (function (Stormancer) {
     var Packet = (function () {
@@ -1327,6 +1469,38 @@ var Stormancer;
     })();
     Stormancer.Route = Route;
 })(Stormancer || (Stormancer = {}));
+/**
+Manages connections.
+@interface IConnectionManager
+@memberof Stormancer
+*/
+/**
+Number of connections managed by the object.
+@member Stormancer.IConnectionManager#connectionCount
+@type {number}
+*/
+/**
+Generates an unique connection id for this node. Only used on servers.
+@method Stormancer.IConnectionManager#generateNewConnectionId
+@return {number} A number containing an unique ID.
+*/
+/**
+Adds a connection to the manager. This method is called by the infrastructure when a new connection connects to a transport.
+@method Stormancer.IConnectionManager#newConnection
+@param {Stormancer.IConnection} connection The connection object to add.
+*/
+/**
+Closes the target connection.
+@method Stormancer.IConnectionManager#closeConnection
+@param {Stormancer.IConnection} connection The connection to close.
+@param {string} reason The reason why the connection was closed.
+*/
+/**
+Returns a connection by ID.
+@method Stormancer.IConnectionManager#getConnection
+@param {number} id The connection ID.
+@return {Stormancer.IConnection} The connection attached to this ID.
+*/
 var Stormancer;
 (function (Stormancer) {
     var DefaultPacketDispatcher = (function () {
@@ -1366,6 +1540,21 @@ var Stormancer;
     })();
     Stormancer.DefaultPacketDispatcher = DefaultPacketDispatcher;
 })(Stormancer || (Stormancer = {}));
+/**
+Interface describing a message dispatcher.
+@interface IPacketDispatcher
+@memberof Stormancer
+*/
+/**
+Adds a packet processor to the dispatcher.
+@method Stormancer.IPacketDispatcher#addProcessor
+@param {Stormancer.IPacketProcessor} processor An `IPacketProcessor` object
+*/
+/**
+Dispatches a packet to the system.
+@method Stormancer.IPacketDispatcher#dispatchPacket
+@param {Stormancer.Packet} packet Packet to dispatch.
+*/
 var Stormancer;
 (function (Stormancer) {
     var TokenHandler = (function () {
@@ -1401,6 +1590,16 @@ var Stormancer;
     })();
     Stormancer.MsgPackSerializer = MsgPackSerializer;
 })(Stormancer || (Stormancer = {}));
+/**
+Represents a packet processor. Packet processors handle packets received from remote peers.
+@interface IPacketProcessor
+@memberof Stormancer
+*/
+/**
+Method called by the packet dispatcher to register the packet processor.
+@method Stormancer.IPacketProcessor#registerProcessor
+@param {Stormancer.PacketProcessorConfig} config The packet processor configuration.
+*/
 var Stormancer;
 (function (Stormancer) {
     var PacketProcessorConfig = (function () {
@@ -1421,6 +1620,55 @@ var Stormancer;
     })();
     Stormancer.PacketProcessorConfig = PacketProcessorConfig;
 })(Stormancer || (Stormancer = {}));
+/**
+A Stormancer network transport.
+@interface ITransport
+@memberof Stormancer
+*/
+/**
+Fires when a connection to a remote peer is closed.
+@member Stormancer.ITransport#connectionClosed
+@type {function[]}
+*/
+/**
+Fires when a remote peer has opened a connection.
+@member Stormancer.ITransport#connectionOpened
+@type {function[]}
+*/
+/**
+Id of the local peer.
+@member Stormancer.ITransport#id
+@type {number}
+*/
+/**
+Gets a boolean indicating if the transport is currently running.
+@member Stormancer.ITransport#isRunning
+@type {boolean}
+*/
+/**
+The name of the transport.
+@member Stormancer.ITransport#name
+@type {string}
+*/
+/**
+Fires when the transport recieves new packets.
+@member Stormancer.ITransport#packetReceived
+@type {function[]}
+*/
+/**
+Connects the transport to a remote host.
+@method Stormancer.ITransport#connect
+@param {string} endpoint A string containing the target endpoint the expected format is `host:port`.
+@return {Promise<Stormancer.IConnection>} A `Task<IConnection>` object completing with the connection process and returning the corresponding `IConnection`.
+*/
+/**
+Starts the transport.
+@method Stormancer.ITransport#getComponent
+@param {string} name The name of the transport if several are started.
+@param {Stormancer.IConnectionManager} handler The connection handler used by the connection.
+@param {object} token A `CancellationToken`. It will be cancelled when the transport has to be shutdown.
+@return {Promise} A `Task` completing when the transport is started.
+*/
 var Stormancer;
 (function (Stormancer) {
     var _ = {
@@ -1430,14 +1678,6 @@ var Stormancer;
         ID_REQUEST_RESPONSE_ERROR: 139,
         ID_CONNECTION_RESULT: 140,
         ID_SCENES: 141
-    };
-    var _2 = {
-        ID_CONNECT_TO_SCENE: 134,
-        ID_DISCONNECT_FROM_SCENE: 135,
-        ID_GET_SCENE_INFOS: 136,
-        ID_SET_METADATA: 0,
-        ID_SCENE_READY: 1,
-        ID_PING: 2
     };
     var MessageIDTypes = (function () {
         function MessageIDTypes() {
@@ -1451,18 +1691,6 @@ var Stormancer;
         return MessageIDTypes;
     })();
     Stormancer.MessageIDTypes = MessageIDTypes;
-    var SystemRequestIDTypes = (function () {
-        function SystemRequestIDTypes() {
-        }
-        SystemRequestIDTypes.ID_GET_SCENE_INFOS = 136;
-        SystemRequestIDTypes.ID_CONNECT_TO_SCENE = 134;
-        SystemRequestIDTypes.ID_SET_METADATA = 0;
-        SystemRequestIDTypes.ID_SCENE_READY = 1;
-        SystemRequestIDTypes.ID_PING = 2;
-        SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE = 135;
-        return SystemRequestIDTypes;
-    })();
-    Stormancer.SystemRequestIDTypes = SystemRequestIDTypes;
 })(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
@@ -1500,6 +1728,7 @@ var Stormancer;
     })();
     Stormancer.RequestContext = RequestContext;
 })(Stormancer || (Stormancer = {}));
+///<reference path="../MessageIDTypes.ts"/>
 var Stormancer;
 (function (Stormancer) {
     var RequestProcessor = (function () {
@@ -1507,6 +1736,7 @@ var Stormancer;
             this._pendingRequests = {};
             this._isRegistered = false;
             this._handlers = {};
+            this._currentId = 0;
             this._pendingRequests = {};
             this._logger = logger;
             for (var key in modules) {
@@ -1531,7 +1761,9 @@ var Stormancer;
                             }
                         }
                     };
-                    handler(context).then(function () { return continuation(null); }).catch(function (error) { return continuation(error); });
+                    handler(context)
+                        .then(function () { return continuation(null); })
+                        .catch(function (error) { return continuation(error); });
                     return true;
                 });
             }
@@ -1593,28 +1825,24 @@ var Stormancer;
             this._handlers[msgId] = handler;
         };
         RequestProcessor.prototype.reserveRequestSlot = function (observer) {
-            var id = 0;
-            this.toto = 1;
-            while (id < 65535) {
-                if (!this._pendingRequests[id]) {
-                    var request = { lastRefresh: new Date, id: id, observer: observer, deferred: new Stormancer.Deferred() };
-                    this._pendingRequests[id] = request;
+            var i = 0;
+            while (i < 0xFFFF) {
+                i++;
+                this._currentId = (this._currentId + 1) & 0xFFFF;
+                if (!this._pendingRequests[this._currentId]) {
+                    var request = { lastRefresh: new Date, id: this._currentId, observer: observer, deferred: new Stormancer.Deferred() };
+                    this._pendingRequests[this._currentId] = request;
                     return request;
                 }
-                id++;
             }
             throw new Error("Unable to create new request: Too many pending requests.");
         };
         RequestProcessor.prototype.sendSystemRequest = function (peer, msgId, data, priority) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (priority === void 0) { priority = Stormancer.PacketPriority.MEDIUM_PRIORITY; }
             var deferred = new Stormancer.Deferred();
             var request = this.reserveRequestSlot({
-                onNext: function (packet) {
-                    deferred.resolve(packet);
-                },
-                onError: function (e) {
-                    deferred.reject(e);
-                },
+                onNext: function (packet) { deferred.resolve(packet); },
+                onError: function (e) { deferred.reject(e); },
                 onCompleted: function () {
                     deferred.resolve();
                 }
@@ -1741,8 +1969,8 @@ var Stormancer;
             route.handlers.push(function (p) { return action(p); });
         };
         Scene.prototype.sendPacket = function (route, data, priority, reliability) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            if (priority === void 0) { priority = Stormancer.PacketPriority.MEDIUM_PRIORITY; }
+            if (reliability === void 0) { reliability = Stormancer.PacketReliability.RELIABLE; }
             if (!route) {
                 throw new Error("route is null or undefined!");
             }
@@ -1759,13 +1987,14 @@ var Stormancer;
             this.hostConnection.sendToScene(this.handle, routeObj.handle, data, priority, reliability);
         };
         Scene.prototype.send = function (route, data, priority, reliability) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
-            if (reliability === void 0) { reliability = 2 /* RELIABLE */; }
+            if (priority === void 0) { priority = Stormancer.PacketPriority.MEDIUM_PRIORITY; }
+            if (reliability === void 0) { reliability = Stormancer.PacketReliability.RELIABLE; }
             return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
         };
         Scene.prototype.connect = function () {
             var _this = this;
-            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this.localRoutes)).then(function () {
+            return this._client.connectToScene(this, this._token, Stormancer.Helpers.mapValues(this.localRoutes))
+                .then(function () {
                 _this.connected = true;
             });
         };
@@ -1850,6 +2079,30 @@ var Stormancer;
     })();
     Stormancer.ScenePeer = ScenePeer;
 })(Stormancer || (Stormancer = {}));
+/// <reference path="Scripts/msgPack.ts" />
+var Stormancer;
+(function (Stormancer) {
+    var _ = {
+        ID_CONNECT_TO_SCENE: 134,
+        ID_DISCONNECT_FROM_SCENE: 135,
+        ID_GET_SCENE_INFOS: 136,
+        ID_SET_METADATA: 0,
+        ID_SCENE_READY: 1,
+        ID_PING: 2
+    };
+    var SystemRequestIDTypes = (function () {
+        function SystemRequestIDTypes() {
+        }
+        SystemRequestIDTypes.ID_SET_METADATA = 0;
+        SystemRequestIDTypes.ID_SCENE_READY = 1;
+        SystemRequestIDTypes.ID_PING = 2;
+        SystemRequestIDTypes.ID_CONNECT_TO_SCENE = 134;
+        SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE = 135;
+        SystemRequestIDTypes.ID_GET_SCENE_INFOS = 136;
+        return SystemRequestIDTypes;
+    })();
+    Stormancer.SystemRequestIDTypes = SystemRequestIDTypes;
+})(Stormancer || (Stormancer = {}));
 var Stormancer;
 (function (Stormancer) {
     var WebSocketConnection = (function () {
@@ -1862,13 +2115,13 @@ var Stormancer;
             this.id = id;
             this._socket = socket;
             this.connectionDate = new Date();
-            this.state = 2 /* Connected */;
+            this.state = Stormancer.ConnectionState.Connected;
         }
         WebSocketConnection.prototype.close = function () {
             this._socket.close();
         };
         WebSocketConnection.prototype.sendSystem = function (msgId, data, priority) {
-            if (priority === void 0) { priority = 2 /* MEDIUM_PRIORITY */; }
+            if (priority === void 0) { priority = Stormancer.PacketPriority.MEDIUM_PRIORITY; }
             var bytes = new Uint8Array(data.length + 1);
             bytes[0] = msgId;
             bytes.set(data, 1);

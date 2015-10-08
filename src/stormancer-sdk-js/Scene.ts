@@ -243,6 +243,7 @@ module Stormancer {
             return new ScenePeer(this.hostConnection, this.handle, this.remoteRoutes, this);
         }
         a: IMap<string>;
+
         private _registeredComponents: IMap<() => any> = {};
         
         /**

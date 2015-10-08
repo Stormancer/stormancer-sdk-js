@@ -29,9 +29,10 @@
                     });
                 }
             });
+            ctx.sceneDisconnected.push((scene: Scene) => {
+                var processor = scene.getComponent<RpcService>(RpcClientPlugin.ServiceName);
+                processor.disconnected();
+            });
         }
-
-        
-         
     }
-} 
+}

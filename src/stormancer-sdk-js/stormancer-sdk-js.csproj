@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>1.4</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.6</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -66,12 +66,12 @@
     <TypeScriptCompile Include="SystemMessages\ConnectedToSceneMsg.ts" />
     <TypeScriptCompile Include="SystemMessages\ConnectionResult.ts" />
     <TypeScriptCompile Include="SystemMessages\SceneInfosDto.ts" />
+    <TypeScriptCompile Include="SystemRequestIDTypes.ts" />
     <TypeScriptCompile Include="Transports\WebSocketClientConnection.ts" />
     <TypeScriptCompile Include="Transports\WebSocketClientTransport.ts" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\ajax.ts" />
-    <Content Include="Scripts\es6-promise.min.js" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>

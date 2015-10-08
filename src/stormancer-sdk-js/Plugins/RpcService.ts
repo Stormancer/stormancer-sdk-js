@@ -13,10 +13,20 @@
         private _runningRequests: IMap<Cancellation.TokenSource> = {};
         private _msgpackSerializer: MsgPackSerializer = new MsgPackSerializer();
 
+        /**
+        @class RpcService
+        @memberof Stormancer
+        @classdesc Used to send remote procedure call through the RPC plugin.
+        If your scene uses the RPC plugin, use `scene.getComponent("rpcService")` to get an instance of this class.
+        */
         constructor(scene: Scene) {
             this._scene = scene;
         }
 
+        /**
+        @method Stormancer.RpcService#rpc
+        @return {ISubscription}
+        */
         public rpc(route: string, objectOrData: any,
             onNext: (packet: Packet<IScenePeer>) => void,
             onError: (error: string) => void = (error) => { },
@@ -79,7 +89,7 @@
             this._pendingRequests[id] = request;
             
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set(<any>[i & 255, i >>> 8]);
+            dataToSend.set(<any>[id & 255, id >>> 8]);
             dataToSend.set(data, 2);
             
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);
@@ -117,17 +127,16 @@
         }
 
         private reserveId(): number {
-            var loop = 0;
-            while (this._pendingRequests[this._currentRequestId]) {
-                loop++;
-                this._currentRequestId = (this._currentRequestId + 1) & 65535;
-
-                if (loop > 65535) {
-                    throw new Error("Too many requests in progress, unable to start a new one.");
+            var i = 0;
+            while (i <= 0xFFFF) {
+                i++;
+                this._currentRequestId = (this._currentRequestId + 1) & 0xFFFF;
+                if (!this._pendingRequests[this._currentRequestId]) {
+                    return this._currentRequestId;
                 }
             }
 
-            return this._currentRequestId;
+            throw new Error("Too many requests in progress, unable to start a new one.");
         }
 
         //finds the appropriate pending request and consumes the first 2 bytes of the packet.
