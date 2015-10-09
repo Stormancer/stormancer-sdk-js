@@ -170,21 +170,20 @@ var Stormancer;
             return newData;
         };
         RpcRequestContext.prototype.sendValue = function (data, priority) {
-            this.writeRequestId(data);
+            data = this.writeRequestId(data);
             this._scene.sendPacket(Stormancer.RpcClientPlugin.NextRouteName, data, priority, (this._ordered ? Stormancer.PacketReliability.RELIABLE_ORDERED : Stormancer.PacketReliability.RELIABLE));
             this._msgSent = 1;
         };
         RpcRequestContext.prototype.sendError = function (errorMsg) {
             var data = this._peer.serializer.serialize(errorMsg);
-            this.writeRequestId(data);
+            data = this.writeRequestId(data);
             this._scene.sendPacket(Stormancer.RpcClientPlugin.ErrorRouteName, data, Stormancer.PacketPriority.MEDIUM_PRIORITY, Stormancer.PacketReliability.RELIABLE_ORDERED);
         };
         RpcRequestContext.prototype.sendCompleted = function () {
             var data = new Uint8Array(0);
-            this.writeRequestId(data);
+            var data = this.writeRequestId(data);
             var data2 = new Uint8Array(1 + data.byteLength);
             data2[0] = this._msgSent;
-            data2.set(data, 1);
             this._scene.sendPacket(Stormancer.RpcClientPlugin.CompletedRouteName, data, Stormancer.PacketPriority.MEDIUM_PRIORITY, Stormancer.PacketReliability.RELIABLE_ORDERED);
         };
         return RpcRequestContext;
@@ -274,6 +273,7 @@ var Stormancer;
             metadatas[Stormancer.RpcClientPlugin.PluginName] = Stormancer.RpcClientPlugin.Version;
             this._scene.addRoute(route, function (p) {
                 var id = p.getDataView().getUint16(0, true);
+                p.data = p.data.subarray(2);
                 var cts = new Cancellation.TokenSource();
                 var ctx = new Stormancer.RpcRequestContext(p.connection, _this._scene, id, ordered, p.data, cts.token);
                 if (!_this._runningRequests[id]) {
@@ -302,7 +302,8 @@ var Stormancer;
             throw new Error("Too many requests in progress, unable to start a new one.");
         };
         RpcService.prototype.getPendingRequest = function (packet) {
-            var id = packet.data[0] + 256 * packet.data[1];
+            var dv = packet.getDataView();
+            var id = packet.getDataView().getUint16(0, true);
             packet.data = packet.data.subarray(2);
             return this._pendingRequests[id];
         };
@@ -1159,6 +1160,7 @@ var Stormancer;
         };
         Client.prototype.startAsyncClock = function () {
             if (!this._syncClockIntervalId) {
+                this.syncClockImpl();
                 this._syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
             }
         };
@@ -1189,7 +1191,10 @@ var Stormancer;
             }
         };
         Client.prototype.clock = function () {
-            return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            if (this._offset) {
+                return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            }
+            return 0;
         };
         return Client;
     })();

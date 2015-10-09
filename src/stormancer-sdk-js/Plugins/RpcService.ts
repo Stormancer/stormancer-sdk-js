@@ -109,6 +109,7 @@
             metadatas[RpcClientPlugin.PluginName] = RpcClientPlugin.Version;
             this._scene.addRoute(route, p => {
                 var id = p.getDataView().getUint16(0, true);
+                p.data = p.data.subarray(2);
                 var cts = new Cancellation.TokenSource();
                 var ctx = new RpcRequestContext(p.connection, this._scene, id, ordered, p.data, cts.token);
                 if (!this._runningRequests[id]) {
@@ -141,10 +142,10 @@
 
         //finds the appropriate pending request and consumes the first 2 bytes of the packet.
         private getPendingRequest(packet: Packet<IScenePeer>): RpcRequest {
-            var id = packet.data[0] + 256 * packet.data[1];
-
+            var dv = packet.getDataView();
+            var id = packet.getDataView().getUint16(0, true);
+            //var id = packet.data[0] + 256 * packet.data[1];
             packet.data = packet.data.subarray(2);
-
             return this._pendingRequests[id];
         }
 

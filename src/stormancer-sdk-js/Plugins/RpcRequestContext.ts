@@ -35,23 +35,22 @@
         }
 
         public sendValue(data: Uint8Array, priority: PacketPriority): void {
-            this.writeRequestId(data);
+            data = this.writeRequestId(data);
             this._scene.sendPacket(RpcClientPlugin.NextRouteName, data, priority, (this._ordered ? PacketReliability.RELIABLE_ORDERED : PacketReliability.RELIABLE));
             this._msgSent = 1;
         }
 
         public sendError(errorMsg: string): void {
             var data = this._peer.serializer.serialize(errorMsg);
-            this.writeRequestId(data);
+            data = this.writeRequestId(data);
             this._scene.sendPacket(RpcClientPlugin.ErrorRouteName, data, PacketPriority.MEDIUM_PRIORITY, PacketReliability.RELIABLE_ORDERED);
         }
 
         public sendCompleted(): void {
             var data = new Uint8Array(0);
-            this.writeRequestId(data);
+            var data = this.writeRequestId(data);
             var data2 = new Uint8Array(1 + data.byteLength);
             data2[0] = this._msgSent;
-            data2.set(data, 1);
             this._scene.sendPacket(RpcClientPlugin.CompletedRouteName, data, PacketPriority.MEDIUM_PRIORITY, PacketReliability.RELIABLE_ORDERED);
         }
     }

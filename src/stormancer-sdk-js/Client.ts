@@ -282,12 +282,13 @@ module Stormancer {
         */
         public serverPing: number = null;
 
-        private _offset: number = 0;
+        private _offset = 0;
         private _pingInterval = 5000;
         private _syncClockIntervalId: number;
         private _watch: Watch = new Watch();
         private startAsyncClock(): void {
             if (!this._syncClockIntervalId) {
+                this.syncClockImpl();
                 this._syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
             }
         }
@@ -323,7 +324,10 @@ module Stormancer {
         @return {number} The number of milliseconds since the application started.
         */
         public clock(): number {
-            return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            if (this._offset) {
+                return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            }
+            return 0;
         }
     }
 

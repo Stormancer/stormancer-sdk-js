@@ -39,7 +39,6 @@ module Stormancer {
             var bytes = new Uint8Array(data.length + 1);
             bytes[0] = msgId;
             bytes.set(data, 1);
-
             this._socket.send(bytes.buffer);
         }
  
@@ -47,13 +46,11 @@ module Stormancer {
         public sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void {
             var bytes = new Uint8Array(data.length + 3);
             bytes[0] = sceneIndex;
-
             var ushorts = new Uint16Array(1);
             ushorts[0] = route;
             bytes.set(new Uint8Array(ushorts.buffer), 1);
-
             bytes.set(data, 3);
-
+            //console.log("SENT ", bytes);
             this._socket.send(bytes.buffer);
         }
 
