@@ -280,41 +280,64 @@ module Stormancer {
         @member Stormancer.Client#serverPing
         @type {number}
         */
-        public serverPing: number = null;
-
+        public latestPing: number = null;
+        private _pingsAndOffsets = [];
         private _offset = 0;
         private _pingInterval = 5000;
-        private _syncClockIntervalId: number;
         private _watch: Watch = new Watch();
+        private _syncclockstarted = false;
         private startAsyncClock(): void {
-            if (!this._syncClockIntervalId) {
-                this.syncClockImpl();
-                this._syncClockIntervalId = setInterval(this.syncClockImpl.bind(this), this._pingInterval);
-            }
+            this._syncclockstarted = true;
+            this.syncClockImpl();
         }
         private stopAsyncClock(): void {
-            clearInterval(this._syncClockIntervalId);
-            this._syncClockIntervalId = null;
+            this._syncclockstarted = false;
         }
         private syncClockImpl(): void {
             try {
+                var maxValues = 100;
                 var timeStart = Math.floor(this._watch.getElapsedTime());
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
                 data[1] = Math.floor(timeStart / Math.pow(2, 32));
                 this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).then(packet => {
                     var timeEnd = this._watch.getElapsedTime();
+
                     var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
+
                     var timeRef = 0;
                     for (var i = 0; i < 8; i++) {
                         timeRef += (data[i] * Math.pow(2, (i * 8)));
                     }
-                    this.serverPing = timeEnd - timeStart;
-                    this._offset = timeRef - (this.serverPing / 2) - timeStart;
+
+                    this.latestPing = timeEnd - timeStart;
+
+                    this._pingsAndOffsets.push({
+                        ping: this.latestPing,
+                        offset: timeRef - (this.latestPing / 2) - timeStart
+                    });
+                    if (this._pingsAndOffsets.length > maxValues) {
+                        this._pingsAndOffsets.shift();
+                    }
+
+                    var values = this._pingsAndOffsets.slice();
+                    values.sort((a, b) => { return a.ping - b.ping; });
+                    var imax = values.length - Math.floor(0.1 * values.length);
+
+                    var offset = 0;
+                    for (var i = 0; i < imax; i++) {
+                        offset += values[i].offset;
+                    }
+                    offset /= imax;
+                    this._offset = Math.floor(offset);
                 }).catch(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);
+            }
+            if (this._syncclockstarted) {
+                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 100);
+                setTimeout(this.syncClockImpl.bind(this), refreshTime);
             }
         }
         

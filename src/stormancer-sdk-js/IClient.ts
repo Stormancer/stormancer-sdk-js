@@ -22,6 +22,6 @@ module Stormancer {
         serverTransportType: string;
 
         clock(): number;
-        serverPing: number;
+        latestPing: number;
     }
 }
