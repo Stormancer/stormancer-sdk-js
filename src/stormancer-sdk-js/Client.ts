@@ -336,7 +336,7 @@ module Stormancer {
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 100);
+                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 1000);
                 setTimeout(this.syncClockImpl.bind(this), refreshTime);
             }
         }
@@ -356,17 +356,17 @@ module Stormancer {
 
     class Watch {
         constructor() {
-            this._baseTime = this.getTime();
+            this._baseTime = this.now();
         }
         private _baseTime: number = 0;
         public start(): void {
-            this._baseTime = this.getTime();
+            this._baseTime = this.now();
         }
-        private getTime(): number {
+        private now(): number {
             return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
         }
         public getElapsedTime(): number {
-            return this.getTime() - this._baseTime;
+            return this.now() - this._baseTime;
         }
     }
 }

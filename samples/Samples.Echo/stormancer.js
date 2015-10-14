@@ -1205,7 +1205,7 @@ var Stormancer;
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 100);
+                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 1000);
                 setTimeout(this.syncClockImpl.bind(this), refreshTime);
             }
         };
@@ -1221,16 +1221,16 @@ var Stormancer;
     var Watch = (function () {
         function Watch() {
             this._baseTime = 0;
-            this._baseTime = this.getTime();
+            this._baseTime = this.now();
         }
         Watch.prototype.start = function () {
-            this._baseTime = this.getTime();
+            this._baseTime = this.now();
         };
-        Watch.prototype.getTime = function () {
+        Watch.prototype.now = function () {
             return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
         };
         Watch.prototype.getElapsedTime = function () {
-            return this.getTime() - this._baseTime;
+            return this.now() - this._baseTime;
         };
         return Watch;
     })();
