@@ -1008,8 +1008,8 @@ var Stormancer;
             this.serverTransportType = null;
             this._systemSerializer = new Stormancer.MsgPackSerializer();
             this.latestPing = null;
-            this._pingsAndDeltas = [];
-            this._deltaClock = 0;
+            this._pingsAndOffsets = [];
+            this._offset = 0;
             this._medianLatency = 0;
             this._standardDeviationLatency = 0;
             this._pingInterval = 5000;
@@ -1185,22 +1185,22 @@ var Stormancer;
                     var ping = timeEnd - timeStart;
                     _this.latestPing = ping;
                     var latency = ping / 2;
-                    if (_this._pingsAndDeltas.length < maxValues || latency < _this._medianLatency + _this._standardDeviationLatency) {
-                        var delta = timeServer - timeEnd + latency;
-                        _this._pingsAndDeltas.push({
+                    if (_this._pingsAndOffsets.length < maxValues || latency < _this._medianLatency + _this._standardDeviationLatency) {
+                        var offset = timeServer - timeEnd + latency;
+                        _this._pingsAndOffsets.push({
                             latency: latency,
-                            delta: delta
+                            offset: offset
                         });
-                        if (_this._pingsAndDeltas.length > maxValues) {
-                            _this._pingsAndDeltas.shift();
+                        if (_this._pingsAndOffsets.length > maxValues) {
+                            _this._pingsAndOffsets.shift();
                         }
-                        var deltaAvg = 0;
-                        var len = _this._pingsAndDeltas.length;
+                        var offsetAvg = 0;
+                        var len = _this._pingsAndOffsets.length;
                         for (var i = 0; i < len; i++) {
-                            deltaAvg += _this._pingsAndDeltas[i].delta;
+                            offsetAvg += _this._pingsAndOffsets[i].offset;
                         }
-                        _this._deltaClock = Math.floor(deltaAvg / len);
-                        var sorted = _this._pingsAndDeltas.slice().sort(function (a, b) { return a.latency - b.latency; });
+                        _this._offset = Math.floor(offsetAvg / len);
+                        var sorted = _this._pingsAndOffsets.slice().sort(function (a, b) { return a.latency - b.latency; });
                         var len = sorted.length;
                         _this._medianLatency = sorted[Math.floor(len / 2)].latency;
                         var average = 0;
@@ -1222,13 +1222,13 @@ var Stormancer;
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var delay = (this._pingsAndDeltas.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                var delay = (this._pingsAndOffsets.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
                 setTimeout(this.syncClockImpl.bind(this), delay);
             }
         };
         Client.prototype.clock = function () {
-            if (this._deltaClock) {
-                return Math.floor(this._watch.getElapsedTime()) + this._deltaClock;
+            if (this._offset) {
+                return Math.floor(this._watch.getElapsedTime()) + this._offset;
             }
             return 0;
         };

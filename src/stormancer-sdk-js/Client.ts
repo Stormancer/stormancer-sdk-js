@@ -281,8 +281,8 @@ module Stormancer {
         @type {number}
         */
         public latestPing: number = null;
-        private _pingsAndDeltas = [];
-        private _deltaClock = 0;
+        private _pingsAndOffsets = [];
+        private _offset = 0;
         private _medianLatency = 0;
         private _standardDeviationLatency = 0;
         private _pingInterval = 5000;
@@ -314,24 +314,24 @@ module Stormancer {
                     var latency = ping / 2;
                     
                     // get first pings and exclude future abnormal pings
-                    if (this._pingsAndDeltas.length < maxValues || latency < this._medianLatency + this._standardDeviationLatency) {
-                        var delta = timeServer - timeEnd + latency;
-                        this._pingsAndDeltas.push({
+                    if (this._pingsAndOffsets.length < maxValues || latency < this._medianLatency + this._standardDeviationLatency) {
+                        var offset = timeServer - timeEnd + latency;
+                        this._pingsAndOffsets.push({
                             latency: latency,
-                            delta: delta
+                            offset: offset
                         });
-                        if (this._pingsAndDeltas.length > maxValues) {
-                            this._pingsAndDeltas.shift();
+                        if (this._pingsAndOffsets.length > maxValues) {
+                            this._pingsAndOffsets.shift();
                         }
-                        var deltaAvg = 0;
-                        var len = this._pingsAndDeltas.length;
+                        var offsetAvg = 0;
+                        var len = this._pingsAndOffsets.length;
                         for (var i = 0; i < len; i++) {
-                            deltaAvg += this._pingsAndDeltas[i].delta;
+                            offsetAvg += this._pingsAndOffsets[i].offset;
                         }
-                        this._deltaClock = Math.floor(deltaAvg / len);
+                        this._offset = Math.floor(offsetAvg / len);
 
                         // computing the standard deviation for excluding future abnormal pings
-                        var sorted = this._pingsAndDeltas.slice().sort((a, b) => { return a.latency - b.latency; });
+                        var sorted = this._pingsAndOffsets.slice().sort((a, b) => { return a.latency - b.latency; });
                         var len = sorted.length;
                         this._medianLatency = sorted[Math.floor(len / 2)].latency;
                         var average = 0;
@@ -353,7 +353,7 @@ module Stormancer {
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var delay = (this._pingsAndDeltas.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                var delay = (this._pingsAndOffsets.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
                 setTimeout(this.syncClockImpl.bind(this), delay);
             }
         }
@@ -364,8 +364,8 @@ module Stormancer {
         @return {number} The number of milliseconds since the application started.
         */
         public clock(): number {
-            if (this._deltaClock) {
-                return Math.floor(this._watch.getElapsedTime()) + this._deltaClock;
+            if (this._offset) {
+                return Math.floor(this._watch.getElapsedTime()) + this._offset;
             }
             return 0;
         }
