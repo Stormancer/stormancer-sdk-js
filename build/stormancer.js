@@ -332,8 +332,8 @@ var Stormancer;
             if (request) {
                 if (messageSent) {
                     request.deferred.promise().then(function () {
-                        request.observer.onCompleted();
                         delete _this._pendingRequests[request.id];
+                        request.observer.onCompleted();
                     });
                 }
                 else {
@@ -1008,9 +1008,12 @@ var Stormancer;
             this.serverTransportType = null;
             this._systemSerializer = new Stormancer.MsgPackSerializer();
             this.latestPing = null;
-            this._pingsAndOffsets = [];
-            this._offset = 0;
+            this._pingsAndDeltas = [];
+            this._deltaClock = 0;
+            this._medianLatency = 0;
+            this._standardDeviationLatency = 0;
             this._pingInterval = 5000;
+            this._pingIntervalAtStart = 1000;
             this._watch = new Watch();
             this._syncclockstarted = false;
             this._accountId = config.account;
@@ -1170,48 +1173,62 @@ var Stormancer;
         Client.prototype.syncClockImpl = function () {
             var _this = this;
             try {
-                var maxValues = 100;
-                var timeStart = Math.floor(this._watch.getElapsedTime());
+                var maxValues = 10;
+                var timeStart = this._watch.getElapsedTime();
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
-                data[1] = Math.floor(timeStart / Math.pow(2, 32));
+                data[1] = (timeStart >> 32);
                 this._requestProcessor.sendSystemRequest(this._serverConnection, Stormancer.SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), Stormancer.PacketPriority.IMMEDIATE_PRIORITY).then(function (packet) {
                     var timeEnd = _this._watch.getElapsedTime();
-                    var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
-                    var timeRef = 0;
-                    for (var i = 0; i < 8; i++) {
-                        timeRef += (data[i] * Math.pow(2, (i * 8)));
+                    var dataView = packet.getDataView();
+                    var timeServer = dataView.getUint32(0, true) + (dataView.getUint32(4, true) << 32);
+                    var ping = timeEnd - timeStart;
+                    _this.latestPing = ping;
+                    var latency = ping / 2;
+                    if (_this._pingsAndDeltas.length < maxValues || latency < _this._medianLatency + _this._standardDeviationLatency) {
+                        var delta = timeServer - timeEnd + latency;
+                        _this._pingsAndDeltas.push({
+                            latency: latency,
+                            delta: delta
+                        });
+                        if (_this._pingsAndDeltas.length > maxValues) {
+                            _this._pingsAndDeltas.shift();
+                        }
+                        var deltaAvg = 0;
+                        var len = _this._pingsAndDeltas.length;
+                        for (var i = 0; i < len; i++) {
+                            deltaAvg += _this._pingsAndDeltas[i].delta;
+                        }
+                        _this._deltaClock = Math.floor(deltaAvg / len);
+                        var sorted = _this._pingsAndDeltas.slice().sort(function (a, b) { return a.latency - b.latency; });
+                        var len = sorted.length;
+                        _this._medianLatency = sorted[Math.floor(len / 2)].latency;
+                        var average = 0;
+                        for (var i = 0; i < len; i++) {
+                            average += sorted[i].latency;
+                        }
+                        average /= len;
+                        var varianceLatency = 0;
+                        for (var i = 0; i < len; i++) {
+                            var tmp = (sorted[i].latency - average);
+                            varianceLatency += (tmp * tmp);
+                        }
+                        varianceLatency /= len;
+                        _this._standardDeviationLatency = Math.sqrt(varianceLatency);
                     }
-                    _this.latestPing = timeEnd - timeStart;
-                    _this._pingsAndOffsets.push({
-                        ping: _this.latestPing,
-                        offset: timeRef - (_this.latestPing / 2) - timeStart
-                    });
-                    if (_this._pingsAndOffsets.length > maxValues) {
-                        _this._pingsAndOffsets.shift();
-                    }
-                    var values = _this._pingsAndOffsets.slice();
-                    values.sort(function (a, b) { return a.ping - b.ping; });
-                    var imax = values.length - Math.floor(0.1 * values.length);
-                    var offset = 0;
-                    for (var i = 0; i < imax; i++) {
-                        offset += values[i].offset;
-                    }
-                    offset /= imax;
-                    _this._offset = Math.floor(offset);
                 }).catch(function (e) { return console.error("ping: Failed to ping server.", e); });
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 1000);
-                setTimeout(this.syncClockImpl.bind(this), refreshTime);
+                var delay = (this._pingsAndDeltas.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                setTimeout(this.syncClockImpl.bind(this), delay);
             }
         };
         Client.prototype.clock = function () {
-            if (this._offset) {
-                return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            if (this._deltaClock) {
+                return Math.floor(this._watch.getElapsedTime()) + this._deltaClock;
             }
             return 0;
         };

@@ -281,9 +281,12 @@ module Stormancer {
         @type {number}
         */
         public latestPing: number = null;
-        private _pingsAndOffsets = [];
-        private _offset = 0;
+        private _pingsAndDeltas = [];
+        private _deltaClock = 0;
+        private _medianLatency = 0;
+        private _standardDeviationLatency = 0;
         private _pingInterval = 5000;
+        private _pingIntervalAtStart = 1000;
         private _watch: Watch = new Watch();
         private _syncclockstarted = false;
         private startAsyncClock(): void {
@@ -295,49 +298,63 @@ module Stormancer {
         }
         private syncClockImpl(): void {
             try {
-                var maxValues = 100;
-                var timeStart = Math.floor(this._watch.getElapsedTime());
+                var maxValues = 10;
+                var timeStart = this._watch.getElapsedTime();
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
-                data[1] = Math.floor(timeStart / Math.pow(2, 32));
+                data[1] = (timeStart >> 32);
                 this._requestProcessor.sendSystemRequest(this._serverConnection, SystemRequestIDTypes.ID_PING, new Uint8Array(data.buffer), PacketPriority.IMMEDIATE_PRIORITY).then(packet => {
                     var timeEnd = this._watch.getElapsedTime();
+                    
+                    var dataView = packet.getDataView();
+                    var timeServer = dataView.getUint32(0, true) + (dataView.getUint32(4, true) << 32);
 
-                    var data = new Uint8Array(packet.data.buffer, packet.data.byteOffset, 8);
+                    var ping = timeEnd - timeStart;
+                    this.latestPing = ping;
+                    var latency = ping / 2;
+                    
+                    // get first pings and exclude future abnormal pings
+                    if (this._pingsAndDeltas.length < maxValues || latency < this._medianLatency + this._standardDeviationLatency) {
+                        var delta = timeServer - timeEnd + latency;
+                        this._pingsAndDeltas.push({
+                            latency: latency,
+                            delta: delta
+                        });
+                        if (this._pingsAndDeltas.length > maxValues) {
+                            this._pingsAndDeltas.shift();
+                        }
+                        var deltaAvg = 0;
+                        var len = this._pingsAndDeltas.length;
+                        for (var i = 0; i < len; i++) {
+                            deltaAvg += this._pingsAndDeltas[i].delta;
+                        }
+                        this._deltaClock = Math.floor(deltaAvg / len);
 
-                    var timeRef = 0;
-                    for (var i = 0; i < 8; i++) {
-                        timeRef += (data[i] * Math.pow(2, (i * 8)));
+                        // computing the standard deviation for excluding future abnormal pings
+                        var sorted = this._pingsAndDeltas.slice().sort((a, b) => { return a.latency - b.latency; });
+                        var len = sorted.length;
+                        this._medianLatency = sorted[Math.floor(len / 2)].latency;
+                        var average = 0;
+                        for (var i = 0; i < len; i++) {
+                            average += sorted[i].latency;
+                        }
+                        average /= len;
+                        var varianceLatency = 0;
+                        for (var i = 0; i < len; i++) {
+                            var tmp = (sorted[i].latency - average);
+                            varianceLatency += (tmp * tmp);
+                        }
+                        varianceLatency /= len;
+                        this._standardDeviationLatency = Math.sqrt(varianceLatency);
                     }
-
-                    this.latestPing = timeEnd - timeStart;
-
-                    this._pingsAndOffsets.push({
-                        ping: this.latestPing,
-                        offset: timeRef - (this.latestPing / 2) - timeStart
-                    });
-                    if (this._pingsAndOffsets.length > maxValues) {
-                        this._pingsAndOffsets.shift();
-                    }
-
-                    var values = this._pingsAndOffsets.slice();
-                    values.sort((a, b) => { return a.ping - b.ping; });
-                    var imax = values.length - Math.floor(0.1 * values.length);
-
-                    var offset = 0;
-                    for (var i = 0; i < imax; i++) {
-                        offset += values[i].offset;
-                    }
-                    offset /= imax;
-                    this._offset = Math.floor(offset);
                 }).catch(e => console.error("ping: Failed to ping server.", e));
             }
             catch (e) {
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var refreshTime = (this._pingsAndOffsets.length >= maxValues ? this._pingInterval : 1000);
-                setTimeout(this.syncClockImpl.bind(this), refreshTime);
+                var delay = (this._pingsAndDeltas.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                setTimeout(this.syncClockImpl.bind(this), delay);
             }
         }
         
@@ -347,8 +364,8 @@ module Stormancer {
         @return {number} The number of milliseconds since the application started.
         */
         public clock(): number {
-            if (this._offset) {
-                return Math.floor(this._watch.getElapsedTime()) + this._offset;
+            if (this._deltaClock) {
+                return Math.floor(this._watch.getElapsedTime()) + this._deltaClock;
             }
             return 0;
         }

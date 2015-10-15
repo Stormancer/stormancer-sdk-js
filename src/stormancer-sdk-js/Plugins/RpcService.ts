@@ -176,8 +176,8 @@
             if (request) {
                 if (messageSent) {
                     request.deferred.promise().then(() => {
-                        request.observer.onCompleted();
                         delete this._pendingRequests[request.id];
+                        request.observer.onCompleted();
                     });
                 }
                 else {
