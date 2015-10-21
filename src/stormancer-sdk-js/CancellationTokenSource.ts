@@ -26,7 +26,7 @@
 
             this.data.reason = reason;
 
-            setTimeout(function () {
+            setTimeout(() => {
                 for (var i = 0; i < this.data.listeners.length; i++) {
                     if (typeof this.data.listeners[i] === 'function') {
                         this.data.listeners[i](reason);
@@ -76,7 +76,7 @@
         */
         public onCancelled(callBack: (reason: string) => void) {
             if (this.isCancelled()) {
-                setTimeout(function () {
+                setTimeout(() => {
                     callBack(this.data.reason);
                 }, 0);
             } else {

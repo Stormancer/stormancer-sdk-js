@@ -957,13 +957,14 @@ var Cancellation;
             this.token = new token(this.data);
         }
         TokenSource.prototype.cancel = function (reason) {
+            var _this = this;
             this.data.isCancelled = true;
             reason = reason || 'Operation Cancelled';
             this.data.reason = reason;
             setTimeout(function () {
-                for (var i = 0; i < this.data.listeners.length; i++) {
-                    if (typeof this.data.listeners[i] === 'function') {
-                        this.data.listeners[i](reason);
+                for (var i = 0; i < _this.data.listeners.length; i++) {
+                    if (typeof _this.data.listeners[i] === 'function') {
+                        _this.data.listeners[i](reason);
                     }
                 }
             }, 0);
@@ -984,9 +985,10 @@ var Cancellation;
             }
         };
         token.prototype.onCancelled = function (callBack) {
+            var _this = this;
             if (this.isCancelled()) {
                 setTimeout(function () {
-                    callBack(this.data.reason);
+                    callBack(_this.data.reason);
                 }, 0);
             }
             else {
