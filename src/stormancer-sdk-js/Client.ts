@@ -287,6 +287,7 @@ module Stormancer {
         private _standardDeviationLatency = 0;
         private _pingInterval = 5000;
         private _pingIntervalAtStart = 200;
+        private _maxClockValues = 24;
         private _watch: Watch = new Watch();
         private _syncclockstarted = false;
         private startAsyncClock(): void {
@@ -298,7 +299,6 @@ module Stormancer {
         }
         private syncClockImpl(): void {
             try {
-                var maxValues = 24;
                 var timeStart = this._watch.getElapsedTime();
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
@@ -323,22 +323,22 @@ module Stormancer {
                         latency: latency,
                         offset: offset
                     });
-                    if (this._clockValues.length > maxValues) {
+                    if (this._clockValues.length > this._maxClockValues) {
                         this._clockValues.shift();
                     }
                     
                     // Compute the standard deviation
-                    var pings = this._clockValues.map((v) => { return v.latency; }).sort();
-                    var len = pings.length;
-                    this._medianLatency = pings[Math.floor(len / 2)];
-                    var average = 0;
+                    var latencies = this._clockValues.map((v) => { return v.latency; }).sort();
+                    var len = latencies.length;
+                    this._medianLatency = latencies[Math.floor(len / 2)];
+                    var pingAvg = 0;
                     for (var i = 0; i < len; i++) {
-                        average += pings[i];
+                        pingAvg += latencies[i];
                     }
-                    average /= len;
+                    pingAvg /= len;
                     var varianceLatency = 0;
                     for (var i = 0; i < len; i++) {
-                        var tmp = pings[i] - average;
+                        var tmp = latencies[i] - pingAvg;
                         varianceLatency += (tmp * tmp);
                     }
                     varianceLatency /= len;
@@ -346,8 +346,8 @@ module Stormancer {
 
                     // Compute the average offset by discarding the 'abnormal' pings
                     var offsets = this._clockValues.map((v) => { return (v.latency < this._medianLatency + this._standardDeviationLatency ? v.offset : false); }).filter((v) => (v !== false));
-                    var offsetAvg = 0;
                     var len = offsets.length;
+                    var offsetAvg = 0;
                     for (var i = 0; i < len; i++) {
                         offsetAvg += offsets[i];
                     }
@@ -358,7 +358,7 @@ module Stormancer {
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var delay = (this._clockValues.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                var delay = (this._clockValues.length < this._maxClockValues ? this._pingIntervalAtStart : this._pingInterval);
                 setTimeout(this.syncClockImpl.bind(this), delay);
             }
         }

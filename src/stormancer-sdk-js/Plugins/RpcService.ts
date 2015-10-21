@@ -83,40 +83,44 @@
                 observer: observer,
                 deferred: deferred,
                 receivedMessages: 0,
-                id : id
+                id: id
             };
 
             this._pendingRequests[id] = request;
-            
+
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set(<any>[id & 255, id >>> 8]);
+            (new DataView(dataToSend.buffer)).setUint16(0, id, true);
             dataToSend.set(data, 2);
-            
+
             this._scene.sendPacket(route, dataToSend, priority, PacketReliability.RELIABLE_ORDERED);
 
             return {
-                cancel: () => {
-                    var buffer = new ArrayBuffer(2);
-                    new DataView(buffer).setUint16(0, id, true);
-                    this._scene.sendPacket("stormancer.rpc.cancel", new Uint8Array(buffer));
-                    delete this._pendingRequests[id];
+                unsubscribe: () => {
+                    if (this._pendingRequests[id]) {
+                        delete this._pendingRequests[id];
+                        var buffer = new ArrayBuffer(2);
+                        new DataView(buffer).setUint16(0, id, true);
+                        this._scene.sendPacket("stormancer.rpc.cancel", new Uint8Array(buffer));
+                    }
                 }
             };
         }
 
-        public addProcedure(route: string, handler: (ctx: RpcRequestContext) => Promise<void>, ordered: boolean): void {
+        public addProcedure(route: string, handler: (ctx: RpcRequestContext) => any, ordered: boolean): void {
             var metadatas: Map = {};
             metadatas[RpcClientPlugin.PluginName] = RpcClientPlugin.Version;
             this._scene.addRoute(route, p => {
-                var id = p.getDataView().getUint16(0, true);
+                var requestId = p.getDataView().getUint16(0, true);
+                var id = this.computeId(p);
                 p.data = p.data.subarray(2);
                 var cts = new Cancellation.TokenSource();
-                var ctx = new RpcRequestContext(p.connection, this._scene, id, ordered, p.data, cts.token);
+                var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.token);
                 if (!this._runningRequests[id]) {
-                    handler(ctx).then(t => {
+                    this._runningRequests[id] = cts;
+                    Helpers.invokeWrapping(handler, ctx).then(() => {
                         delete this._runningRequests[id];
                         ctx.sendCompleted();
-                    }).catch(reason => {
+                    }, reason => {
                         delete this._runningRequests[id];
                         ctx.sendError(reason);
                     });
@@ -140,11 +144,16 @@
             throw new Error("Too many requests in progress, unable to start a new one.");
         }
 
+        private computeId(packet: Packet<IScenePeer>): string {
+            var requestId = packet.getDataView().getUint16(0, true);
+            var id = packet.connection.id.toString() + "-" + requestId.toString();
+            return id;
+        }
+
         //finds the appropriate pending request and consumes the first 2 bytes of the packet.
         private getPendingRequest(packet: Packet<IScenePeer>): RpcRequest {
             var dv = packet.getDataView();
             var id = packet.getDataView().getUint16(0, true);
-            //var id = packet.data[0] + 256 * packet.data[1];
             packet.data = packet.data.subarray(2);
             return this._pendingRequests[id];
         }
@@ -163,15 +172,15 @@
         error(packet: Packet<IScenePeer>): void {
             var request = this.getPendingRequest(packet);
             if (request) {
-                request.observer.onError(packet.connection.serializer.deserialize<string>(packet.data));
                 delete this._pendingRequests[request.id];
+                request.observer.onError(packet.connection.serializer.deserialize<string>(packet.data));
             }
         }
 
         complete(packet: Packet<IScenePeer>): void {
             var messageSent = packet.data[0];
             packet.data = packet.data.subarray(1);
-            
+
             var request = this.getPendingRequest(packet);
             if (request) {
                 if (messageSent) {
@@ -181,14 +190,14 @@
                     });
                 }
                 else {
-                    request.observer.onCompleted();
                     delete this._pendingRequests[request.id];
+                    request.observer.onCompleted();
                 }
             }
         }
 
         cancel(packet: Packet<IScenePeer>): void {
-            var id = (new DataView(packet.data.buffer, packet.data.byteOffset, packet.data.byteLength)).getUint16(0, true);
+            var id = this.computeId(packet);
             var cts = this._runningRequests[id];
             if (cts) {
                 cts.cancel();

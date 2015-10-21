@@ -51,7 +51,15 @@ var Stormancer;
                 }
             }
             else {
-                return Promise.resolve();
+                return Promise.reject();
+            }
+        };
+        Helpers.invokeWrapping = function (func, arg) {
+            try {
+                return Promise.resolve(func(arg));
+            }
+            catch (exception) {
+                return Promise.reject(exception);
             }
         };
         return Helpers;
@@ -163,6 +171,9 @@ var Stormancer;
         RpcRequestContext.prototype.data = function () {
             return this._data;
         };
+        RpcRequestContext.prototype.cancellationToken = function () {
+            return this._cancellationToken;
+        };
         RpcRequestContext.prototype.writeRequestId = function (data) {
             var newData = new Uint8Array(2 + data.byteLength);
             (new DataView(newData.buffer)).setUint16(0, this.id, true);
@@ -255,15 +266,17 @@ var Stormancer;
             };
             this._pendingRequests[id] = request;
             var dataToSend = new Uint8Array(2 + data.length);
-            dataToSend.set([id & 255, id >>> 8]);
+            (new DataView(dataToSend.buffer)).setUint16(0, id, true);
             dataToSend.set(data, 2);
             this._scene.sendPacket(route, dataToSend, priority, Stormancer.PacketReliability.RELIABLE_ORDERED);
             return {
-                cancel: function () {
-                    var buffer = new ArrayBuffer(2);
-                    new DataView(buffer).setUint16(0, id, true);
-                    _this._scene.sendPacket("stormancer.rpc.cancel", new Uint8Array(buffer));
-                    delete _this._pendingRequests[id];
+                unsubscribe: function () {
+                    if (_this._pendingRequests[id]) {
+                        delete _this._pendingRequests[id];
+                        var buffer = new ArrayBuffer(2);
+                        new DataView(buffer).setUint16(0, id, true);
+                        _this._scene.sendPacket("stormancer.rpc.cancel", new Uint8Array(buffer));
+                    }
                 }
             };
         };
@@ -272,15 +285,17 @@ var Stormancer;
             var metadatas = {};
             metadatas[Stormancer.RpcClientPlugin.PluginName] = Stormancer.RpcClientPlugin.Version;
             this._scene.addRoute(route, function (p) {
-                var id = p.getDataView().getUint16(0, true);
+                var requestId = p.getDataView().getUint16(0, true);
+                var id = _this.computeId(p);
                 p.data = p.data.subarray(2);
                 var cts = new Cancellation.TokenSource();
-                var ctx = new Stormancer.RpcRequestContext(p.connection, _this._scene, id, ordered, p.data, cts.token);
+                var ctx = new Stormancer.RpcRequestContext(p.connection, _this._scene, requestId, ordered, p.data, cts.token);
                 if (!_this._runningRequests[id]) {
-                    handler(ctx).then(function (t) {
+                    _this._runningRequests[id] = cts;
+                    Stormancer.Helpers.invokeWrapping(handler, ctx).then(function () {
                         delete _this._runningRequests[id];
                         ctx.sendCompleted();
-                    }).catch(function (reason) {
+                    }, function (reason) {
                         delete _this._runningRequests[id];
                         ctx.sendError(reason);
                     });
@@ -301,6 +316,11 @@ var Stormancer;
             }
             throw new Error("Too many requests in progress, unable to start a new one.");
         };
+        RpcService.prototype.computeId = function (packet) {
+            var requestId = packet.getDataView().getUint16(0, true);
+            var id = packet.connection.id.toString() + "-" + requestId.toString();
+            return id;
+        };
         RpcService.prototype.getPendingRequest = function (packet) {
             var dv = packet.getDataView();
             var id = packet.getDataView().getUint16(0, true);
@@ -320,8 +340,8 @@ var Stormancer;
         RpcService.prototype.error = function (packet) {
             var request = this.getPendingRequest(packet);
             if (request) {
-                request.observer.onError(packet.connection.serializer.deserialize(packet.data));
                 delete this._pendingRequests[request.id];
+                request.observer.onError(packet.connection.serializer.deserialize(packet.data));
             }
         };
         RpcService.prototype.complete = function (packet) {
@@ -337,13 +357,13 @@ var Stormancer;
                     });
                 }
                 else {
-                    request.observer.onCompleted();
                     delete this._pendingRequests[request.id];
+                    request.observer.onCompleted();
                 }
             }
         };
         RpcService.prototype.cancel = function (packet) {
-            var id = (new DataView(packet.data.buffer, packet.data.byteOffset, packet.data.byteLength)).getUint16(0, true);
+            var id = this.computeId(packet);
             var cts = this._runningRequests[id];
             if (cts) {
                 cts.cancel();
@@ -1014,6 +1034,7 @@ var Stormancer;
             this._standardDeviationLatency = 0;
             this._pingInterval = 5000;
             this._pingIntervalAtStart = 200;
+            this._maxClockValues = 24;
             this._watch = new Watch();
             this._syncclockstarted = false;
             this._accountId = config.account;
@@ -1173,7 +1194,6 @@ var Stormancer;
         Client.prototype.syncClockImpl = function () {
             var _this = this;
             try {
-                var maxValues = 24;
                 var timeStart = this._watch.getElapsedTime();
                 var data = new Uint32Array(2);
                 data[0] = timeStart;
@@ -1190,27 +1210,27 @@ var Stormancer;
                         latency: latency,
                         offset: offset
                     });
-                    if (_this._clockValues.length > maxValues) {
+                    if (_this._clockValues.length > _this._maxClockValues) {
                         _this._clockValues.shift();
                     }
-                    var pings = _this._clockValues.map(function (v) { return v.latency; }).sort();
-                    var len = pings.length;
-                    _this._medianLatency = pings[Math.floor(len / 2)];
-                    var average = 0;
+                    var latencies = _this._clockValues.map(function (v) { return v.latency; }).sort();
+                    var len = latencies.length;
+                    _this._medianLatency = latencies[Math.floor(len / 2)];
+                    var pingAvg = 0;
                     for (var i = 0; i < len; i++) {
-                        average += pings[i];
+                        pingAvg += latencies[i];
                     }
-                    average /= len;
+                    pingAvg /= len;
                     var varianceLatency = 0;
                     for (var i = 0; i < len; i++) {
-                        var tmp = pings[i] - average;
+                        var tmp = latencies[i] - pingAvg;
                         varianceLatency += (tmp * tmp);
                     }
                     varianceLatency /= len;
                     _this._standardDeviationLatency = Math.sqrt(varianceLatency);
                     var offsets = _this._clockValues.map(function (v) { return (v.latency < _this._medianLatency + _this._standardDeviationLatency ? v.offset : false); }).filter(function (v) { return (v !== false); });
-                    var offsetAvg = 0;
                     var len = offsets.length;
+                    var offsetAvg = 0;
                     for (var i = 0; i < len; i++) {
                         offsetAvg += offsets[i];
                     }
@@ -1221,7 +1241,7 @@ var Stormancer;
                 console.error("ping: Failed to ping server.", e);
             }
             if (this._syncclockstarted) {
-                var delay = (this._clockValues.length < maxValues ? this._pingIntervalAtStart : this._pingInterval);
+                var delay = (this._clockValues.length < this._maxClockValues ? this._pingIntervalAtStart : this._pingInterval);
                 setTimeout(this.syncClockImpl.bind(this), delay);
             }
         };

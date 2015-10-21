@@ -38,7 +38,7 @@ module Stormancer {
             return result;
         }
 
-        static promiseIf(condition: boolean, action: () => Promise<void>, context?: any): Promise<void> {
+        static promiseIf<TRseult>(condition: boolean, action: () => Promise<TRseult>, context?: any): Promise<TRseult> {
             if (condition) {
                 if (context) {
                     return action.call(context);
@@ -47,7 +47,16 @@ module Stormancer {
                     return action();
                 }
             } else {
-                return Promise.resolve();
+                return Promise.reject();
+            }
+        }
+        
+        static invokeWrapping<TResult>(func: (arg?: any) => TResult, arg?: any): Promise<TResult> {
+            try {
+                return Promise.resolve(func(arg));
+            }
+            catch (exception) {
+                return Promise.reject(exception);
             }
         }
     }
@@ -66,18 +75,13 @@ module Stormancer {
             });
         }
 
-        private _promise: Promise<T>;
         public promise(): Promise<T> {
             return this._promise;
         }
 
-        private _state: string = "pending";
         public state(): string {
             return this._state;
         }
-
-        private _resolve: any;
-        private _reject: any;
 
         public resolve(value?: T) {
             this._resolve(value);
@@ -88,5 +92,10 @@ module Stormancer {
             this._reject(error);
             this._state = "rejected";
         }
+
+        private _promise: Promise<T>;
+        private _state: string = "pending";
+        private _resolve: any;
+        private _reject: any
     }
 }

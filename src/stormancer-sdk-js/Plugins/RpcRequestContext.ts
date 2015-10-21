@@ -18,6 +18,10 @@
             return this._data;
         }
 
+        public cancellationToken(): Cancellation.token {
+            return this._cancellationToken;
+        }
+
         constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token) {
             this._scene = scene;
             this.id = id;

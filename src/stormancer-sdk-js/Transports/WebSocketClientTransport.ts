@@ -83,7 +83,6 @@ module Stormancer {
 
         private onMessage(buffer: ArrayBuffer) {
             var data = new Uint8Array(buffer);
-            //console.log("RECEIVED ", data);
             if (this._connection) {
                 var packet = new Packet<IConnection>(this._connection, data);
 

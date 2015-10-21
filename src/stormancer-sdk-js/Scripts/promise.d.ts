@@ -5,6 +5,6 @@
 
     static all<T>(iterable?: any[]): Promise<T>;
     static race<T>(iterable?: any[]): Promise<T>;
-    static reject<T>(reason?: any): Promise<T>;
-    static resolve<T>(value?: any): Promise<T>;
+    static reject<T>(reason?: T): Promise<T>;
+    static resolve<T>(value?: T): Promise<T>;
 }

@@ -50,7 +50,6 @@ module Stormancer {
             ushorts[0] = route;
             bytes.set(new Uint8Array(ushorts.buffer), 1);
             bytes.set(data, 3);
-            //console.log("SENT ", bytes);
             this._socket.send(bytes.buffer);
         }
 
