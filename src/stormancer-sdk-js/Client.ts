@@ -280,7 +280,11 @@ module Stormancer {
         @member Stormancer.Client#serverPing
         @type {number}
         */
-        public latestPing: number = null;
+        public lastPing(): number {
+            return this._lastPing;
+        }
+
+        private _lastPing: number = null;
         private _clockValues = [];
         private _offset = 0;
         private _medianLatency = 0;
@@ -312,7 +316,7 @@ module Stormancer {
 
                     // compute ping
                     var ping = timeEnd - timeStart;
-                    this.latestPing = ping;
+                    this._lastPing = ping;
                     var latency = ping / 2;
 
                     // compute offest
@@ -326,10 +330,10 @@ module Stormancer {
                     if (this._clockValues.length > this._maxClockValues) {
                         this._clockValues.shift();
                     }
+                    var len = this._clockValues.length;
                     
                     // Compute the standard deviation
                     var latencies = this._clockValues.map((v) => { return v.latency; }).sort();
-                    var len = latencies.length;
                     this._medianLatency = latencies[Math.floor(len / 2)];
                     var pingAvg = 0;
                     for (var i = 0; i < len; i++) {
@@ -345,21 +349,29 @@ module Stormancer {
                     this._standardDeviationLatency = Math.sqrt(varianceLatency);
 
                     // Compute the average offset by discarding the 'abnormal' pings
-                    var offsets = this._clockValues.map((v) => { return (v.latency < this._medianLatency + this._standardDeviationLatency ? v.offset : false); }).filter((v) => (v !== false));
-                    var len = offsets.length;
                     var offsetAvg = 0;
+                    var lenOffsets = 0;
+                    var latencyMax = this._medianLatency + this._standardDeviationLatency;
                     for (var i = 0; i < len; i++) {
-                        offsetAvg += offsets[i];
+                        var v = this._clockValues[i];
+                        if (v.latency < latencyMax) {
+                            offsetAvg += v.offset;
+                            lenOffsets++;
+                        }
                     }
-                    this._offset = offsetAvg / len;
-                }).catch(e => console.error("ping: Failed to ping server.", e));
+                    this._offset = offsetAvg / lenOffsets;
+
+                    // restart the next syncclock check
+                    if (this._syncclockstarted) {
+                        var delay = (this._clockValues.length < this._maxClockValues ? this._pingIntervalAtStart : this._pingInterval);
+                        setTimeout(this.syncClockImpl.bind(this), delay);
+                    }
+                }, e => {
+                    throw "ping: Failed to ping server. (" + e + ")";
+                });
             }
             catch (e) {
-                console.error("ping: Failed to ping server.", e);
-            }
-            if (this._syncclockstarted) {
-                var delay = (this._clockValues.length < this._maxClockValues ? this._pingIntervalAtStart : this._pingInterval);
-                setTimeout(this.syncClockImpl.bind(this), delay);
+                throw "ping: Failed to ping server. (" + e + ")";
             }
         }
         

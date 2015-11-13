@@ -43,15 +43,10 @@ var Stormancer;
         };
         Helpers.promiseIf = function (condition, action, context) {
             if (condition) {
-                if (context) {
-                    return action.call(context);
-                }
-                else {
-                    return action();
-                }
+                return action.call(context);
             }
             else {
-                return Promise.reject();
+                return Promise.resolve();
             }
         };
         Helpers.invokeWrapping = function (func, arg) {
@@ -939,7 +934,7 @@ var Stormancer;
                 data: JSON.stringify(userData)
             })
                 .catch(function (error) { return console.log("get token error:" + error); })
-                .then(function (result) { return _this._tokenHandler.decodeToken(result.replace(/"/g, '')); });
+                .then(function (result) { return _this._tokenHandler.decodeToken(result); });
         };
         return ApiClient;
     })();
@@ -1029,7 +1024,7 @@ var Stormancer;
             this.id = null;
             this.serverTransportType = null;
             this._systemSerializer = new Stormancer.MsgPackSerializer();
-            this.latestPing = null;
+            this._lastPing = null;
             this._clockValues = [];
             this._offset = 0;
             this._medianLatency = 0;
@@ -1186,6 +1181,9 @@ var Stormancer;
                 }
             });
         };
+        Client.prototype.lastPing = function () {
+            return this._lastPing;
+        };
         Client.prototype.startAsyncClock = function () {
             this._syncclockstarted = true;
             this.syncClockImpl();
@@ -1205,7 +1203,7 @@ var Stormancer;
                     var dataView = packet.getDataView();
                     var timeServer = dataView.getUint32(0, true) + (dataView.getUint32(4, true) << 32);
                     var ping = timeEnd - timeStart;
-                    _this.latestPing = ping;
+                    _this._lastPing = ping;
                     var latency = ping / 2;
                     var offset = timeServer - timeEnd + latency;
                     _this._clockValues.push({
@@ -1215,8 +1213,8 @@ var Stormancer;
                     if (_this._clockValues.length > _this._maxClockValues) {
                         _this._clockValues.shift();
                     }
+                    var len = _this._clockValues.length;
                     var latencies = _this._clockValues.map(function (v) { return v.latency; }).sort();
-                    var len = latencies.length;
                     _this._medianLatency = latencies[Math.floor(len / 2)];
                     var pingAvg = 0;
                     for (var i = 0; i < len; i++) {
@@ -1230,21 +1228,27 @@ var Stormancer;
                     }
                     varianceLatency /= len;
                     _this._standardDeviationLatency = Math.sqrt(varianceLatency);
-                    var offsets = _this._clockValues.map(function (v) { return (v.latency < _this._medianLatency + _this._standardDeviationLatency ? v.offset : false); }).filter(function (v) { return (v !== false); });
-                    var len = offsets.length;
                     var offsetAvg = 0;
+                    var lenOffsets = 0;
+                    var latencyMax = _this._medianLatency + _this._standardDeviationLatency;
                     for (var i = 0; i < len; i++) {
-                        offsetAvg += offsets[i];
+                        var v = _this._clockValues[i];
+                        if (v.latency < latencyMax) {
+                            offsetAvg += v.offset;
+                            lenOffsets++;
+                        }
                     }
-                    _this._offset = offsetAvg / len;
-                }).catch(function (e) { return console.error("ping: Failed to ping server.", e); });
+                    _this._offset = offsetAvg / lenOffsets;
+                    if (_this._syncclockstarted) {
+                        var delay = (_this._clockValues.length < _this._maxClockValues ? _this._pingIntervalAtStart : _this._pingInterval);
+                        setTimeout(_this.syncClockImpl.bind(_this), delay);
+                    }
+                }, function (e) {
+                    throw "ping: Failed to ping server. (" + e + ")";
+                });
             }
             catch (e) {
-                console.error("ping: Failed to ping server.", e);
-            }
-            if (this._syncclockstarted) {
-                var delay = (this._clockValues.length < this._maxClockValues ? this._pingIntervalAtStart : this._pingInterval);
-                setTimeout(this.syncClockImpl.bind(this), delay);
+                throw "ping: Failed to ping server. (" + e + ")";
             }
         };
         Client.prototype.clock = function () {
@@ -1624,6 +1628,7 @@ var Stormancer;
             this._tokenSerializer = new Stormancer.MsgPackSerializer();
         }
         TokenHandler.prototype.decodeToken = function (token) {
+            token = token.replace(/"/g, '');
             var data = token.split('-')[0];
             var buffer = Stormancer.Helpers.base64ToByteArray(data);
             var result = this._tokenSerializer.deserialize(buffer);
