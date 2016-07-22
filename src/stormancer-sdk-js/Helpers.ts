@@ -14,7 +14,8 @@ module Stormancer {
 
         static stringFormat(str: string, ...args: any[]): string {
             for (var i in args) {
-                str = str.replace('{' + i + '}', args[i]);
+                var regexp: RegExp = new RegExp("\\{" + i + "\\}", "g");
+                str = str.replace(regexp, args[i]);
             }
             return str;
         }
