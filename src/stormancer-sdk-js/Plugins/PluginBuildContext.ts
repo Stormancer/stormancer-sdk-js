@@ -16,7 +16,7 @@
         @member Stormancer.PluginBuildContext#sceneCreated
         @type {sceneHandler[]}
         */
-        public sceneCreated: ((scene: IScene) => void)[] = [];
+        public sceneCreated: ((scene: Scene) => void)[] = [];
         
         /**
         Event fired when a client object is created. That's an array of functions which are called and have the scene instance as first parameter.
@@ -30,14 +30,14 @@
         @member Stormancer.PluginBuildContext#sceneConnected
         @type {sceneHandler[]}
         */
-        public sceneConnected : ((scene: IScene) => void)[] = [];
+        public sceneConnected : ((scene: Scene) => void)[] = [];
      
         /**
         Event fired when a scene is disconnected. That's an array of functions which are called and have the scene instance as first parameter.
         @member Stormancer.PluginBuildContext#sceneDisconnected
         @type {sceneHandler[]}
         */
-        public sceneDisconnected : ((scene: IScene) => void)[] = [];
+        public sceneDisconnected : ((scene: Scene) => void)[] = [];
       
         /**
         Event fired when a packet is received from a remote peer. That's an array of functions which are called and have the scene instance as first parameter.

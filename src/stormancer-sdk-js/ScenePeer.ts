@@ -3,9 +3,9 @@ module Stormancer {
         private _connection: IConnection;
         private _sceneHandle: number;
         private _routeMapping: IMap<Route>;
-        private _scene: IScene;
+        private _scene: Scene;
 
-        public constructor(connection: IConnection, sceneHandle: number, routeMapping: IMap<Route>, scene: IScene) {
+        public constructor(connection: IConnection, sceneHandle: number, routeMapping: IMap<Route>, scene: Scene) {
             this._connection = connection;
             this._sceneHandle = sceneHandle;
             this._routeMapping = routeMapping;

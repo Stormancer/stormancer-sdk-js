@@ -1,6 +1,4 @@
-﻿/// <reference path="Scripts/msgPack.ts" />
-
-/**
+﻿/**
 @namespace Stormancer
 */
 module Stormancer {

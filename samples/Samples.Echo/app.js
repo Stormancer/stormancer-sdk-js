@@ -1,72 +1,71 @@
 var Greeter = (function () {
     function Greeter(element) {
-        this.connected = false;
-        this.element = element;
-        this.element.innerHTML += "The time is: ";
+        this._connected = false;
+        this._element = element;
+        this._element.innerHTML += "The time is: ";
         var sentDiv = document.createElement("div");
         element.appendChild(sentDiv);
         sentDiv.innerHTML += "Sent: ";
-        this.sentSpan = document.createElement('span');
-        sentDiv.appendChild(this.sentSpan);
+        this._sentSpan = document.createElement('span');
+        sentDiv.appendChild(this._sentSpan);
         var receivedDiv = document.createElement("div");
         element.appendChild(receivedDiv);
         receivedDiv.innerHTML += "Received: ";
-        this.receivedSpan = document.createElement("span");
-        receivedDiv.appendChild(this.receivedSpan);
+        this._receivedSpan = document.createElement("span");
+        receivedDiv.appendChild(this._receivedSpan);
     }
     Greeter.prototype.start = function () {
         var _this = this;
         console.log("start!");
-        var sceneName = "matchmaker";
-        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
+        var config = Stormancer.Configuration.forAccount("58ec9ba7-56e4-3d89-2c55-c9435e08b26b", "tester");
+        var client = new Stormancer.Client(config);
+        console.log("getPublicScene");
+        client.getPublicScene("main", "").then(function (scene) {
+            console.log("getPublicScene OK");
+            console.log("Scene.connect");
+            scene.addRoute("echo", _this.onEcho.bind(_this));
+            return scene.connect().then(function () {
+                console.log("Scene.connect OK");
+                _this._connected = true;
+                scene.send("echo", "stormancer");
+                _this._timerToken = setInterval(function () {
+                    console.log("check clock", client.clock());
+                }, 2000);
+                console.log("RPC");
+                var rpcService = scene.getComponent("rpcService");
+                rpcService.rpc("rpc", "stormancer", function (packet) {
+                    var msgpack = new Stormancer.MsgPackSerializer();
+                    var response = msgpack.deserialize(packet.data);
+                    if (response === "stormancer") {
+                        console.log("RPC OK");
+                    }
+                    else {
+                        console.error("RPC failed");
+                    }
+                });
+            });
+        }).catch(function (onRejected) {
+            console.log("getPublicScene Failed", onRejected);
+        });
         $("#sendButton").click(function (e) {
             var message = document.querySelector("#message").value;
             console.log("click", message);
-            this.sendMessage("echo.in", message);
+            this.sendMessage("echo", message);
         }.bind(this));
-        var client = $.stormancer(config);
-        console.log("I want my matchmaker!");
-        client.getPublicScene(sceneName, "moi")
-            .then(function (matchmaker) {
-            console.log("I have my matchmaker!");
-            return matchmaker.connect().then(function () {
-                console.log("connected to matchmaker!");
-                matchmaker.getComponent("rpcService").RpcRaw("matchmaking.requestScene", new Uint8Array(0), function (packet) {
-                    var response = msgpack.unpack(packet.data);
-                    var scenePromise = client.getScene(response.ConnectionToken);
-                    var timeAtConnexion = null;
-                    var deferred = $.Deferred();
-                    scenePromise.then(function (scene) {
-                        _this.scene = scene;
-                        scene.registerRoute("echo.out", function (message) {
-                            console.log("Message received :", message);
-                            _this.receivedSpan.innerHTML = message;
-                        });
-                        return scene.connect().then(function () {
-                            _this.connected = true;
-                        });
-                    });
-                });
-            });
-        });
     };
-    Greeter.prototype.sendMessage = function (routeName, message) {
-        if (this.scene && this.connected) {
-            this.scene.send(routeName, message);
-            console.log("Message sent on " + routeName + ":" + message);
-        }
-    };
-    Greeter.prototype.messageReceived = function (packet) {
+    Greeter.prototype.onEcho = function (packet) {
         console.log("Packet received :", packet);
-        this.receivedSpan.innerHTML += "<br>" + msgpack.unpack(packet.data);
+        var msgPackSerializer = new Stormancer.MsgPackSerializer();
+        this._receivedSpan.innerHTML += "<br>" + msgPackSerializer.deserialize(packet.data);
     };
     Greeter.prototype.stop = function () {
-        clearTimeout(this.timerToken);
+        clearTimeout(this._timerToken);
     };
     return Greeter;
-})();
+}());
 window.onload = function () {
     var el = document.getElementById('content');
     var greeter = new Greeter(el);
     greeter.start();
 };
+//# sourceMappingURL=app.js.map

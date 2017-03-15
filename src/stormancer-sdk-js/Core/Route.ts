@@ -12,7 +12,7 @@ module Stormancer {
         @param {number} handle Handle of the route (16 bits unsigned integer).
         @param {object.<string, string>} metadata Metadata attached to this route.
         */
-        public constructor(scene: IScene, name: string, handle = 0, metadata: Map = {}) {
+        public constructor(scene: Scene, name: string, handle = 0, metadata: Map = {}) {
             this.scene = scene;
             this.name = name;
             this.handle = handle;
@@ -24,7 +24,7 @@ module Stormancer {
         @member Stormancer.Route#scene
         @type {Stormancer.Scene}
         */
-        public scene: IScene = null;
+        public scene: Scene = null;
         
         /**
         A string containing the name of the route.

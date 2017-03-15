@@ -29,7 +29,7 @@ module Stormancer {
 
             token.onCancelled(this.stop);
 
-            return Promise.resolve<void>();
+            return Promise.resolve();
         }
 
         private stop() {

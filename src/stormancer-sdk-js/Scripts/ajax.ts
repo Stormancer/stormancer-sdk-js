@@ -8,10 +8,10 @@ function $http(url, options?) {
         ajax: function <T>(method, url, args, options): Promise<T> {
 
             // Creating a promise
-            var promise = new Promise(function (resolve, reject) {
+            var promise = new Promise<T>(function (resolve, reject) {
 
                 // Instantiates the XMLHttpRequest
-                var client = new XMLHttpRequest();
+                var xhr = new XMLHttpRequest();
                 var uri = url;
 
                 if (args && (method === 'POST' || method === 'PUT')) {
@@ -27,18 +27,18 @@ function $http(url, options?) {
                     }
                 }
 
-                client.open(method, uri);
+                xhr.open(method, uri);
 
                 // set options
                 var data = null;
                 if (options) {
                     if (options.contentType) {
-                        client.setRequestHeader("Content-Type", options.contentType);
+                        xhr.setRequestHeader("Content-Type", options.contentType);
                     }
                     if (options.headers) {
                         for (var key in options.headers) {
                             if (options.headers.hasOwnProperty(key)) {
-                                client.setRequestHeader(key, options.headers[key]);
+                                xhr.setRequestHeader(key, options.headers[key]);
                             }
                         }
                     }
@@ -47,20 +47,20 @@ function $http(url, options?) {
                     }
                 }
 
-                client.send(data);
+                xhr.send(data);
 
-                client.onload = function () {
-                    if (this.status == 200) {
+                xhr.onload = function () {
+                    if (xhr.status == 200) {
                         // Performs the function "resolve" when this.status is equal to 200
-                        resolve(this.response);
+                        resolve(xhr.response);
                     }
                     else {
                         // Performs the function "reject" when this.status is different than 200
-                        reject(this.statusText);
+                        reject(xhr.statusText);
                     }
                 };
-                client.onerror = function () {
-                    reject(this.statusText);
+                xhr.onerror = function () {
+                    reject(xhr.statusText);
                 };
             });
 

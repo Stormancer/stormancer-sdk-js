@@ -1,101 +1,79 @@
 ﻿class Greeter {
-    element: HTMLElement;
-    sentSpan: HTMLElement;
-    receivedSpan: HTMLElement;
-    timerToken: number;
-    scene;
-    connected: boolean = false;
+    private _element: HTMLElement;
+    private _sentSpan: HTMLElement;
+    private _receivedSpan: HTMLElement;
+    private _timerToken: number;
+    private _scene: Stormancer.Scene;
+    private _connected: boolean = false;
 
     constructor(element: HTMLElement) {
-        this.element = element;
+        this._element = element;
 
-        this.element.innerHTML += "The time is: ";
+        this._element.innerHTML += "The time is: ";
 
         var sentDiv = document.createElement("div");
         element.appendChild(sentDiv);
         sentDiv.innerHTML += "Sent: ";
-        this.sentSpan = document.createElement('span');
-        sentDiv.appendChild(this.sentSpan);
+        this._sentSpan = document.createElement('span');
+        sentDiv.appendChild(this._sentSpan);
 
         var receivedDiv = document.createElement("div");
         element.appendChild(receivedDiv);
         receivedDiv.innerHTML += "Received: ";
-        this.receivedSpan = document.createElement("span");
-        receivedDiv.appendChild(this.receivedSpan);
+        this._receivedSpan = document.createElement("span");
+        receivedDiv.appendChild(this._receivedSpan);
     }
 
     start() {
         console.log("start!");
 
-        ///Local debug test configuration
-        //var sceneName = "test-scene";
-        //var config = Stormancer.Configuration.forAccount("test", "echo");
-        //config.serverEndpoint = "http://localhost:8081";
+        var config = Stormancer.Configuration.forAccount("58ec9ba7-56e4-3d89-2c55-c9435e08b26b", "tester");
+        var client = new Stormancer.Client(config);
 
-        //Online test configuration
-        var sceneName = "matchmaker";
-        var config = Stormancer.Configuration.forAccount("d81fc876-6094-3d92-a3d0-86d42d866b96", "matchmaking-test");
+        console.log("getPublicScene");
+        client.getPublicScene("main", "").then(scene => {
+            console.log("getPublicScene OK");
+            console.log("Scene.connect");
+            scene.addRoute("echo", this.onEcho.bind(this));
+            return scene.connect().then(() => {
+                console.log("Scene.connect OK");
+                this._connected = true;
+                scene.send("echo", "stormancer");
+                this._timerToken = setInterval(() => {
+                    console.log("check clock", client.clock());
+                }, 2000);
+                console.log("RPC");
+                var rpcService = scene.getComponent<Stormancer.RpcService>("rpcService");
+                rpcService.rpc("rpc", "stormancer", packet => {
+                    var msgpack = new Stormancer.MsgPackSerializer();
+                    var response = msgpack.deserialize(packet.data);
+                    if (response === "stormancer") {
+                        console.log("RPC OK");
+                    }
+                    else {
+                        console.error("RPC failed");
+                    }
+                });
+            });
+        }).catch(onRejected => {
+            console.log("getPublicScene Failed", onRejected);
+        });
 
         $("#sendButton").click(function (e) {
             var message = (<any>document.querySelector("#message")).value;
             console.log("click", message)
-            this.sendMessage("echo.in", message);
+            this.sendMessage("echo", message);
         }.bind(this));
-
-        var client = $.stormancer(config);
-
-        console.log("I want my matchmaker!");
-        client.getPublicScene(sceneName, "moi")
-            .then(matchmaker => {
-                console.log("I have my matchmaker!");
-                return matchmaker.connect().then(() => {
-                    console.log("connected to matchmaker!");
-                    matchmaker.getComponent<Stormancer.RpcService>("rpcService").RpcRaw("matchmaking.requestScene", new Uint8Array(0), packet => {
-                        var response = msgpack.unpack(packet.data);
-
-                        var scenePromise = client.getScene(response.ConnectionToken);
-
-                        var timeAtConnexion = null;
-
-                        var deferred = $.Deferred<string>();
-                        scenePromise.then(scene => {
-                            this.scene = scene;
-                            scene.registerRoute<string>("echo.out", message => {
-                                console.log("Message received :", message);
-                                this.receivedSpan.innerHTML = message;
-                            });
-
-                            return scene.connect().then(() => {
-                                this.connected = true;
-                                //this.timerToken = setInterval(() => {
-                                //    var localDateString = new Date().toLocaleString();
-                                //    this.sentSpan.innerHTML = localDateString;
-                                //    this.sendMessage("echo.in", localDateString);
-                                //    console.log("server clock", client.clock());
-                                //}, 2000);
-                            });
-                        });
-                    });
-                });
-            });
-
     }
-
-    sendMessage(routeName, message) {
-        if (this.scene && this.connected) {
-            this.scene.send(routeName, message);
-            console.log("Message sent on " + routeName + ":" + message);
-        }
-    }
-
-    messageReceived(packet: Stormancer.Packet<Stormancer.IScenePeer>) {
+    
+    onEcho(packet: Stormancer.Packet<Stormancer.IScenePeer>) {
         console.log("Packet received :", packet);
-
-        this.receivedSpan.innerHTML += "<br>" + msgpack.unpack(packet.data);
+        var msgPackSerializer = new Stormancer.MsgPackSerializer();
+        this._receivedSpan.innerHTML += "<br>" + msgPackSerializer.deserialize(packet.data);
     }
 
     stop() {
-        clearTimeout(this.timerToken);
+        clearTimeout(this._timerToken);
     }
 }
 

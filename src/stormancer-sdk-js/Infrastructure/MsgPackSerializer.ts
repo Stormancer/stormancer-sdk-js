@@ -1,5 +1,18 @@
 module Stormancer {
 
+    declare function msgpack5(): msgpack;
+
+    declare class msgpack {
+        constructor(options?: msgpack5Options);
+        encode(object: any): Uint8Array;
+        decode(buf: Uint8Array | Array<number>): any;
+    }
+
+    interface msgpack5Options {
+        forceFloat64?: boolean;
+        compatibilityMode?: boolean;
+    }
+
     export class MsgPackSerializer implements ISerializer {
         
         /**
@@ -18,7 +31,7 @@ module Stormancer {
         @return {Uint8Array} The byte array.
         */
         public serialize<T>(data: T): Uint8Array {
-            return new Uint8Array(msgpack.pack(data));
+            return new Uint8Array(this._msgpack.encode(data));
         }
         
         /**
@@ -29,12 +42,14 @@ module Stormancer {
         @return {object} The deserialized data.
         */
         public deserialize<T>(bytes: Uint8Array): T {
-            return msgpack.unpack(bytes);
+            return this._msgpack.decode(bytes);
         }
 
         /**
         The name of the serializer.
         */
-        name: string = "msgpack/map";
+        public name: string = "msgpack/map";
+        
+        private _msgpack: msgpack = msgpack5();
     }
 }

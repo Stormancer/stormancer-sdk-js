@@ -11,7 +11,6 @@ module Stormancer {
         }
 
         public decodeToken(token: string): SceneEndpoint {
-            token = token.replace(/"/g, '');
             var data = token.split('-')[0];
             var buffer = Helpers.base64ToByteArray(data);
             var result = this._tokenSerializer.deserialize<ConnectionData>(buffer);

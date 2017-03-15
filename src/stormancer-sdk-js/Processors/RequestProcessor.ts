@@ -26,9 +26,10 @@ module Stormancer {
 
         public registerProcessor(config: PacketProcessorConfig): void {
             this._isRegistered = true;
+
             for (var key in this._handlers) {
                 var handler = this._handlers[key];
-                config.addProcessor(key, (p: Packet<IConnection>) => {
+                config.addProcessor(parseInt(key), (p: Packet<IConnection>) => {
                     var context = new RequestContext(p);
 
                     var continuation = (fault: any) => {

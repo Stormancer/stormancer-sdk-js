@@ -1,6 +1,6 @@
 module Stormancer {
 
-    export class Scene implements IScene {
+    export class Scene {
 
         /**
         A string representing the unique ID of the scene.
@@ -8,21 +8,21 @@ module Stormancer {
         @type {string}
         */
         public id: string;
-        
+
         /**
         True if the instance is an host. False if it's a client.
         @member Stormancer.Scene#isHost
         @type {boolean}
         */
         public isHost: boolean = false;
-        
+
         /**
         A byte representing the index of the scene for this peer.
         @member Stormancer.Scene#handle
         @type {number}
         */
         public handle: number = null;
-        
+
         /**
         A boolean representing whether the scene is connected or not.
         @member Stormancer.Scene#connected
@@ -31,14 +31,14 @@ module Stormancer {
         public connected: boolean = false;
 
         public hostConnection: IConnection;
-        
+
         /**
         Returns a list of the routes registered on the local peer.
         @member Stormancer.Scene#localRoutes
         @type {Object.<string, object>}
         */
         public localRoutes: IMap<Route> = {};
-        
+
         /**
         Returns a list of the routes available on the remote peer.
         @member Stormancer.Scene#remoteRoutes
@@ -49,7 +49,7 @@ module Stormancer {
         private _token: string;
         private _metadata: Map;
         private _client: Client;
-        
+
         /**
         A Scene should not be created by the user. Get a Scene by using **Client#getPublicScene** or **Client#getScene**.
         @class Scene
@@ -78,7 +78,7 @@ module Stormancer {
         getHostMetadata(key: string): string {
             return this._metadata[key];
         }
-        
+
         /**
         Registers a route on the local peer for receiving data packets. See the {Stormancer.Packet} class to know how to get the data.
         @method Stormancer.Scene#addRoute
@@ -109,7 +109,7 @@ module Stormancer {
         @callback packetHandler
         @param {Stormancer.Packet} packet The packet containing some data.
         */
-        
+
         /**
         Registers a route on the local peer for receiving deserialised javascript objects. See {Stormancer.Scene.addRoute} to have more flexibility on the data.
         @method Stormancer.Scene#registerRoute
@@ -123,13 +123,13 @@ module Stormancer {
                 handler(data);
             }, metadata);
         }
-        
+
         /**
         This callback handles a received data object.
         @callback dataHandler
         @param {Object} object The data object.
         */
-        
+
         private onMessageImpl(route: Route, handler: (packet: Packet<IScenePeer>) => void): void {
             var action = (p: Packet<IConnection>) => {
                 var packet = new Packet(this.host(), p.data, p.getMetadata());
@@ -176,17 +176,17 @@ module Stormancer {
         public send<T>(route: string, data: T, priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY, reliability: PacketReliability = PacketReliability.RELIABLE): void {
             return this.sendPacket(route, this.hostConnection.serializer.serialize(data), priority, reliability);
         }
-        
+
         /**
         Connect the Scene to the Stormancer application scene.
         @method Stormancer.Scene#connect
         @return {Promise} A promise which complete when the Scene is connected.
         */
         public connect(): Promise<void> {
-            return this._client.connectToScene(this, this._token, Helpers.mapValues(this.localRoutes))
-                .then(() => {
-                    this.connected = true;
-                });
+            var promise = this._client.connectToScene(this, this._token, Helpers.mapValues(this.localRoutes))
+            return promise.then(() => {
+                this.connected = true;
+            });
         }
 
         /**
@@ -203,7 +203,7 @@ module Stormancer {
             ev && ev.map((value) => {
                 value(packet);
             });
-            
+
             // extract the route id
             var routeId = new DataView(packet.data.buffer, packet.data.byteOffset).getUint16(0, true);
             packet.data = packet.data.subarray(2);
@@ -226,14 +226,14 @@ module Stormancer {
         }
 
         private _handlers: IMap<((packet: Packet<IConnection>) => void)[]> = {};
-        
+
         /**
         Pool of functions called when a packet is received.
         @member Stormancer.Scene#packetReceived
         @type {function[]}
         */
         public packetReceived: ((packet: Packet<IConnection>) => void)[] = [];
-        
+
         /**
         Returns an Scene peer object that represents the scene host.
         @method Stormancer.Scene#host
@@ -245,7 +245,7 @@ module Stormancer {
         a: IMap<string>;
 
         private _registeredComponents: IMap<() => any> = {};
-        
+
         /**
         Registers a component and provide a factory for getting it.
         @method Stormancer.Scene#registerComponent
@@ -255,7 +255,7 @@ module Stormancer {
         public registerComponent<T>(componentName: string, factory: () => T): void {
             this._registeredComponents[componentName] = factory;
         }
-        
+
         /**
         Returns a specific registered component.
         @method Stormancer.Scene#getComponent

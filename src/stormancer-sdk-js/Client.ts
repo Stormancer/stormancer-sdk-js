@@ -1,5 +1,3 @@
-/// <reference path="Scripts/promise.d.ts" />
-
 module Stormancer {
 
     /**
@@ -146,9 +144,9 @@ module Stormancer {
         @param {object} userData User data to send
         @return {Promise} Promise which complete when the scene is ready to connect.
         */
-        public getPublicScene(sceneId: string, userData: any): Promise<IScene> {
+        public getPublicScene(sceneId: string, userData: any): Promise<Scene> {
             return this._apiClient.getSceneEndpoint(this._accountId, this._applicationName, sceneId, userData)
-                .then<IScene>(ci => this.getSceneImpl(sceneId, ci));
+                .then<Scene>(ci => this.getSceneImpl(sceneId, ci));
         }
         
         /**
@@ -157,12 +155,12 @@ module Stormancer {
         @param {string} token Scene token
         @return {Promise} Promise which complete when the scene is ready to connect.
         */
-        public getScene(token: string): Promise<IScene> {
+        public getScene(token: string): Promise<Scene> {
             var ci = this._tokenHandler.decodeToken(token);
             return this.getSceneImpl(ci.tokenData.SceneId, ci);
         }
 
-        private getSceneImpl(sceneId: string, ci: SceneEndpoint): Promise<IScene> {
+        private getSceneImpl(sceneId: string, ci: SceneEndpoint): Promise<Scene> {
             var self = this;
             return this.ensureTransportStarted(ci).then(() => {
                 if (ci.tokenData.Version > 0) {
@@ -209,10 +207,10 @@ module Stormancer {
                         return self._transport.connect(ci.tokenData.Endpoints[self._transport.name])
                             .then(c => {
                                 self.registerConnection(c);
-                                return self.updateMetadata();
+                                return self.updateMetadata().then(() => {});
                             });
                     });
-            }, self);
+            }, this);
         }
 
         private startTransport(): Promise<void> {
@@ -229,7 +227,7 @@ module Stormancer {
 
         private _serverConnection: IConnection;
 
-        public disconnectScene(scene: IScene, sceneHandle: number): Promise<void> {
+        public disconnectScene(scene: Scene, sceneHandle: number): Promise<void> {
             return this.sendSystemRequest(SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE, sceneHandle)
                 .then(() => {
                     this._scenesDispatcher.removeScene(sceneHandle);

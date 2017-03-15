@@ -32,15 +32,16 @@
             onError: (error: string) => void = (error) => { },
             onCompleted: () => void = () => { },
             priority: PacketPriority = PacketPriority.MEDIUM_PRIORITY): ISubscription {
-            var data: Uint8Array;
+            var data: Uint8Array | ArrayLike<number>;
             if (objectOrData instanceof Uint8Array) {
                 data = objectOrData;
             }
             else {
                 if (objectOrData instanceof Array || objectOrData instanceof ArrayBuffer) {
-                    data = new Uint8Array(objectOrData);
+                    var data2: ArrayBuffer | ArrayLike<number> = objectOrData;
+                    data = new Uint8Array(<ArrayBuffer>(data2));
                 }
-                else if (objectOrData instanceof DataView || objectOrData instanceof Int8Array || objectOrData instanceof Int16Array || objectOrData instanceof Int32Array || objectOrData instanceof Uint16Array || objectOrData instanceof Uint32Array || objectOrData instanceof Float32Array || objectOrData instanceof Float64Array) {
+                else if (objectOrData instanceof DataView || objectOrData instanceof Int8Array || objectOrData instanceof Int16Array || objectOrData instanceof Int32Array || objectOrData instanceof Uint8Array || objectOrData instanceof Uint16Array || objectOrData instanceof Uint32Array || objectOrData instanceof Float32Array || objectOrData instanceof Float64Array) {
                     data = new Uint8Array(objectOrData.buffer, objectOrData.byteOffset, objectOrData.byteLength);
                 }
                 else {

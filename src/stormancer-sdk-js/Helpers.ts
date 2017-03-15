@@ -39,11 +39,11 @@ module Stormancer {
             return result;
         }
 
-        static promiseIf<TResult>(condition: boolean, action: () => Promise<TResult>, context?: any): Promise<TResult> {
+        static promiseIf(condition: boolean, action: () => Promise<void>, context?: any): Promise<void> {
             if (condition) {
                 return action.call(context);
             } else {
-                return Promise.resolve<TResult>();
+                return Promise.resolve();
             }
         }
         
