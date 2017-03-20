@@ -37,7 +37,6 @@
     <TypeScriptCompile Include="Core\ILogger.ts" />
     <TypeScriptCompile Include="Core\IScenePeer.ts" />
     <TypeScriptCompile Include="Core\ISerializer.ts" />
-    <TypeScriptCompile Include="Stream.ts" />
     <TypeScriptCompile Include="SystemMessages\RouteDto.ts" />
     <TypeScriptCompile Include="Core\Packet.ts" />
     <TypeScriptCompile Include="Core\PacketPriority.ts" />
