@@ -38,11 +38,14 @@
     <TypeScriptCompile Include="Core\ILogger.ts" />
     <TypeScriptCompile Include="Core\IScenePeer.ts" />
     <TypeScriptCompile Include="Core\ISerializer.ts" />
-    <TypeScriptCompile Include="stormancer.ts" />
+    <TypeScriptCompile Include="stormancer.ts">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>stormancer.tt</DependentUpon>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="SystemMessages\RouteDto.ts" />
     <TypeScriptCompile Include="Core\Packet.ts" />
     <TypeScriptCompile Include="Core\PacketPriority.ts" />
-    <TypeScriptCompile Include="Core\PacketReliability.ts" />
     <TypeScriptCompile Include="Core\Route.ts" />
     <TypeScriptCompile Include="IClient.ts" />
     <TypeScriptCompile Include="IConnectionManager.ts" />
@@ -69,6 +72,18 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\ajax.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="stormancer.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>stormancer.ts</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="tsconfig.json" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
@@ -100,7 +115,8 @@
     <TypeScriptRemoveComments>True</TypeScriptRemoveComments>
     <TypeScriptSourceMap>True</TypeScriptSourceMap>
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
-    <TypeScriptOutFile>bin\Debug\stormancer.js</TypeScriptOutFile>
+    <TypeScriptOutFile>
+    </TypeScriptOutFile>
     <TypeScriptTarget>ES6</TypeScriptTarget>
     <TypeScriptOutDir>bin\Debug</TypeScriptOutDir>
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
@@ -135,7 +151,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /d /y "$(SolutionDir)libs\msgpack5.js" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\bin\$(ConfigurationName)\stormancer.js" "$(SolutionDir)build"
-xcopy /d /y "$(ConfigurationName)\stormancer.d.ts" "$(SolutionDir)build"</PostBuildEvent>
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\stormancer.js" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\stormancer.d.ts" "$(SolutionDir)build"</PostBuildEvent>
   </PropertyGroup>
 </Project>

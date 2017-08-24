@@ -1,7 +1,5 @@
-namespace Stormancer {
-    export interface RouteDto {
-        Name: string;
-        Handle: number;
-        Metadata: Map;
-    }
+export interface RouteDto {
+    Name: string;
+    Handle: number;
+    Metadata: Map;
 }

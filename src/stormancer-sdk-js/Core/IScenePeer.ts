@@ -28,16 +28,14 @@ Sends a message to the remote peer.
 @param {PacketReliability} reliability The message requested reliability.
 */
 
-namespace Stormancer {
-    // A remote scene.
-    export interface IScenePeer {
-        // Sends a message to the remote scene.
-        send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
+// A remote scene.
+export interface IScenePeer {
+    // Sends a message to the remote scene.
+    send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
 
-        id: number;
+    id: number;
 
-        getComponent<T>(componentName: string): T;
+    getComponent<T>(componentName: string): T;
 
-        serializer: ISerializer;
-    }
+    serializer: ISerializer;
 }

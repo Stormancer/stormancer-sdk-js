@@ -1,5 +1,3 @@
-﻿namespace Stormancer {
-    export interface ISubscription {
-        unsubscribe(): void;
-    }
+﻿export interface ISubscription {
+    unsubscribe(): void;
 }

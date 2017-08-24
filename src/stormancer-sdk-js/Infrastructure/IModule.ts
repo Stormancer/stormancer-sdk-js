@@ -1,5 +1,3 @@
-namespace Stormancer {
-    export interface IRequestModule {
-        register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
-    }
+export interface IRequestModule {
+    register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
 }

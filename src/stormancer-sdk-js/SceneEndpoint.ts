@@ -1,28 +1,26 @@
-namespace Stormancer {
-    export class SceneEndpoint {
-        public tokenData: ConnectionData;
+export class SceneEndpoint {
+    public tokenData: ConnectionData;
 
-        public token: string;
-    }
+    public token: string;
+}
 
-    export class ConnectionData {
-        public Endpoints: Map;
+export class ConnectionData {
+    public Endpoints: Map;
 
-        public AccountId: string;
-        public Application: string;
+    public AccountId: string;
+    public Application: string;
 
-        public SceneId: string;
+    public SceneId: string;
 
-        public Routing: string;
+    public Routing: string;
 
-        public Issued: Date;
+    public Issued: Date;
 
-        public Expiration: Date;
+    public Expiration: Date;
 
-        public UserData: Uint8Array;
+    public UserData: Uint8Array;
 
-        public ContentType: string;
+    public ContentType: string;
 
-        public Version: number;
-    }
+    public Version: number;
 }

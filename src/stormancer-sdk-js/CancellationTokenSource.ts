@@ -1,4 +1,4 @@
-﻿module Cancellation {
+﻿export module Cancellation {
 
     /**
     TokenSource
@@ -16,7 +16,7 @@
             isCancelled: false,
             listeners: []
         };
-        
+
         /**
         Cancel
         */
@@ -34,18 +34,18 @@
                 }
             }, 0);
         }
-        
+
         /**
         Token
         */
         public token: token = new token(this.data);
     }
-    
+
     /**
     Token
     */
     export class token {
-        
+
         /**
         Constructor
         */
@@ -54,7 +54,7 @@
         }
 
         private data: sourceData;
-        
+
         /**
         To know if the token has been cancelled.
         */
@@ -94,12 +94,12 @@
         Cancellation reason
         */
         reason: string;
-        
+
         /**
         token is cancelled
         */
         isCancelled: boolean;
-        
+
         /**
         Listeners array
         */

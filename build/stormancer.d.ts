@@ -1,109 +1,4 @@
-declare namespace Stormancer {
-    interface Map {
-        [key: string]: string;
-    }
-    interface IMap<T> {
-        [key: string]: T;
-    }
-    class Helpers {
-        static base64ToByteArray(data: string): Uint8Array;
-        static stringFormat(str: string, ...args: any[]): string;
-        static mapKeys(map: {
-            [key: string]: any;
-        }): string[];
-        static mapValues<T>(map: IMap<T>): T[];
-        static promiseIf(condition: boolean, action: () => Promise<void>, context?: any): Promise<void>;
-        static invokeWrapping<TResult>(func: (arg?: any) => TResult, arg?: any): Promise<TResult>;
-    }
-    interface IObserver<T> {
-        onCompleted(): void;
-        onError(error: any): void;
-        onNext(value: T): void;
-    }
-    class Deferred<T> {
-        constructor();
-        promise(): Promise<T>;
-        state(): string;
-        resolve(value?: T): void;
-        reject(error?: any): void;
-        private _promise;
-        private _state;
-        private _resolve;
-        private _reject;
-    }
-}
-declare namespace Stormancer {
-    interface ISubscription {
-        unsubscribe(): void;
-    }
-}
-declare namespace Stormancer {
-    interface IClientPlugin {
-        build(ctx: PluginBuildContext): void;
-    }
-}
-declare namespace Stormancer {
-    class PluginBuildContext {
-        constructor();
-        sceneCreated: ((scene: Scene) => void)[];
-        clientCreated: ((client: IClient) => void)[];
-        sceneConnected: ((scene: Scene) => void)[];
-        sceneDisconnected: ((scene: Scene) => void)[];
-        packetReceived: ((packet: Packet<IConnection>) => void)[];
-    }
-}
-declare namespace Stormancer {
-    class RpcClientPlugin implements IClientPlugin {
-        static NextRouteName: string;
-        static ErrorRouteName: string;
-        static CompletedRouteName: string;
-        static CancellationRouteName: string;
-        static Version: string;
-        static PluginName: string;
-        static ServiceName: string;
-        build(ctx: PluginBuildContext): void;
-    }
-}
-declare namespace Stormancer {
-    class RpcRequestContext {
-        private _scene;
-        private id;
-        private _ordered;
-        private _peer;
-        private _msgSent;
-        private _data;
-        private _cancellationToken;
-        remotePeer(): IScenePeer;
-        data(): Uint8Array;
-        cancellationToken(): Cancellation.token;
-        constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token);
-        private writeRequestId(data);
-        sendValue(data: Uint8Array, priority: PacketPriority): void;
-        sendError(errorMsg: string): void;
-        sendCompleted(): void;
-    }
-}
-declare namespace Stormancer {
-    class RpcService {
-        private _currentRequestId;
-        private _scene;
-        private _pendingRequests;
-        private _runningRequests;
-        private _msgpackSerializer;
-        constructor(scene: Scene);
-        rpc(route: string, objectOrData: any, onNext: (packet: Packet<IScenePeer>) => void, onError?: (error: string) => void, onCompleted?: () => void, priority?: PacketPriority): ISubscription;
-        addProcedure(route: string, handler: (ctx: RpcRequestContext) => any, ordered: boolean): void;
-        private reserveId();
-        private computeId(packet);
-        private getPendingRequest(packet);
-        next(packet: Packet<IScenePeer>): void;
-        error(packet: Packet<IScenePeer>): void;
-        complete(packet: Packet<IScenePeer>): void;
-        cancel(packet: Packet<IScenePeer>): void;
-        disconnected(): void;
-    }
-}
-declare namespace Stormancer {
+export declare module Stormancer {
     class ApiClient {
         constructor(config: Configuration, tokenHandler: ITokenHandler);
         private _config;
@@ -111,28 +6,26 @@ declare namespace Stormancer {
         private _tokenHandler;
         getSceneEndpoint(accountId: string, applicationName: string, sceneId: string, userData: any): Promise<SceneEndpoint>;
     }
-}
-declare module Cancellation {
-    class TokenSource {
-        constructor();
-        private data;
-        cancel(reason?: string): void;
-        token: token;
+    module Cancellation {
+        class TokenSource {
+            constructor();
+            private data;
+            cancel(reason?: string): void;
+            token: token;
+        }
+        class token {
+            constructor(data: sourceData);
+            private data;
+            isCancelled(): boolean;
+            throwIfCancelled(): void;
+            onCancelled(callBack: (reason: string) => void): void;
+        }
+        interface sourceData {
+            reason: string;
+            isCancelled: boolean;
+            listeners: ((reason: string) => void)[];
+        }
     }
-    class token {
-        constructor(data: sourceData);
-        private data;
-        isCancelled(): boolean;
-        throwIfCancelled(): void;
-        onCancelled(callBack: (reason: string) => void): void;
-    }
-    interface sourceData {
-        reason: string;
-        isCancelled: boolean;
-        listeners: ((reason: string) => void)[];
-    }
-}
-declare namespace Stormancer {
     class ConnectionHandler implements IConnectionManager {
         private _current;
         generateNewConnectionId(): number;
@@ -191,8 +84,6 @@ declare namespace Stormancer {
         private syncClockImpl();
         clock(): number;
     }
-}
-declare namespace Stormancer {
     class Configuration {
         constructor();
         static forAccount(accountId: string, applicationName: string): Configuration;
@@ -208,123 +99,38 @@ declare namespace Stormancer {
         transport: ITransport;
         serializers: ISerializer[];
     }
-}
-declare namespace Stormancer {
-    enum ConnectionState {
-        Disconnected = 0,
-        Connecting = 1,
-        Connected = 2,
+    interface Map {
+        [key: string]: string;
     }
-    interface IConnection {
-        id: number;
-        connectionDate: Date;
-        metadata: Map;
-        account: string;
-        application: string;
-        state: ConnectionState;
-        close(): void;
-        connectionClosed: ((reason: string) => void)[];
-        ping: number;
-        serializerChosen: boolean;
-        serializer: ISerializer;
-        registerComponent<T>(componentName: string, component: T): void;
-        getComponent<T>(componenentName: string): T;
-        sendSystem(msgId: number, data: Uint8Array, priority?: PacketPriority): void;
-        sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
-        setApplication(account: string, application: string): void;
+    interface IMap<T> {
+        [key: string]: T;
     }
-}
-declare namespace Stormancer {
-    interface IConnectionStatistics {
-        packetLossRate: number;
-        bytesPerSecondLimitationType: any;
-        bytesPerSecondLimit: number;
-        queuedBytes: number;
-        queuedBytesForPriority(priority: PacketPriority): number;
-        queuedPackets: number;
-        queuedPacketsForPriority(priority: PacketPriority): number;
+    class Helpers {
+        static base64ToByteArray(data: string): Uint8Array;
+        static stringFormat(str: string, ...args: any[]): string;
+        static mapKeys(map: {
+            [key: string]: any;
+        }): string[];
+        static mapValues<T>(map: IMap<T>): T[];
+        static promiseIf(condition: boolean, action: () => Promise<void>, context?: any): Promise<void>;
+        static invokeWrapping<TResult>(func: (arg?: any) => TResult, arg?: any): Promise<TResult>;
     }
-}
-declare namespace Stormancer {
-    enum LogLevel {
-        fatal = 0,
-        error = 1,
-        warn = 2,
-        info = 3,
-        debug = 4,
-        trace = 5,
+    interface IObserver<T> {
+        onCompleted(): void;
+        onError(error: any): void;
+        onNext(value: T): void;
     }
-    interface ILogger {
-        log(level: LogLevel, category: string, message: string, data: any): any;
+    class Deferred<T> {
+        constructor();
+        promise(): Promise<T>;
+        state(): string;
+        resolve(value?: T): void;
+        reject(error?: any): void;
+        private _promise;
+        private _state;
+        private _resolve;
+        private _reject;
     }
-}
-declare namespace Stormancer {
-    interface IScenePeer {
-        send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
-        id: number;
-        getComponent<T>(componentName: string): T;
-        serializer: ISerializer;
-    }
-}
-declare namespace Stormancer {
-    interface ISerializer {
-        serialize<T>(data: T): Uint8Array;
-        deserialize<T>(bytes: Uint8Array): T;
-        name: string;
-    }
-}
-declare namespace Stormancer {
-}
-declare var module: any;
-declare namespace Stormancer {
-    interface RouteDto {
-        Name: string;
-        Handle: number;
-        Metadata: Map;
-    }
-}
-declare namespace Stormancer {
-    class Packet<T> {
-        constructor(source: T, data: Uint8Array, metadata?: IMap<any>);
-        connection: T;
-        data: Uint8Array;
-        getDataView(): DataView;
-        readObject(): any;
-        private metadata;
-        setMetadata(metadata: IMap<any>): void;
-        getMetadata(): IMap<any>;
-        setMetadataValue(key: string, value: any): void;
-        getMetadataValue(key: string): any;
-    }
-}
-declare namespace Stormancer {
-    enum PacketPriority {
-        IMMEDIATE_PRIORITY = 0,
-        HIGH_PRIORITY = 1,
-        MEDIUM_PRIORITY = 2,
-        LOW_PRIORITY = 3,
-    }
-}
-declare namespace Stormancer {
-    enum PacketReliability {
-        UNRELIABLE = 0,
-        UNRELIABLE_SEQUENCED = 1,
-        RELIABLE = 2,
-        RELIABLE_ORDERED = 3,
-        RELIABLE_SEQUENCED = 4,
-    }
-}
-declare namespace Stormancer {
-    class Route {
-        constructor(scene: Scene, name: string, handle?: number, metadata?: Map);
-        scene: Scene;
-        name: string;
-        handle: number;
-        metadata: Map;
-        handlers: ((packet: Packet<IConnection>) => void)[];
-    }
-}
-declare namespace Stormancer {
     interface IClient {
         applicationName: string;
         logger: ILogger;
@@ -336,8 +142,6 @@ declare namespace Stormancer {
         clock(): number;
         lastPing(): number;
     }
-}
-declare namespace Stormancer {
     interface IConnectionManager {
         generateNewConnectionId(): number;
         newConnection(connection: IConnection): void;
@@ -345,46 +149,6 @@ declare namespace Stormancer {
         getConnection(id: number): IConnection;
         connectionCount: number;
     }
-}
-declare namespace Stormancer {
-    class DefaultPacketDispatcher implements IPacketDispatcher {
-        private _handlers;
-        private _defaultProcessors;
-        dispatchPacket(packet: Packet<IConnection>): void;
-        addProcessor(processor: IPacketProcessor): void;
-    }
-}
-declare namespace Stormancer {
-    interface IPacketDispatcher {
-        addProcessor(processor: IPacketProcessor): void;
-        dispatchPacket(packet: Packet<IConnection>): void;
-    }
-}
-declare namespace Stormancer {
-    interface ITokenHandler {
-        decodeToken(token: string): SceneEndpoint;
-    }
-    class TokenHandler implements ITokenHandler {
-        private _tokenSerializer;
-        constructor();
-        decodeToken(token: string): SceneEndpoint;
-    }
-}
-declare namespace Stormancer {
-    interface IRequestModule {
-        register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
-    }
-}
-declare namespace Stormancer {
-    class MsgPackSerializer implements ISerializer {
-        constructor();
-        serialize<T>(data: T): Uint8Array;
-        deserialize<T>(bytes: Uint8Array): T;
-        name: string;
-        private _msgpack;
-    }
-}
-declare namespace Stormancer {
     class PacketProcessorConfig {
         constructor(handlers: IMap<(packet: Packet<IConnection>) => boolean>, defaultProcessors: ((n: number, p: Packet<IConnection>) => boolean)[]);
         private _handlers;
@@ -395,8 +159,6 @@ declare namespace Stormancer {
     interface IPacketProcessor {
         registerProcessor(config: PacketProcessorConfig): void;
     }
-}
-declare namespace Stormancer {
     interface ITransport {
         start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
         isRunning: boolean;
@@ -407,8 +169,6 @@ declare namespace Stormancer {
         name: string;
         id: Uint8Array;
     }
-}
-declare namespace Stormancer {
     class MessageIDTypes {
         static ID_SYSTEM_REQUEST: number;
         static ID_REQUEST_RESPONSE_MSG: number;
@@ -417,45 +177,6 @@ declare namespace Stormancer {
         static ID_CONNECTION_RESULT: number;
         static ID_SCENES: number;
     }
-}
-declare namespace Stormancer {
-    class RequestContext {
-        private _packet;
-        private _requestId;
-        private _didSendValues;
-        inputData: Uint8Array;
-        isComplete: boolean;
-        constructor(packet: Packet<IConnection>);
-        send(data: Uint8Array): void;
-        complete(): void;
-        error(data: Uint8Array): void;
-    }
-}
-declare namespace Stormancer {
-    class RequestProcessor implements IPacketProcessor {
-        private _pendingRequests;
-        private _logger;
-        private _isRegistered;
-        private _handlers;
-        private _currentId;
-        constructor(logger: ILogger, modules: IRequestModule[]);
-        registerProcessor(config: PacketProcessorConfig): void;
-        addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => Promise<void>): void;
-        private reserveRequestSlot(observer);
-        sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority?: PacketPriority): Promise<Packet<IConnection>>;
-    }
-}
-declare namespace Stormancer {
-    class SceneDispatcher implements IPacketProcessor {
-        private _scenes;
-        private _buffers;
-        registerProcessor(config: PacketProcessorConfig): void;
-        private handler(sceneHandle, packet);
-        addScene(scene: Scene): void;
-        removeScene(sceneHandle: number): void;
-    }
-}
-declare namespace Stormancer {
     class Scene {
         id: string;
         isHost: boolean;
@@ -486,8 +207,6 @@ declare namespace Stormancer {
         registerComponent<T>(componentName: string, factory: () => T): void;
         getComponent<T>(componentName: string): T;
     }
-}
-declare namespace Stormancer {
     class SceneEndpoint {
         tokenData: ConnectionData;
         token: string;
@@ -504,8 +223,6 @@ declare namespace Stormancer {
         ContentType: string;
         Version: number;
     }
-}
-declare namespace Stormancer {
     class ScenePeer implements IScenePeer {
         private _connection;
         private _sceneHandle;
@@ -517,21 +234,239 @@ declare namespace Stormancer {
         send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
         getComponent<T>(componentName: string): T;
     }
-}
-declare namespace Stormancer {
+    class SystemRequestIDTypes {
+        static ID_SET_METADATA: number;
+        static ID_SCENE_READY: number;
+        static ID_PING: number;
+        static ID_CONNECT_TO_SCENE: number;
+        static ID_DISCONNECT_FROM_SCENE: number;
+        static ID_GET_SCENE_INFOS: number;
+    }
+    enum ConnectionState {
+        Disconnected = 0,
+        Connecting = 1,
+        Connected = 2,
+    }
+    interface IConnection {
+        id: number;
+        connectionDate: Date;
+        metadata: Map;
+        account: string;
+        application: string;
+        state: ConnectionState;
+        close(): void;
+        connectionClosed: ((reason: string) => void)[];
+        ping: number;
+        serializerChosen: boolean;
+        serializer: ISerializer;
+        registerComponent<T>(componentName: string, component: T): void;
+        getComponent<T>(componenentName: string): T;
+        sendSystem(msgId: number, data: Uint8Array, priority?: PacketPriority): void;
+        sendToScene(sceneIndex: number, route: number, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
+        setApplication(account: string, application: string): void;
+    }
+    interface IConnectionStatistics {
+        packetLossRate: number;
+        bytesPerSecondLimitationType: any;
+        bytesPerSecondLimit: number;
+        queuedBytes: number;
+        queuedBytesForPriority(priority: PacketPriority): number;
+        queuedPackets: number;
+        queuedPacketsForPriority(priority: PacketPriority): number;
+    }
+    enum LogLevel {
+        fatal = 0,
+        error = 1,
+        warn = 2,
+        info = 3,
+        debug = 4,
+        trace = 5,
+    }
+    interface ILogger {
+        log(level: LogLevel, category: string, message: string, data: any): any;
+    }
+    interface IScenePeer {
+        send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
+        id: number;
+        getComponent<T>(componentName: string): T;
+        serializer: ISerializer;
+    }
+    interface ISerializer {
+        serialize<T>(data: T): Uint8Array;
+        deserialize<T>(bytes: Uint8Array): T;
+        name: string;
+    }
+    class Packet<T> {
+        constructor(source: T, data: Uint8Array, metadata?: IMap<any>);
+        connection: T;
+        data: Uint8Array;
+        getDataView(): DataView;
+        readObject(): any;
+        private metadata;
+        setMetadata(metadata: IMap<any>): void;
+        getMetadata(): IMap<any>;
+        setMetadataValue(key: string, value: any): void;
+        getMetadataValue(key: string): any;
+    }
+    enum PacketPriority {
+        IMMEDIATE_PRIORITY = 0,
+        HIGH_PRIORITY = 1,
+        MEDIUM_PRIORITY = 2,
+        LOW_PRIORITY = 3,
+    }
+    enum PacketReliability {
+        UNRELIABLE = 0,
+        UNRELIABLE_SEQUENCED = 1,
+        RELIABLE = 2,
+        RELIABLE_ORDERED = 3,
+        RELIABLE_SEQUENCED = 4,
+    }
+    class Route {
+        constructor(scene: Scene, name: string, handle?: number, metadata?: Map);
+        scene: Scene;
+        name: string;
+        handle: number;
+        metadata: Map;
+        handlers: ((packet: Packet<IConnection>) => void)[];
+    }
+    class DefaultPacketDispatcher implements IPacketDispatcher {
+        private _handlers;
+        private _defaultProcessors;
+        dispatchPacket(packet: Packet<IConnection>): void;
+        addProcessor(processor: IPacketProcessor): void;
+    }
+    interface IRequestModule {
+        register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
+    }
+    interface IPacketDispatcher {
+        addProcessor(processor: IPacketProcessor): void;
+        dispatchPacket(packet: Packet<IConnection>): void;
+    }
+    interface ISubscription {
+        unsubscribe(): void;
+    }
+    interface ITokenHandler {
+        decodeToken(token: string): SceneEndpoint;
+    }
+    class TokenHandler implements ITokenHandler {
+        private _tokenSerializer;
+        constructor();
+        decodeToken(token: string): SceneEndpoint;
+    }
+    class MsgPackSerializer implements ISerializer {
+        constructor();
+        serialize<T>(data: T): Uint8Array;
+        deserialize<T>(bytes: Uint8Array): T;
+        name: string;
+        private _msgpack;
+    }
+    interface IClientPlugin {
+        build(ctx: PluginBuildContext): void;
+    }
+    class PluginBuildContext {
+        constructor();
+        sceneCreated: ((scene: Scene) => void)[];
+        clientCreated: ((client: IClient) => void)[];
+        sceneConnected: ((scene: Scene) => void)[];
+        sceneDisconnected: ((scene: Scene) => void)[];
+        packetReceived: ((packet: Packet<IConnection>) => void)[];
+    }
+    class RpcClientPlugin implements IClientPlugin {
+        static NextRouteName: string;
+        static ErrorRouteName: string;
+        static CompletedRouteName: string;
+        static CancellationRouteName: string;
+        static Version: string;
+        static PluginName: string;
+        static ServiceName: string;
+        build(ctx: PluginBuildContext): void;
+    }
+    class RpcRequestContext {
+        private _scene;
+        private id;
+        private _ordered;
+        private _peer;
+        private _msgSent;
+        private _data;
+        private _cancellationToken;
+        remotePeer(): IScenePeer;
+        data(): Uint8Array;
+        cancellationToken(): Cancellation.token;
+        constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token);
+        private writeRequestId(data);
+        sendValue(data: Uint8Array, priority: PacketPriority): void;
+        sendError(errorMsg: string): void;
+        sendCompleted(): void;
+    }
+    class RpcService {
+        private _currentRequestId;
+        private _scene;
+        private _pendingRequests;
+        private _runningRequests;
+        private _msgpackSerializer;
+        constructor(scene: Scene);
+        rpc(route: string, objectOrData: any, onNext: (packet: Packet<IScenePeer>) => void, onError?: (error: string) => void, onCompleted?: () => void, priority?: PacketPriority): ISubscription;
+        addProcedure(route: string, handler: (ctx: RpcRequestContext) => any, ordered: boolean): void;
+        private reserveId();
+        private computeId(packet);
+        private getPendingRequest(packet);
+        next(packet: Packet<IScenePeer>): void;
+        error(packet: Packet<IScenePeer>): void;
+        complete(packet: Packet<IScenePeer>): void;
+        cancel(packet: Packet<IScenePeer>): void;
+        disconnected(): void;
+    }
+    class RequestContext {
+        private _packet;
+        private _requestId;
+        private _didSendValues;
+        inputData: Uint8Array;
+        isComplete: boolean;
+        constructor(packet: Packet<IConnection>);
+        send(data: Uint8Array): void;
+        complete(): void;
+        error(data: Uint8Array): void;
+    }
+    class RequestProcessor implements IPacketProcessor {
+        private _pendingRequests;
+        private _logger;
+        private _isRegistered;
+        private _handlers;
+        private _currentId;
+        constructor(logger: ILogger, modules: IRequestModule[]);
+        registerProcessor(config: PacketProcessorConfig): void;
+        addSystemRequestHandler(msgId: number, handler: (context: RequestContext) => Promise<void>): void;
+        private reserveRequestSlot(observer);
+        sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority?: PacketPriority): Promise<Packet<IConnection>>;
+    }
+    class SceneDispatcher implements IPacketProcessor {
+        private _scenes;
+        private _buffers;
+        registerProcessor(config: PacketProcessorConfig): void;
+        private handler(sceneHandle, packet);
+        addScene(scene: Scene): void;
+        removeScene(sceneHandle: number): void;
+    }
+    function $http(url: any, options?: any): {
+        'get': <T>(args: any, options: any) => Promise<T>;
+        'post': <T>(args: any, options: any) => Promise<T>;
+        'put': <T>(args: any, options: any) => Promise<T>;
+        'delete': <T>(args: any, options: any) => Promise<T>;
+    };
     interface ConnectToSceneMsg {
         Token: string;
         Routes: RouteDto[];
         ConnectionMetadata: Map;
     }
-}
-declare namespace Stormancer {
     interface ConnectionResult {
         SceneHandle: number;
         RouteMappings: IMap<number>;
     }
-}
-declare namespace Stormancer {
+    interface RouteDto {
+        Name: string;
+        Handle: number;
+        Metadata: Map;
+    }
     interface SceneInfosRequestDto {
         Token: string;
         Metadata: Map;
@@ -542,18 +477,6 @@ declare namespace Stormancer {
         Routes: RouteDto[];
         SelectedSerializer: string;
     }
-}
-declare namespace Stormancer {
-    class SystemRequestIDTypes {
-        static ID_SET_METADATA: number;
-        static ID_SCENE_READY: number;
-        static ID_PING: number;
-        static ID_CONNECT_TO_SCENE: number;
-        static ID_DISCONNECT_FROM_SCENE: number;
-        static ID_GET_SCENE_INFOS: number;
-    }
-}
-declare namespace Stormancer {
     class WebSocketConnection implements IConnection {
         private _socket;
         constructor(id: number, socket: WebSocket);
@@ -575,8 +498,6 @@ declare namespace Stormancer {
         registerComponent<T>(componentName: string, component: T): void;
         getComponent<T>(componentName: any): T;
     }
-}
-declare namespace Stormancer {
     class WebSocketTransport implements ITransport {
         name: string;
         id: Uint8Array;
@@ -598,9 +519,3 @@ declare namespace Stormancer {
         private onClose(deferred, closeEvent);
     }
 }
-declare function $http(url: any, options?: any): {
-    'get': <T>(args: any, options: any) => Promise<T>;
-    'post': <T>(args: any, options: any) => Promise<T>;
-    'put': <T>(args: any, options: any) => Promise<T>;
-    'delete': <T>(args: any, options: any) => Promise<T>;
-};

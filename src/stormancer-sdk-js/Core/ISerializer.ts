@@ -21,14 +21,11 @@ Deserialize an object from a stream.
 @return {object} The deserialized object.
 */
 
-namespace Stormancer {
+export interface ISerializer {
 
-    export interface ISerializer {
+    serialize<T>(data: T): Uint8Array;
 
-        serialize<T>(data: T): Uint8Array;
+    deserialize<T>(bytes: Uint8Array): T;
 
-        deserialize<T>(bytes: Uint8Array): T;
-
-        name: string;
-    }
+    name: string;
 }

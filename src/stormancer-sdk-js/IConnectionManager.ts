@@ -31,18 +31,15 @@ Returns a connection by ID.
 @return {Stormancer.IConnection} The connection attached to this ID.
 */
 
-namespace Stormancer {
+export interface IConnectionManager {
 
-    export interface IConnectionManager {
+    generateNewConnectionId(): number;
 
-        generateNewConnectionId(): number;
+    newConnection(connection: IConnection): void;
 
-        newConnection(connection: IConnection): void;
+    closeConnection(connection: IConnection, reason: string): void;
 
-        closeConnection(connection: IConnection, reason: string): void;
+    getConnection(id: number): IConnection;
 
-        getConnection(id: number): IConnection;
-
-        connectionCount: number;
-    }
+    connectionCount: number;
 }

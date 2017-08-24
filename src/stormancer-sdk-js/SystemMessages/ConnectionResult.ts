@@ -1,6 +1,4 @@
-namespace Stormancer {
-    export interface ConnectionResult {
-        SceneHandle: number;
-        RouteMappings: IMap<number>;
-    }
+export interface ConnectionResult {
+    SceneHandle: number;
+    RouteMappings: IMap<number>;
 }

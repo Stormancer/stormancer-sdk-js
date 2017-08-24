@@ -1,13 +1,11 @@
-namespace Stormancer {
-    export interface SceneInfosRequestDto {
-        Token: string;
-        Metadata: Map;
-    }
+export interface SceneInfosRequestDto {
+    Token: string;
+    Metadata: Map;
+}
 
-    export interface SceneInfosDto {
-        SceneId: string;
-        Metadata: Map;
-        Routes: RouteDto[];
-        SelectedSerializer: string;
-    }
+export interface SceneInfosDto {
+    SceneId: string;
+    Metadata: Map;
+    Routes: RouteDto[];
+    SelectedSerializer: string;
 }

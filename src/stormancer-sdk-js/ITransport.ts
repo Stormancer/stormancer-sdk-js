@@ -48,26 +48,23 @@ Starts the transport.
 @return {Promise} A `Task` completing when the transport is started.
 */
 
-namespace Stormancer {
+export interface ITransport {
 
-    export interface ITransport {
+    // Starts the transport
+    start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
 
-        // Starts the transport
-        start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
-        
-        isRunning: boolean;
-        
-        // Connects the transport to a remote host.
-        connect(endpoint: string): Promise<IConnection>;
+    isRunning: boolean;
 
-        packetReceived: ((packet: Packet<IConnection>) => void)[];
+    // Connects the transport to a remote host.
+    connect(endpoint: string): Promise<IConnection>;
 
-        connectionOpened: ((connection: IConnection) => void)[];
+    packetReceived: ((packet: Packet<IConnection>) => void)[];
 
-        connectionClosed: ((connection: IConnection) => void)[];
+    connectionOpened: ((connection: IConnection) => void)[];
 
-        name: string;
+    connectionClosed: ((connection: IConnection) => void)[];
 
-        id: Uint8Array;
-    }
+    name: string;
+
+    id: Uint8Array;
 }

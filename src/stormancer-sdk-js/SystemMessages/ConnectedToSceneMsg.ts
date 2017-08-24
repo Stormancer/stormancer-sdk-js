@@ -1,7 +1,5 @@
-namespace Stormancer {
-    export interface ConnectToSceneMsg {
-        Token: string;
-        Routes: RouteDto[];
-        ConnectionMetadata: Map;
-    }
+export interface ConnectToSceneMsg {
+    Token: string;
+    Routes: RouteDto[];
+    ConnectionMetadata: Map;
 }

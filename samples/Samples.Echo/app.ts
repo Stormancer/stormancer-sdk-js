@@ -1,4 +1,6 @@
-﻿class Greeter {
+﻿import { Stormancer } from "./Scripts/typings/stormancer/stormancer";
+
+class Greeter {
     private _element: HTMLElement;
     private _sentSpan: HTMLElement;
     private _receivedSpan: HTMLElement;

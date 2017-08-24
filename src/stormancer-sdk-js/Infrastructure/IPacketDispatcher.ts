@@ -14,12 +14,9 @@ Dispatches a packet to the system.
 @param {Stormancer.Packet} packet Packet to dispatch.
 */
 
-namespace Stormancer {
+export interface IPacketDispatcher {
 
-    export interface IPacketDispatcher {
+    addProcessor(processor: IPacketProcessor): void;
 
-        addProcessor(processor: IPacketProcessor): void;
-
-        dispatchPacket(packet: Packet<IConnection>): void;
-    }
+    dispatchPacket(packet: Packet<IConnection>): void;
 }

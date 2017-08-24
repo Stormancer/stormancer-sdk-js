@@ -1,5 +1,5 @@
 // $http function is implemented in order to follow the standard Adapter pattern
-function $http(url, options?) {
+export function $http(url, options?) {
 
     // A small example of object
     var core = {
