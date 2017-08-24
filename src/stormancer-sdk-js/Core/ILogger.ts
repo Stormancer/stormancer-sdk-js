@@ -12,7 +12,7 @@ Logs a json message.
 @param {object} data Detailed informations about the log.
 */
 
-module Stormancer {
+namespace Stormancer {
 
     /**
     Available log levels

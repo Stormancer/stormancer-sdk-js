@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export interface Map {
         [key: string]: string;
     }

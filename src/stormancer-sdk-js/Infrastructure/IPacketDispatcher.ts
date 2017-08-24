@@ -14,7 +14,7 @@ Dispatches a packet to the system.
 @param {Stormancer.Packet} packet Packet to dispatch.
 */
 
-module Stormancer {
+namespace Stormancer {
 
     export interface IPacketDispatcher {
 

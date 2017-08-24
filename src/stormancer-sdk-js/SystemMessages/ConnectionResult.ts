@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export interface ConnectionResult {
         SceneHandle: number;
         RouteMappings: IMap<number>;

@@ -31,7 +31,7 @@ Returns a connection by ID.
 @return {Stormancer.IConnection} The connection attached to this ID.
 */
 
-module Stormancer {
+namespace Stormancer {
 
     export interface IConnectionManager {
 

@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
 
     /**
     ConnectionHandler

@@ -1,4 +1,4 @@
-﻿module Stormancer {
+﻿namespace Stormancer {
     interface RpcRequest {
         observer: IObserver<Packet<IScenePeer>>;
         deferred: Deferred<void>;

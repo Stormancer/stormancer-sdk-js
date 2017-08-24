@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export interface RouteDto {
         Name: string;
         Handle: number;

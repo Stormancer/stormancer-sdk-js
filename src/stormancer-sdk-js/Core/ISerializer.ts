@@ -21,7 +21,7 @@ Deserialize an object from a stream.
 @return {object} The deserialized object.
 */
 
-module Stormancer {
+namespace Stormancer {
 
     export interface ISerializer {
 

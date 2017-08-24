@@ -1,6 +1,6 @@
 ///<reference path="../MessageIDTypes.ts"/>
 
-module Stormancer {
+namespace Stormancer {
     interface SystemRequest {
         lastRefresh: Date;
         id: number;

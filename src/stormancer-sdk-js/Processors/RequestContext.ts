@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
 
     export class RequestContext {
 
@@ -44,7 +44,7 @@ module Stormancer {
         public complete(): void {
             var dataToSend = new Uint8Array(3);
             dataToSend.set(this._requestId);
-            dataToSend.set(2, this._didSendValues ? 1 : 0);
+            dataToSend[2] = (this._didSendValues ? 1 : 0);
             this._packet.connection.sendSystem(MessageIDTypes.ID_REQUEST_RESPONSE_COMPLETE, dataToSend);
         }
         

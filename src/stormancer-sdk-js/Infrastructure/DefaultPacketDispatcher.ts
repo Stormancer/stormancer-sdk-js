@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export class DefaultPacketDispatcher implements IPacketDispatcher {
         private _handlers: IMap<(packet: Packet<IConnection>) => boolean> = {};
         private _defaultProcessors: ((msgType: number, packet: Packet<IConnection>) => boolean)[] = [];

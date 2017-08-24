@@ -10,13 +10,14 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <TypeScriptToolsVersion>2.2</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>2.3</TypeScriptToolsVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
+    <Use64BitIISExpress />
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Helpers.ts" />
@@ -37,6 +38,7 @@
     <TypeScriptCompile Include="Core\ILogger.ts" />
     <TypeScriptCompile Include="Core\IScenePeer.ts" />
     <TypeScriptCompile Include="Core\ISerializer.ts" />
+    <TypeScriptCompile Include="stormancer.ts" />
     <TypeScriptCompile Include="SystemMessages\RouteDto.ts" />
     <TypeScriptCompile Include="Core\Packet.ts" />
     <TypeScriptCompile Include="Core\PacketPriority.ts" />
@@ -58,7 +60,6 @@
     <TypeScriptCompile Include="Scene.ts" />
     <TypeScriptCompile Include="SceneEndpoint.ts" />
     <TypeScriptCompile Include="ScenePeer.ts" />
-    <TypeScriptCompile Include="stormancer.ts" />
     <TypeScriptCompile Include="SystemMessages\ConnectedToSceneMsg.ts" />
     <TypeScriptCompile Include="SystemMessages\ConnectionResult.ts" />
     <TypeScriptCompile Include="SystemMessages\SceneInfosDto.ts" />
@@ -97,14 +98,14 @@
   </ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TypeScriptRemoveComments>True</TypeScriptRemoveComments>
-    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptSourceMap>True</TypeScriptSourceMap>
     <TypeScriptGeneratesDeclarations>True</TypeScriptGeneratesDeclarations>
-    <TypeScriptOutFile>bin\$(ConfigurationName)\stormancer.js</TypeScriptOutFile>
+    <TypeScriptOutFile>bin\Debug\stormancer.js</TypeScriptOutFile>
     <TypeScriptTarget>ES6</TypeScriptTarget>
-    <TypeScriptOutDir>bin\$(ConfigurationName)</TypeScriptOutDir>
+    <TypeScriptOutDir>bin\Debug</TypeScriptOutDir>
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
-    <TypeScriptModuleKind>None</TypeScriptModuleKind>
+    <TypeScriptModuleKind>System</TypeScriptModuleKind>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
     <TypeScriptMapRoot />
     <TypeScriptSourceRoot />
@@ -133,7 +134,8 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>powershell cat "$(SolutionDir)libs\es6-promise.min.js", "$(SolutionDir)libs\msgpack5.js", "$(SolutionDir)src\stormancer-sdk-js\bin\$(ConfigurationName)\stormancer.js" &gt; "$(SolutionDir)build\stormancer.js"
+    <PostBuildEvent>xcopy /d /y "$(SolutionDir)libs\msgpack5.js" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\bin\$(ConfigurationName)\stormancer.js" "$(SolutionDir)build"
 xcopy /d /y "$(ConfigurationName)\stormancer.d.ts" "$(SolutionDir)build"</PostBuildEvent>
   </PropertyGroup>
 </Project>

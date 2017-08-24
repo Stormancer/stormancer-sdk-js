@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export class WebSocketTransport implements ITransport {
         public name: string = "websocket";
         public id: Uint8Array;

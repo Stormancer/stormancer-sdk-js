@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
 
     /**
     Different available reliability levels when sending a packet.

@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
 
     declare function msgpack5(): msgpack;
 

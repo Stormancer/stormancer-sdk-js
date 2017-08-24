@@ -1,5 +1,5 @@
-/** @module Stormancer */
-module Stormancer {
+/** @namespace Stormancer */
+namespace Stormancer {
 
     export class ApiClient {
 

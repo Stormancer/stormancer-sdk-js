@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     
     /**
     A connection to a remote peer.

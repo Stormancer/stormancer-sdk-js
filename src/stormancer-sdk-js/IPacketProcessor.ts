@@ -9,7 +9,7 @@ Method called by the packet dispatcher to register the packet processor.
 @param {Stormancer.PacketProcessorConfig} config The packet processor configuration.
 */
 
-module Stormancer {
+namespace Stormancer {
     
     export class PacketProcessorConfig {
         

@@ -28,7 +28,7 @@ Sends a message to the remote peer.
 @param {PacketReliability} reliability The message requested reliability.
 */
 
-module Stormancer {
+namespace Stormancer {
     // A remote scene.
     export interface IScenePeer {
         // Sends a message to the remote scene.

@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export interface ITokenHandler {
         decodeToken(token: string): SceneEndpoint;
     }

@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export class ScenePeer implements IScenePeer {
         private _connection: IConnection;
         private _sceneHandle: number;

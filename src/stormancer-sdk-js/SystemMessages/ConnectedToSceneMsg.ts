@@ -1,4 +1,4 @@
-module Stormancer {
+namespace Stormancer {
     export interface ConnectToSceneMsg {
         Token: string;
         Routes: RouteDto[];

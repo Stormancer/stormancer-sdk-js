@@ -1,4 +1,4 @@
-declare module Stormancer {
+declare namespace Stormancer {
     interface Map {
         [key: string]: string;
     }
@@ -32,17 +32,17 @@ declare module Stormancer {
         private _reject;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface ISubscription {
         unsubscribe(): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IClientPlugin {
         build(ctx: PluginBuildContext): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class PluginBuildContext {
         constructor();
         sceneCreated: ((scene: Scene) => void)[];
@@ -52,7 +52,7 @@ declare module Stormancer {
         packetReceived: ((packet: Packet<IConnection>) => void)[];
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class RpcClientPlugin implements IClientPlugin {
         static NextRouteName: string;
         static ErrorRouteName: string;
@@ -64,7 +64,7 @@ declare module Stormancer {
         build(ctx: PluginBuildContext): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class RpcRequestContext {
         private _scene;
         private id;
@@ -83,7 +83,7 @@ declare module Stormancer {
         sendCompleted(): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class RpcService {
         private _currentRequestId;
         private _scene;
@@ -103,7 +103,7 @@ declare module Stormancer {
         disconnected(): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class ApiClient {
         constructor(config: Configuration, tokenHandler: ITokenHandler);
         private _config;
@@ -132,7 +132,7 @@ declare module Cancellation {
         listeners: ((reason: string) => void)[];
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class ConnectionHandler implements IConnectionManager {
         private _current;
         generateNewConnectionId(): number;
@@ -192,7 +192,7 @@ declare module Stormancer {
         clock(): number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class Configuration {
         constructor();
         static forAccount(accountId: string, applicationName: string): Configuration;
@@ -209,7 +209,7 @@ declare module Stormancer {
         serializers: ISerializer[];
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     enum ConnectionState {
         Disconnected = 0,
         Connecting = 1,
@@ -234,7 +234,7 @@ declare module Stormancer {
         setApplication(account: string, application: string): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IConnectionStatistics {
         packetLossRate: number;
         bytesPerSecondLimitationType: any;
@@ -245,7 +245,7 @@ declare module Stormancer {
         queuedPacketsForPriority(priority: PacketPriority): number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     enum LogLevel {
         fatal = 0,
         error = 1,
@@ -258,7 +258,7 @@ declare module Stormancer {
         log(level: LogLevel, category: string, message: string, data: any): any;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IScenePeer {
         send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
         id: number;
@@ -266,61 +266,24 @@ declare module Stormancer {
         serializer: ISerializer;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface ISerializer {
         serialize<T>(data: T): Uint8Array;
         deserialize<T>(bytes: Uint8Array): T;
         name: string;
     }
 }
-declare module Stormancer {
-    class Stream {
-        private _size;
-        private _offset;
-        private _arrayBuffer;
-        private _dataView;
-        private _pendingOperations;
-        constructor(data: ArrayBuffer | number);
-        readonly length: number;
-        readonly bytesAvailable: number;
-        readonly buffer: ArrayBuffer;
-        private checkArrayBufferSize(dataSizeToWrite);
-        writeUint8(data: number): void;
-        writeInt8(data: number): void;
-        writeUint16(data: number): void;
-        writeInt16(data: number): void;
-        writeUint32(data: number): void;
-        writeInt32(data: number): void;
-        writeFloat32(data: number): void;
-        writeFloat64(data: number): void;
-        writeBytes(data: ArrayBuffer | ArrayBufferView | Array<number>): void;
-        writeString(data: string): void;
-        writeBoolean: (data: number) => void;
-        writeByte: (data: number) => void;
-        readUint8(): number;
-        readInt8(): number;
-        readUint16(): number;
-        readInt16(): number;
-        readUint32(): number;
-        readInt32(): number;
-        readFloat32(): number;
-        readFloat64(): number;
-        readBytes(sizeToRead: number): ArrayBuffer;
-        readString(): string;
-        readBoolean: () => boolean;
-        readByte: () => number;
-        flush: () => void;
-        resetReadOffset(): void;
-    }
+declare namespace Stormancer {
 }
-declare module Stormancer {
+declare var module: any;
+declare namespace Stormancer {
     interface RouteDto {
         Name: string;
         Handle: number;
         Metadata: Map;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class Packet<T> {
         constructor(source: T, data: Uint8Array, metadata?: IMap<any>);
         connection: T;
@@ -334,7 +297,7 @@ declare module Stormancer {
         getMetadataValue(key: string): any;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     enum PacketPriority {
         IMMEDIATE_PRIORITY = 0,
         HIGH_PRIORITY = 1,
@@ -342,7 +305,7 @@ declare module Stormancer {
         LOW_PRIORITY = 3,
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     enum PacketReliability {
         UNRELIABLE = 0,
         UNRELIABLE_SEQUENCED = 1,
@@ -351,7 +314,7 @@ declare module Stormancer {
         RELIABLE_SEQUENCED = 4,
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class Route {
         constructor(scene: Scene, name: string, handle?: number, metadata?: Map);
         scene: Scene;
@@ -361,7 +324,7 @@ declare module Stormancer {
         handlers: ((packet: Packet<IConnection>) => void)[];
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IClient {
         applicationName: string;
         logger: ILogger;
@@ -374,7 +337,7 @@ declare module Stormancer {
         lastPing(): number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IConnectionManager {
         generateNewConnectionId(): number;
         newConnection(connection: IConnection): void;
@@ -383,7 +346,7 @@ declare module Stormancer {
         connectionCount: number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class DefaultPacketDispatcher implements IPacketDispatcher {
         private _handlers;
         private _defaultProcessors;
@@ -391,13 +354,13 @@ declare module Stormancer {
         addProcessor(processor: IPacketProcessor): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IPacketDispatcher {
         addProcessor(processor: IPacketProcessor): void;
         dispatchPacket(packet: Packet<IConnection>): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface ITokenHandler {
         decodeToken(token: string): SceneEndpoint;
     }
@@ -407,12 +370,12 @@ declare module Stormancer {
         decodeToken(token: string): SceneEndpoint;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface IRequestModule {
         register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class MsgPackSerializer implements ISerializer {
         constructor();
         serialize<T>(data: T): Uint8Array;
@@ -421,7 +384,7 @@ declare module Stormancer {
         private _msgpack;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class PacketProcessorConfig {
         constructor(handlers: IMap<(packet: Packet<IConnection>) => boolean>, defaultProcessors: ((n: number, p: Packet<IConnection>) => boolean)[]);
         private _handlers;
@@ -433,7 +396,7 @@ declare module Stormancer {
         registerProcessor(config: PacketProcessorConfig): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface ITransport {
         start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
         isRunning: boolean;
@@ -445,7 +408,7 @@ declare module Stormancer {
         id: Uint8Array;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class MessageIDTypes {
         static ID_SYSTEM_REQUEST: number;
         static ID_REQUEST_RESPONSE_MSG: number;
@@ -455,7 +418,7 @@ declare module Stormancer {
         static ID_SCENES: number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class RequestContext {
         private _packet;
         private _requestId;
@@ -468,7 +431,7 @@ declare module Stormancer {
         error(data: Uint8Array): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class RequestProcessor implements IPacketProcessor {
         private _pendingRequests;
         private _logger;
@@ -482,7 +445,7 @@ declare module Stormancer {
         sendSystemRequest(peer: IConnection, msgId: number, data: Uint8Array, priority?: PacketPriority): Promise<Packet<IConnection>>;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class SceneDispatcher implements IPacketProcessor {
         private _scenes;
         private _buffers;
@@ -492,7 +455,7 @@ declare module Stormancer {
         removeScene(sceneHandle: number): void;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class Scene {
         id: string;
         isHost: boolean;
@@ -524,7 +487,7 @@ declare module Stormancer {
         getComponent<T>(componentName: string): T;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class SceneEndpoint {
         tokenData: ConnectionData;
         token: string;
@@ -542,7 +505,7 @@ declare module Stormancer {
         Version: number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class ScenePeer implements IScenePeer {
         private _connection;
         private _sceneHandle;
@@ -555,22 +518,20 @@ declare module Stormancer {
         getComponent<T>(componentName: string): T;
     }
 }
-declare module Stormancer {
-}
-declare module Stormancer {
+declare namespace Stormancer {
     interface ConnectToSceneMsg {
         Token: string;
         Routes: RouteDto[];
         ConnectionMetadata: Map;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface ConnectionResult {
         SceneHandle: number;
         RouteMappings: IMap<number>;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     interface SceneInfosRequestDto {
         Token: string;
         Metadata: Map;
@@ -582,7 +543,7 @@ declare module Stormancer {
         SelectedSerializer: string;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class SystemRequestIDTypes {
         static ID_SET_METADATA: number;
         static ID_SCENE_READY: number;
@@ -592,7 +553,7 @@ declare module Stormancer {
         static ID_GET_SCENE_INFOS: number;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class WebSocketConnection implements IConnection {
         private _socket;
         constructor(id: number, socket: WebSocket);
@@ -615,7 +576,7 @@ declare module Stormancer {
         getComponent<T>(componentName: any): T;
     }
 }
-declare module Stormancer {
+declare namespace Stormancer {
     class WebSocketTransport implements ITransport {
         name: string;
         id: Uint8Array;

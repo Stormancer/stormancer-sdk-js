@@ -1,4 +1,4 @@
-﻿module Stormancer {
+﻿namespace Stormancer {
 
     /**
     Message types understood by the agent.

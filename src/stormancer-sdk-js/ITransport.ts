@@ -48,7 +48,7 @@ Starts the transport.
 @return {Promise} A `Task` completing when the transport is started.
 */
 
-module Stormancer {
+namespace Stormancer {
 
     export interface ITransport {
 
