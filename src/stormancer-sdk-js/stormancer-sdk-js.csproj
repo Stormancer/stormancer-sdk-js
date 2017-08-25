@@ -157,13 +157,12 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /d /y "$(SolutionDir)libs\msgpack5.js" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.ts" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.js" "$(SolutionDir)build"
+    <PostBuildEvent>xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.ts" "$(SolutionDir)build"
 xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.d.ts" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.js" "$(SolutionDir)build"
 xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.ts" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.js" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.d.ts" "$(SolutionDir)build"</PostBuildEvent>
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.d.ts" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.js" "$(SolutionDir)build"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <TransformOnBuild>true</TransformOnBuild>

@@ -1,17 +1,7 @@
-declare function msgpack5(): msgpack;
+/// <reference path="../../../libs/msgpack5.no-module.d.ts" />
+/// <reference path="../Core/ISerializer.ts"/>
 
-declare class msgpack {
-    constructor(options?: msgpack5Options);
-    encode(object: any): Uint8Array;
-    decode(buf: Uint8Array | Array<number>): any;
-}
-
-interface msgpack5Options {
-    forceFloat64?: boolean;
-    compatibilityMode?: boolean;
-}
-
-export class MsgPackSerializer implements ISerializer {
+/*export*/ class MsgPackSerializer implements ISerializer {
 
     /**
     Creates a new MsgPackSerializer.
@@ -29,7 +19,7 @@ export class MsgPackSerializer implements ISerializer {
     @return {Uint8Array} The byte array.
     */
     public serialize<T>(data: T): Uint8Array {
-        return new Uint8Array(this._msgpack.encode(data));
+        return <Uint8Array>this._msgpack.encode(data);
     }
 
     /**
@@ -40,7 +30,7 @@ export class MsgPackSerializer implements ISerializer {
     @return {object} The deserialized data.
     */
     public deserialize<T>(bytes: Uint8Array): T {
-        return this._msgpack.decode(bytes);
+        return this._msgpack.decode<T>(bytes);
     }
 
     /**
@@ -48,5 +38,5 @@ export class MsgPackSerializer implements ISerializer {
     */
     public name: string = "msgpack/map";
 
-    private _msgpack: msgpack = msgpack5();
+    private _msgpack: msgpack5.MessagePack = msgpack5();
 }

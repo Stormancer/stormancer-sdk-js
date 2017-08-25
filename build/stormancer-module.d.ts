@@ -87,7 +87,6 @@ export declare module Stormancer {
     class Configuration {
         constructor();
         static forAccount(accountId: string, applicationName: string): Configuration;
-        static apiEndpoint: string;
         serverEndpoint: string;
         account: string;
         application: string;

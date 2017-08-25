@@ -21,7 +21,7 @@ Deserialize an object from a stream.
 @return {object} The deserialized object.
 */
 
-export interface ISerializer {
+/*export*/ interface ISerializer {
 
     serialize<T>(data: T): Uint8Array;
 

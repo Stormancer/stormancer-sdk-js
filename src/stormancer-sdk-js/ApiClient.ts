@@ -1,4 +1,4 @@
-export class ApiClient {
+/*export*/ class ApiClient {
 
     constructor(config: Configuration, tokenHandler: ITokenHandler) {
         this._config = config;

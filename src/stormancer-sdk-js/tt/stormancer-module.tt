@@ -12,6 +12,7 @@ directory = Path.GetFullPath(Path.Combine(directory, ".."));
 
 var files = Directory.EnumerateFiles(directory,"*.ts",SearchOption.AllDirectories);
 #>
+import  *  as msgpack5 from 'msgpack5'
 export module Stormancer
 {
 <#
@@ -20,7 +21,7 @@ foreach(var file in files)
 if (!file.Contains("\\tt\\") && !file.EndsWith(".d.ts"))
 {
 #>
-<#= File.ReadAllText(file) #>
+<#= File.ReadAllText(file).Replace("/*export*/", "export ") #>
 <#
 }
 }

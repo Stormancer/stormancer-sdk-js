@@ -345,7 +345,6 @@ var Stormancer;
     }
     class Configuration {
         constructor() {
-            this.serverEndpoint = "";
             this.account = "";
             this.application = "";
             this.plugins = [];
@@ -366,14 +365,16 @@ var Stormancer;
             return config;
         }
         getApiEndpoint() {
-            return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
+            if (!this.serverEndpoint) {
+                throw new Error("server endpoint not set");
+            }
+            return this.serverEndpoint;
         }
         Metadata(key, value) {
             this.metadata[key] = value;
             return this;
         }
     }
-    Configuration.apiEndpoint = "https://api.stormancer.com/";
     Stormancer.Configuration = Configuration;
     class Helpers {
         static base64ToByteArray(data) {
@@ -766,7 +767,7 @@ var Stormancer;
             this._msgpack = msgpack5();
         }
         serialize(data) {
-            return new Uint8Array(this._msgpack.encode(data));
+            return this._msgpack.encode(data);
         }
         deserialize(bytes) {
             return this._msgpack.decode(bytes);

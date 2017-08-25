@@ -27,19 +27,14 @@ export class Configuration {
         config.application = applicationName;
         return config;
     }
-
-    /**
-    API Endpoint URI
-    */
-    static apiEndpoint: string = "https://api.stormancer.com/";
-
+    
     /**
     A string containing the target server endpoint.
     This value overrides the *apiEndpoint* property.
     @member Stormancer.Configuration#serverEndpoint
     @type {string}
     */
-    public serverEndpoint: string = "";
+    public serverEndpoint: string;
 
     /**
     A string containing the account name of the application.
@@ -65,7 +60,10 @@ export class Configuration {
     @return {string} API Endpoint URI
     */
     getApiEndpoint(): string {
-        return this.serverEndpoint ? this.serverEndpoint : Configuration.apiEndpoint;
+        if (!this.serverEndpoint) {
+            throw new Error("server endpoint not set");
+        }
+        return this.serverEndpoint;
     }
 
     /**

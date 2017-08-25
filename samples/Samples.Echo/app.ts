@@ -1,6 +1,4 @@
-﻿import { Stormancer } from "./libs/stormancer-module";
-
-class Greeter {
+﻿class Greeter {
     private _element: HTMLElement;
     private _sentSpan: HTMLElement;
     private _receivedSpan: HTMLElement;
@@ -30,6 +28,7 @@ class Greeter {
         console.log("start!");
 
         var config = Stormancer.Configuration.forAccount("58ec9ba7-56e4-3d89-2c55-c9435e08b26b", "tester");
+        config.serverEndpoint = "http://api.stormancer.com/";
         var client = new Stormancer.Client(config);
 
         console.log("getPublicScene");

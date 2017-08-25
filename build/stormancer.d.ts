@@ -1,3 +1,4 @@
+/// <reference path="msgpack5.no-module.d.ts" />
 declare namespace Stormancer {
     class ApiClient {
         constructor(config: Configuration, tokenHandler: ITokenHandler);
@@ -87,7 +88,6 @@ declare namespace Stormancer {
     class Configuration {
         constructor();
         static forAccount(accountId: string, applicationName: string): Configuration;
-        static apiEndpoint: string;
         serverEndpoint: string;
         account: string;
         application: string;
