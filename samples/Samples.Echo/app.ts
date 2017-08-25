@@ -1,4 +1,4 @@
-﻿import { Stormancer } from "./Scripts/typings/stormancer/stormancer";
+﻿import { Stormancer } from "./libs/stormancer-module";
 
 class Greeter {
     private _element: HTMLElement;

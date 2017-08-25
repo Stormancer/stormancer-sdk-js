@@ -1,4 +1,4 @@
-export var Stormancer;
+var Stormancer;
 (function (Stormancer) {
     class ApiClient {
         constructor(config, tokenHandler) {

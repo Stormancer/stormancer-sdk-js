@@ -27,6 +27,16 @@
     <TypeScriptCompile Include="Plugins\RpcClientPlugin.ts" />
     <TypeScriptCompile Include="Plugins\RpcRequestContext.ts" />
     <TypeScriptCompile Include="Plugins\RpcService.ts" />
+    <TypeScriptCompile Include="tt\stormancer-module.ts">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>stormancer-module.tt</DependentUpon>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="tt\stormancer.ts">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>stormancer.tt</DependentUpon>
+    </TypeScriptCompile>
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="ApiClient.ts" />
@@ -38,11 +48,6 @@
     <TypeScriptCompile Include="Core\ILogger.ts" />
     <TypeScriptCompile Include="Core\IScenePeer.ts" />
     <TypeScriptCompile Include="Core\ISerializer.ts" />
-    <TypeScriptCompile Include="stormancer.ts">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>stormancer.tt</DependentUpon>
-    </TypeScriptCompile>
     <TypeScriptCompile Include="SystemMessages\RouteDto.ts" />
     <TypeScriptCompile Include="Core\Packet.ts" />
     <TypeScriptCompile Include="Core\PacketPriority.ts" />
@@ -74,16 +79,18 @@
     <TypeScriptCompile Include="Scripts\ajax.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="stormancer.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>stormancer.ts</LastGenOutput>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="tsconfig.json" />
+    <Content Include="tt\stormancer-module.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>stormancer-module.ts</LastGenOutput>
+    </Content>
+    <Content Include="tt\stormancer.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>stormancer.ts</LastGenOutput>
+    </Content>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
@@ -151,7 +158,27 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /d /y "$(SolutionDir)libs\msgpack5.js" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\stormancer.js" "$(SolutionDir)build"
-xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\stormancer.d.ts" "$(SolutionDir)build"</PostBuildEvent>
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.ts" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.js" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer.d.ts" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.ts" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.js" "$(SolutionDir)build"
+xcopy /d /y "$(SolutionDir)src\stormancer-sdk-js\tt\stormancer-module.d.ts" "$(SolutionDir)build"</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TransformOnBuild>true</TransformOnBuild>
+  </PropertyGroup>
+  <!-- Make the import portable across VS versions -->
+  <PropertyGroup>
+    <!-- Get the Visual Studio version - defaults to 10: -->
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <!-- Keep the next element all on one line: -->
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <!-- This is the important line: -->
+  <Import Project="$(VSToolsPath)\TextTemplating\Microsoft.TextTemplating.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
 </Project>

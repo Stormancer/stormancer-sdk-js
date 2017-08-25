@@ -1,4 +1,4 @@
-export declare module Stormancer {
+declare namespace Stormancer {
     class ApiClient {
         constructor(config: Configuration, tokenHandler: ITokenHandler);
         private _config;

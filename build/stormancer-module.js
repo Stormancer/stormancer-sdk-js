@@ -1436,4 +1436,4 @@ export var Stormancer;
     }
     Stormancer.WebSocketTransport = WebSocketTransport;
 })(Stormancer || (Stormancer = {}));
-//# sourceMappingURL=stormancer.js.map
+//# sourceMappingURL=stormancer-module.js.map

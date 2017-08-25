@@ -1,11 +1,11 @@
-System.register(["./Scripts/typings/stormancer/stormancer"], function (exports_1, context_1) {
+System.register(["./libs/stormancer-module"], function (exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
-    var stormancer_1, Greeter;
+    var stormancer_module_1, Greeter;
     return {
         setters: [
-            function (stormancer_1_1) {
-                stormancer_1 = stormancer_1_1;
+            function (stormancer_module_1_1) {
+                stormancer_module_1 = stormancer_module_1_1;
             }
         ],
         execute: function () {
@@ -27,8 +27,8 @@ System.register(["./Scripts/typings/stormancer/stormancer"], function (exports_1
                 }
                 start() {
                     console.log("start!");
-                    var config = stormancer_1.Stormancer.Configuration.forAccount("58ec9ba7-56e4-3d89-2c55-c9435e08b26b", "tester");
-                    var client = new stormancer_1.Stormancer.Client(config);
+                    var config = stormancer_module_1.Stormancer.Configuration.forAccount("58ec9ba7-56e4-3d89-2c55-c9435e08b26b", "tester");
+                    var client = new stormancer_module_1.Stormancer.Client(config);
                     console.log("getPublicScene");
                     client.getPublicScene("main", "").then(scene => {
                         console.log("getPublicScene OK");
@@ -44,7 +44,7 @@ System.register(["./Scripts/typings/stormancer/stormancer"], function (exports_1
                             console.log("RPC");
                             var rpcService = scene.getComponent("rpcService");
                             rpcService.rpc("rpc", "stormancer", packet => {
-                                var msgpack = new stormancer_1.Stormancer.MsgPackSerializer();
+                                var msgpack = new stormancer_module_1.Stormancer.MsgPackSerializer();
                                 var response = msgpack.deserialize(packet.data);
                                 if (response === "stormancer") {
                                     console.log("RPC OK");
@@ -65,7 +65,7 @@ System.register(["./Scripts/typings/stormancer/stormancer"], function (exports_1
                 }
                 onEcho(packet) {
                     console.log("Packet received :", packet);
-                    var msgPackSerializer = new stormancer_1.Stormancer.MsgPackSerializer();
+                    var msgPackSerializer = new stormancer_module_1.Stormancer.MsgPackSerializer();
                     this._receivedSpan.innerHTML += "<br>" + msgPackSerializer.deserialize(packet.data);
                 }
                 stop() {
