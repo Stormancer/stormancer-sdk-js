@@ -1,4 +1,4 @@
-export class Scene {
+/*export*/ class Scene {
 
     /**
     A string representing the unique ID of the scene.

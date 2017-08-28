@@ -1,4 +1,4 @@
-﻿export class PluginBuildContext {
+﻿/*export*/ class PluginBuildContext {
 
     /**
     Initializes a new instance of the PluginBuildContext class.

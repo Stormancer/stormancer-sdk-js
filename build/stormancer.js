@@ -28,51 +28,54 @@ var Stormancer;
     (function (Cancellation) {
         class TokenSource {
             constructor() {
-                this.data = {
+                this._data = {
                     reason: null,
                     isCancelled: false,
                     listeners: []
                 };
-                this.token = new token(this.data);
+                this._token = new Token(this._data);
             }
             cancel(reason) {
-                this.data.isCancelled = true;
+                this._data.isCancelled = true;
                 reason = reason || 'Operation Cancelled';
-                this.data.reason = reason;
+                this._data.reason = reason;
                 setTimeout(() => {
-                    for (var i = 0; i < this.data.listeners.length; i++) {
-                        if (typeof this.data.listeners[i] === 'function') {
-                            this.data.listeners[i](reason);
+                    for (var i = 0; i < this._data.listeners.length; i++) {
+                        if (typeof this._data.listeners[i] === 'function') {
+                            this._data.listeners[i](reason);
                         }
                     }
                 }, 0);
             }
+            getToken() {
+                return this._token;
+            }
         }
         Cancellation.TokenSource = TokenSource;
-        class token {
+        class Token {
             constructor(data) {
-                this.data = data;
+                this._data = data;
             }
             isCancelled() {
-                return this.data.isCancelled;
+                return this._data.isCancelled;
             }
             throwIfCancelled() {
                 if (this.isCancelled()) {
-                    throw this.data.reason;
+                    throw this._data.reason;
                 }
             }
             onCancelled(callBack) {
                 if (this.isCancelled()) {
                     setTimeout(() => {
-                        callBack(this.data.reason);
+                        callBack(this._data.reason);
                     }, 0);
                 }
                 else {
-                    this.data.listeners.push(callBack);
+                    this._data.listeners.push(callBack);
                 }
             }
         }
-        Cancellation.token = token;
+        Cancellation.Token = Token;
     })(Cancellation = Stormancer.Cancellation || (Stormancer.Cancellation = {}));
     class ConnectionHandler {
         constructor() {
@@ -206,7 +209,7 @@ var Stormancer;
         }
         startTransport() {
             this._cts = new Cancellation.TokenSource();
-            return this._transport.start("client", new ConnectionHandler(), this._cts.token);
+            return this._transport.start("client", new ConnectionHandler(), this._cts.getToken());
         }
         registerConnection(connection) {
             this._serverConnection = connection;
@@ -328,21 +331,6 @@ var Stormancer;
         }
     }
     Stormancer.Client = Client;
-    class Watch {
-        constructor() {
-            this._baseTime = 0;
-            this._baseTime = this.now();
-        }
-        start() {
-            this._baseTime = this.now();
-        }
-        now() {
-            return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
-        }
-        getElapsedTime() {
-            return this.now() - this._baseTime;
-        }
-    }
     class Configuration {
         constructor() {
             this.account = "";
@@ -461,14 +449,6 @@ var Stormancer;
         }
     }
     Stormancer.PacketProcessorConfig = PacketProcessorConfig;
-    var _ = {
-        ID_SYSTEM_REQUEST: 134,
-        ID_REQUEST_RESPONSE_MSG: 137,
-        ID_REQUEST_RESPONSE_COMPLETE: 138,
-        ID_REQUEST_RESPONSE_ERROR: 139,
-        ID_CONNECTION_RESULT: 140,
-        ID_SCENES: 141
-    };
     class MessageIDTypes {
     }
     MessageIDTypes.ID_SYSTEM_REQUEST = 134;
@@ -628,6 +608,22 @@ var Stormancer;
     SystemRequestIDTypes.ID_DISCONNECT_FROM_SCENE = 135;
     SystemRequestIDTypes.ID_GET_SCENE_INFOS = 136;
     Stormancer.SystemRequestIDTypes = SystemRequestIDTypes;
+    class Watch {
+        constructor() {
+            this._baseTime = 0;
+            this.start();
+        }
+        start() {
+            this._baseTime = this.now();
+        }
+        now() {
+            return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
+        }
+        getElapsedTime() {
+            return this.now() - this._baseTime;
+        }
+    }
+    Stormancer.Watch = Watch;
     var ConnectionState;
     (function (ConnectionState) {
         ConnectionState[ConnectionState["Disconnected"] = 0] = "Disconnected";
@@ -951,7 +947,7 @@ var Stormancer;
                 var id = this.computeId(p);
                 p.data = p.data.subarray(2);
                 var cts = new Cancellation.TokenSource();
-                var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.token);
+                var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.getToken());
                 if (!this._runningRequests[id]) {
                     this._runningRequests[id] = cts;
                     Helpers.invokeWrapping(handler, ctx).then(() => {

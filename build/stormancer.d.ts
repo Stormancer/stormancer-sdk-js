@@ -10,16 +10,17 @@ declare namespace Stormancer {
     module Cancellation {
         class TokenSource {
             constructor();
-            private data;
             cancel(reason?: string): void;
-            token: token;
+            getToken(): Token;
+            private _data;
+            private _token;
         }
-        class token {
+        class Token {
             constructor(data: sourceData);
-            private data;
             isCancelled(): boolean;
             throwIfCancelled(): void;
             onCancelled(callBack: (reason: string) => void): void;
+            private _data;
         }
         interface sourceData {
             reason: string;
@@ -160,7 +161,7 @@ declare namespace Stormancer {
         registerProcessor(config: PacketProcessorConfig): void;
     }
     interface ITransport {
-        start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
+        start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void>;
         isRunning: boolean;
         connect(endpoint: string): Promise<IConnection>;
         packetReceived: ((packet: Packet<IConnection>) => void)[];
@@ -241,6 +242,13 @@ declare namespace Stormancer {
         static ID_CONNECT_TO_SCENE: number;
         static ID_DISCONNECT_FROM_SCENE: number;
         static ID_GET_SCENE_INFOS: number;
+    }
+    class Watch {
+        constructor();
+        start(): void;
+        private now();
+        getElapsedTime(): number;
+        private _baseTime;
     }
     enum ConnectionState {
         Disconnected = 0,
@@ -391,8 +399,8 @@ declare namespace Stormancer {
         private _cancellationToken;
         remotePeer(): IScenePeer;
         data(): Uint8Array;
-        cancellationToken(): Cancellation.token;
-        constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token);
+        cancellationToken(): Cancellation.Token;
+        constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.Token);
         private writeRequestId(data);
         sendValue(data: Uint8Array, priority: PacketPriority): void;
         sendError(errorMsg: string): void;
@@ -510,7 +518,7 @@ declare namespace Stormancer {
         packetReceived: ((packet: Packet<IConnection>) => void)[];
         connectionOpened: ((connection: IConnection) => void)[];
         connectionClosed: ((connection: IConnection) => void)[];
-        start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
+        start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void>;
         private stop();
         connect(endpoint: string): Promise<IConnection>;
         private createNewConnection(socket);

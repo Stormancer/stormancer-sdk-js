@@ -5,7 +5,7 @@ Available packet priorities
 @memberof Stormancer
 */
 
-export enum PacketPriority {
+/*export*/ enum PacketPriority {
     IMMEDIATE_PRIORITY = 0,
     HIGH_PRIORITY = 1,
     MEDIUM_PRIORITY = 2,
@@ -19,7 +19,7 @@ Different available reliability levels when sending a packet.
 @memberof Stormancer
 */
 
-export enum PacketReliability {
+/*export*/ enum PacketReliability {
     UNRELIABLE = 0,
     UNRELIABLE_SEQUENCED = 1,
     RELIABLE = 2,

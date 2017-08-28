@@ -1,8 +1,8 @@
-export interface ITokenHandler {
+/*export*/ interface ITokenHandler {
     decodeToken(token: string): SceneEndpoint;
 }
 
-export class TokenHandler implements ITokenHandler {
+/*export*/ class TokenHandler implements ITokenHandler {
     private _tokenSerializer: ISerializer;
 
     public constructor() {

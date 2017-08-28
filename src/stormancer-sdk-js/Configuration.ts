@@ -1,4 +1,4 @@
-export class Configuration {
+/*export*/ class Configuration {
 
     /**
     Creates a Configuration. Prefer the **Configuration.forAccount** method instead of this constructor.

@@ -1,9 +1,9 @@
-export interface SceneInfosRequestDto {
+/*export*/ interface SceneInfosRequestDto {
     Token: string;
     Metadata: Map;
 }
 
-export interface SceneInfosDto {
+/*export*/ interface SceneInfosDto {
     SceneId: string;
     Metadata: Map;
     Routes: RouteDto[];

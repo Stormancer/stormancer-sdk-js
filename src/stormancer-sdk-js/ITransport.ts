@@ -48,10 +48,10 @@ Starts the transport.
 @return {Promise} A `Task` completing when the transport is started.
 */
 
-export interface ITransport {
+/*export*/ interface ITransport {
 
     // Starts the transport
-    start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
+    start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void>;
 
     isRunning: boolean;
 

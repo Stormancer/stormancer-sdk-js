@@ -1,3 +1,3 @@
-﻿export interface ISubscription {
+﻿/*export*/ interface ISubscription {
     unsubscribe(): void;
 }

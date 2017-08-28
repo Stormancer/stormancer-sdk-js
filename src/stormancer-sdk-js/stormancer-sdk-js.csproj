@@ -37,6 +37,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>stormancer.tt</DependentUpon>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="Watch.ts" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="ApiClient.ts" />

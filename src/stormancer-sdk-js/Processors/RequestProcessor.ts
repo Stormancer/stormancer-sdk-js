@@ -7,7 +7,7 @@ interface SystemRequest {
     deferred: Deferred<void>;
 }
 
-export class RequestProcessor implements IPacketProcessor {
+/*export*/ class RequestProcessor implements IPacketProcessor {
     private _pendingRequests: IMap<SystemRequest> = {};
     private _logger: ILogger;
     private _isRegistered: boolean = false;

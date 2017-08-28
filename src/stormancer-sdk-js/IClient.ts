@@ -1,4 +1,4 @@
-export interface IClient {
+/*export*/ interface IClient {
     // The name of the Stormancer server application the client is connected to.
     applicationName: string;
 

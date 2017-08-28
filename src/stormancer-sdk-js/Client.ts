@@ -1,7 +1,7 @@
 /**
 ConnectionHandler
 */
-export class ConnectionHandler implements IConnectionManager {
+/*export*/ class ConnectionHandler implements IConnectionManager {
     private _current = 0;
 
     /**
@@ -31,7 +31,7 @@ export class ConnectionHandler implements IConnectionManager {
     public closeConnection(connection: IConnection, reason: string): void { }
 }
 
-export class Client implements IClient {
+/*export*/ class Client implements IClient {
 
     private _apiClient: ApiClient;
     private _accountId: string;
@@ -213,7 +213,7 @@ export class Client implements IClient {
 
     private startTransport(): Promise<void> {
         this._cts = new Cancellation.TokenSource();
-        return this._transport.start("client", new ConnectionHandler(), this._cts.token);
+        return this._transport.start("client", new ConnectionHandler(), this._cts.getToken());
     }
 
     private registerConnection(connection: IConnection) {
@@ -381,21 +381,5 @@ export class Client implements IClient {
             return Math.floor(this._watch.getElapsedTime()) + this._offset;
         }
         return 0;
-    }
-}
-
-class Watch {
-    constructor() {
-        this._baseTime = this.now();
-    }
-    private _baseTime: number = 0;
-    public start(): void {
-        this._baseTime = this.now();
-    }
-    private now(): number {
-        return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
-    }
-    public getElapsedTime(): number {
-        return this.now() - this._baseTime;
     }
 }

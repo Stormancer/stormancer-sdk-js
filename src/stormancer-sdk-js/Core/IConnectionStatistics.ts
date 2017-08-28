@@ -1,4 +1,4 @@
-export interface IConnectionStatistics {
+/*export*/ interface IConnectionStatistics {
     /// Number of packets lost in the last second.
     packetLossRate: number;
 

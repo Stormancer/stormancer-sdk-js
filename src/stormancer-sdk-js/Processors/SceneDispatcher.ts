@@ -1,4 +1,4 @@
-export class SceneDispatcher implements IPacketProcessor {
+/*export*/ class SceneDispatcher implements IPacketProcessor {
     private _scenes: Scene[] = [];
     private _buffers: Packet<IConnection>[][] = [];
     public registerProcessor(config: PacketProcessorConfig): void {

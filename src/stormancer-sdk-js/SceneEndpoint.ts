@@ -1,10 +1,10 @@
-export class SceneEndpoint {
+/*export*/ class SceneEndpoint {
     public tokenData: ConnectionData;
 
     public token: string;
 }
 
-export class ConnectionData {
+/*export*/ class ConnectionData {
     public Endpoints: Map;
 
     public AccountId: string;

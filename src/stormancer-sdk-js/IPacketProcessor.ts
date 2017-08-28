@@ -9,7 +9,7 @@ Method called by the packet dispatcher to register the packet processor.
 @param {Stormancer.PacketProcessorConfig} config The packet processor configuration.
 */
 
-export class PacketProcessorConfig {
+/*export*/ class PacketProcessorConfig {
 
     /**
     Creates a packet processor configuration.
@@ -51,6 +51,6 @@ export class PacketProcessorConfig {
     }
 }
 
-export interface IPacketProcessor {
+/*export*/ interface IPacketProcessor {
     registerProcessor(config: PacketProcessorConfig): void;
 }

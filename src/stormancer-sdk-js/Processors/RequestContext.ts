@@ -1,4 +1,4 @@
-export class RequestContext {
+/*export*/ class RequestContext {
 
     private _packet: Packet<IConnection>;
     private _requestId: Uint8Array;

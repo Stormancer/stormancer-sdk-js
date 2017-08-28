@@ -34,12 +34,12 @@ export  class ApiClient {
     }
 }
 
-export module Cancellation {
+export  module Cancellation {
 
     /**
     TokenSource
     */
-    export class TokenSource {
+    export  class TokenSource {
 
         /**
         Constructor
@@ -47,55 +47,57 @@ export module Cancellation {
         constructor() {
         }
 
-        private data: sourceData = {
+        /**
+        Cancel
+        */
+        public cancel(reason?: string): void {
+            this._data.isCancelled = true;
+            reason = reason || 'Operation Cancelled';
+
+            this._data.reason = reason;
+
+            setTimeout(() => {
+                for (var i = 0; i < this._data.listeners.length; i++) {
+                    if (typeof this._data.listeners[i] === 'function') {
+                        this._data.listeners[i](reason);
+                    }
+                }
+            }, 0);
+        }
+
+        public getToken(): Token {
+            return this._token;
+        }
+
+        private _data: sourceData = {
             reason: <string>null,
             isCancelled: false,
             listeners: []
         };
 
         /**
-        Cancel
-        */
-        public cancel(reason?: string): void {
-            this.data.isCancelled = true;
-            reason = reason || 'Operation Cancelled';
-
-            this.data.reason = reason;
-
-            setTimeout(() => {
-                for (var i = 0; i < this.data.listeners.length; i++) {
-                    if (typeof this.data.listeners[i] === 'function') {
-                        this.data.listeners[i](reason);
-                    }
-                }
-            }, 0);
-        }
-
-        /**
         Token
         */
-        public token: token = new token(this.data);
+        private _token: Token = new Token(this._data);
     }
 
     /**
     Token
     */
-    export class token {
+    export  class Token {
 
         /**
         Constructor
         */
         constructor(data: sourceData) {
-            this.data = data;
+            this._data = data;
         }
-
-        private data: sourceData;
 
         /**
         To know if the token has been cancelled.
         */
         public isCancelled(): boolean {
-            return this.data.isCancelled;
+            return this._data.isCancelled;
         }
 
         /**
@@ -103,7 +105,7 @@ export module Cancellation {
         */
         public throwIfCancelled(): void {
             if (this.isCancelled()) {
-                throw this.data.reason;
+                throw this._data.reason;
             }
         }
 
@@ -113,18 +115,20 @@ export module Cancellation {
         public onCancelled(callBack: (reason: string) => void) {
             if (this.isCancelled()) {
                 setTimeout(() => {
-                    callBack(this.data.reason);
+                    callBack(this._data.reason);
                 }, 0);
             } else {
-                this.data.listeners.push(callBack);
+                this._data.listeners.push(callBack);
             }
         }
+
+        private _data: sourceData;
     }
 
     /**
     sourceData
     */
-    export interface sourceData {
+    export  interface sourceData {
 
         /**
         Cancellation reason
@@ -146,7 +150,7 @@ export module Cancellation {
 /**
 ConnectionHandler
 */
-export class ConnectionHandler implements IConnectionManager {
+export  class ConnectionHandler implements IConnectionManager {
     private _current = 0;
 
     /**
@@ -176,7 +180,7 @@ export class ConnectionHandler implements IConnectionManager {
     public closeConnection(connection: IConnection, reason: string): void { }
 }
 
-export class Client implements IClient {
+export  class Client implements IClient {
 
     private _apiClient: ApiClient;
     private _accountId: string;
@@ -358,7 +362,7 @@ export class Client implements IClient {
 
     private startTransport(): Promise<void> {
         this._cts = new Cancellation.TokenSource();
-        return this._transport.start("client", new ConnectionHandler(), this._cts.token);
+        return this._transport.start("client", new ConnectionHandler(), this._cts.getToken());
     }
 
     private registerConnection(connection: IConnection) {
@@ -529,23 +533,7 @@ export class Client implements IClient {
     }
 }
 
-class Watch {
-    constructor() {
-        this._baseTime = this.now();
-    }
-    private _baseTime: number = 0;
-    public start(): void {
-        this._baseTime = this.now();
-    }
-    private now(): number {
-        return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
-    }
-    public getElapsedTime(): number {
-        return this.now() - this._baseTime;
-    }
-}
-
-export class Configuration {
+export  class Configuration {
 
     /**
     Creates a Configuration. Prefer the **Configuration.forAccount** method instead of this constructor.
@@ -652,15 +640,15 @@ export class Configuration {
     public serializers: ISerializer[] = [];
 }
 
-export interface Map {
+export  interface Map {
     [key: string]: string;
 }
 
-export interface IMap<T> {
+export  interface IMap<T> {
     [key: string]: T;
 }
 
-export class Helpers {
+export  class Helpers {
     static base64ToByteArray(data: string): Uint8Array {
         return new Uint8Array(atob(data).split('').map(function (c) { return c.charCodeAt(0) }));
     }
@@ -710,13 +698,13 @@ export class Helpers {
     }
 }
 
-export interface IObserver<T> {
+export  interface IObserver<T> {
     onCompleted(): void;
     onError(error: any): void;
     onNext(value: T): void;
 }
 
-export class Deferred<T> {
+export  class Deferred<T> {
     constructor() {
         this._promise = new Promise<T>((resolve, reject) => {
             this._resolve = resolve;
@@ -748,7 +736,7 @@ export class Deferred<T> {
     private _reject: any
 }
 
-export interface IClient {
+export  interface IClient {
     // The name of the Stormancer server application the client is connected to.
     applicationName: string;
 
@@ -807,7 +795,7 @@ Returns a connection by ID.
 @return {Stormancer.IConnection} The connection attached to this ID.
 */
 
-export interface IConnectionManager {
+export  interface IConnectionManager {
 
     generateNewConnectionId(): number;
 
@@ -831,7 +819,7 @@ Method called by the packet dispatcher to register the packet processor.
 @param {Stormancer.PacketProcessorConfig} config The packet processor configuration.
 */
 
-export class PacketProcessorConfig {
+export  class PacketProcessorConfig {
 
     /**
     Creates a packet processor configuration.
@@ -873,7 +861,7 @@ export class PacketProcessorConfig {
     }
 }
 
-export interface IPacketProcessor {
+export  interface IPacketProcessor {
     registerProcessor(config: PacketProcessorConfig): void;
 }
 
@@ -927,10 +915,10 @@ Starts the transport.
 @return {Promise} A `Task` completing when the transport is started.
 */
 
-export interface ITransport {
+export  interface ITransport {
 
     // Starts the transport
-    start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void>;
+    start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void>;
 
     isRunning: boolean;
 
@@ -954,23 +942,8 @@ Message types understood by the agent.
 @enum {number}
 @memberof Stormancer
 */
-var _ = // Fake jsdoc enum MessageIDTypes
-    {
-        /** 134 - System request */
-        ID_SYSTEM_REQUEST: 134,
-        /** 137 - Sends a reponse to a system request */
-        ID_REQUEST_RESPONSE_MSG: 137,
-        /** 138 - Sends a "request complete" message to close a system request channel */
-        ID_REQUEST_RESPONSE_COMPLETE: 138,
-        /** 139 - Sends an error as aresponse to a system request and close the request channel */
-        ID_REQUEST_RESPONSE_ERROR: 139,
-        /** 140 - Identifies a response to a connect to scene message */
-        ID_CONNECTION_RESULT: 140,
-        /** 141 - First id for scene handles */
-        ID_SCENES: 141
-    };
 
-export class MessageIDTypes {
+export  class MessageIDTypes {
     public static ID_SYSTEM_REQUEST = 134;
     public static ID_REQUEST_RESPONSE_MSG = 137;
     public static ID_REQUEST_RESPONSE_COMPLETE = 138;
@@ -979,7 +952,7 @@ export class MessageIDTypes {
     public static ID_SCENES = 141;
 }
 
-export class Scene {
+export  class Scene {
 
     /**
     A string representing the unique ID of the scene.
@@ -1248,13 +1221,13 @@ export class Scene {
     }
 }
 
-export class SceneEndpoint {
+export  class SceneEndpoint {
     public tokenData: ConnectionData;
 
     public token: string;
 }
 
-export class ConnectionData {
+export  class ConnectionData {
     public Endpoints: Map;
 
     public AccountId: string;
@@ -1275,7 +1248,7 @@ export class ConnectionData {
     public Version: number;
 }
 
-export class ScenePeer implements IScenePeer {
+export  class ScenePeer implements IScenePeer {
     private _connection: IConnection;
     private _sceneHandle: number;
     private _routeMapping: IMap<Route>;
@@ -1314,7 +1287,7 @@ Message types understood by the agent.
 @memberof Stormancer
 */
 
-export class SystemRequestIDTypes {
+export  class SystemRequestIDTypes {
     public static ID_SET_METADATA = 0;
     public static ID_SCENE_READY = 1;
     public static ID_PING = 2;
@@ -1322,6 +1295,26 @@ export class SystemRequestIDTypes {
     public static ID_CONNECT_TO_SCENE = 134;
     public static ID_DISCONNECT_FROM_SCENE = 135;
     public static ID_GET_SCENE_INFOS = 136;
+}
+
+export  class Watch {
+    constructor() {
+        this.start();
+    }
+
+    public start(): void {
+        this._baseTime = this.now();
+    }
+
+    private now(): number {
+        return (typeof (window) !== "undefined" && window.performance && window.performance.now && window.performance.now()) || Date.now();
+    }
+
+    public getElapsedTime(): number {
+        return this.now() - this._baseTime;
+    }
+
+    private _baseTime: number = 0;
 }
 
 /**
@@ -1413,13 +1406,13 @@ Sets the account and application associated with this object. Used only serversi
 @memberof Stormancer
 */
 
-export enum ConnectionState {
+export  enum ConnectionState {
     Disconnected = 0,
     Connecting = 1,
     Connected = 2
 }
 
-export interface IConnection {
+export  interface IConnection {
     // Unique id in the node for the connection.
     id: number;
 
@@ -1467,7 +1460,7 @@ export interface IConnection {
     setApplication(account: string, application: string): void;
 }
 
-export interface IConnectionStatistics {
+export  interface IConnectionStatistics {
     /// Number of packets lost in the last second.
     packetLossRate: number;
 
@@ -1511,7 +1504,7 @@ Available log levels
 @memberof Stormancer
 */
 
-export enum LogLevel {
+export  enum LogLevel {
     fatal = 0,
     error = 1,
     warn = 2,
@@ -1520,7 +1513,7 @@ export enum LogLevel {
     trace = 5
 }
 
-export interface ILogger {
+export  interface ILogger {
 
     log(level: LogLevel, category: string, message: string, data: any);
 }
@@ -1556,7 +1549,7 @@ Sends a message to the remote peer.
 */
 
 // A remote scene.
-export interface IScenePeer {
+export  interface IScenePeer {
     // Sends a message to the remote scene.
     send(route: string, data: Uint8Array, priority: PacketPriority, reliability: PacketReliability): void;
 
@@ -1599,7 +1592,7 @@ export  interface ISerializer {
     name: string;
 }
 
-export class Packet<T> {
+export  class Packet<T> {
 
     /**
     A packet sent by a remote peer to the running peer.
@@ -1703,7 +1696,7 @@ Available packet priorities
 @memberof Stormancer
 */
 
-export enum PacketPriority {
+export  enum PacketPriority {
     IMMEDIATE_PRIORITY = 0,
     HIGH_PRIORITY = 1,
     MEDIUM_PRIORITY = 2,
@@ -1717,7 +1710,7 @@ Different available reliability levels when sending a packet.
 @memberof Stormancer
 */
 
-export enum PacketReliability {
+export  enum PacketReliability {
     UNRELIABLE = 0,
     UNRELIABLE_SEQUENCED = 1,
     RELIABLE = 2,
@@ -1725,7 +1718,7 @@ export enum PacketReliability {
     RELIABLE_SEQUENCED = 4
 }
 
-export class Route {
+export  class Route {
 
     /**
     Creates a new route instance.
@@ -1780,7 +1773,7 @@ export class Route {
     public handlers: ((packet: Packet<IConnection>) => void)[] = [];
 }
 
-export class DefaultPacketDispatcher implements IPacketDispatcher {
+export  class DefaultPacketDispatcher implements IPacketDispatcher {
     private _handlers: IMap<(packet: Packet<IConnection>) => boolean> = {};
     private _defaultProcessors: ((msgType: number, packet: Packet<IConnection>) => boolean)[] = [];
 
@@ -1815,7 +1808,7 @@ export class DefaultPacketDispatcher implements IPacketDispatcher {
     }
 }
 
-export interface IRequestModule {
+export  interface IRequestModule {
     register(builder: (msgId: number, handler: (context: RequestContext) => Promise<void>) => void): void;
 }
 
@@ -1835,22 +1828,22 @@ Dispatches a packet to the system.
 @param {Stormancer.Packet} packet Packet to dispatch.
 */
 
-export interface IPacketDispatcher {
+export  interface IPacketDispatcher {
 
     addProcessor(processor: IPacketProcessor): void;
 
     dispatchPacket(packet: Packet<IConnection>): void;
 }
 
-export interface ISubscription {
+export  interface ISubscription {
     unsubscribe(): void;
 }
 
-export interface ITokenHandler {
+export  interface ITokenHandler {
     decodeToken(token: string): SceneEndpoint;
 }
 
-export class TokenHandler implements ITokenHandler {
+export  class TokenHandler implements ITokenHandler {
     private _tokenSerializer: ISerializer;
 
     public constructor() {
@@ -1912,11 +1905,11 @@ export  class MsgPackSerializer implements ISerializer {
     private _msgpack: msgpack5.MessagePack = msgpack5();
 }
 
-export interface IClientPlugin {
+export  interface IClientPlugin {
     build(ctx: PluginBuildContext): void;
 }
 
-export class PluginBuildContext {
+export  class PluginBuildContext {
 
     /**
     Initializes a new instance of the PluginBuildContext class.
@@ -1963,7 +1956,7 @@ export class PluginBuildContext {
     public packetReceived: ((packet: Packet<IConnection>) => void)[] = [];
 }
 
-export class RpcClientPlugin implements IClientPlugin {
+export  class RpcClientPlugin implements IClientPlugin {
     static NextRouteName = "stormancer.rpc.next";
     static ErrorRouteName = "stormancer.rpc.error";
     static CompletedRouteName = "stormancer.rpc.completed";
@@ -2000,7 +1993,7 @@ export class RpcClientPlugin implements IClientPlugin {
     }
 }
 
-export class RpcRequestContext {
+export  class RpcRequestContext {
 
     private _scene: Scene = null;
     private id: number = null;
@@ -2008,7 +2001,7 @@ export class RpcRequestContext {
     private _peer: IScenePeer = null;
     private _msgSent: number = null;
     private _data: Uint8Array = null;
-    private _cancellationToken: Cancellation.token = null;
+    private _cancellationToken: Cancellation.Token = null;
 
     public remotePeer(): IScenePeer {
         return this._peer;
@@ -2018,11 +2011,11 @@ export class RpcRequestContext {
         return this._data;
     }
 
-    public cancellationToken(): Cancellation.token {
+    public cancellationToken(): Cancellation.Token {
         return this._cancellationToken;
     }
 
-    constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token) {
+    constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.Token) {
         this._scene = scene;
         this.id = id;
         this._ordered = ordered;
@@ -2066,7 +2059,7 @@ interface RpcRequest {
     id: number;
 }
 
-export class RpcService {
+export  class RpcService {
     private _currentRequestId: number = 0;
     private _scene: Scene;
     private _pendingRequests: IMap<RpcRequest> = {};
@@ -2175,7 +2168,7 @@ export class RpcService {
             var id = this.computeId(p);
             p.data = p.data.subarray(2);
             var cts = new Cancellation.TokenSource();
-            var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.token);
+            var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.getToken());
             if (!this._runningRequests[id]) {
                 this._runningRequests[id] = cts;
                 Helpers.invokeWrapping(handler, ctx).then(() => {
@@ -2274,7 +2267,7 @@ export class RpcService {
     }
 }
 
-export class RequestContext {
+export  class RequestContext {
 
     private _packet: Packet<IConnection>;
     private _requestId: Uint8Array;
@@ -2344,7 +2337,7 @@ interface SystemRequest {
     deferred: Deferred<void>;
 }
 
-export class RequestProcessor implements IPacketProcessor {
+export  class RequestProcessor implements IPacketProcessor {
     private _pendingRequests: IMap<SystemRequest> = {};
     private _logger: ILogger;
     private _isRegistered: boolean = false;
@@ -2494,7 +2487,7 @@ export class RequestProcessor implements IPacketProcessor {
     }
 }
 
-export class SceneDispatcher implements IPacketProcessor {
+export  class SceneDispatcher implements IPacketProcessor {
     private _scenes: Scene[] = [];
     private _buffers: Packet<IConnection>[][] = [];
     public registerProcessor(config: PacketProcessorConfig): void {
@@ -2544,7 +2537,7 @@ export class SceneDispatcher implements IPacketProcessor {
 }
 
 // $http function is implemented in order to follow the standard Adapter pattern
-export function $http(url, options?) {
+export  function $http(url, options?) {
 
     // A small example of object
     var core = {
@@ -2631,36 +2624,36 @@ export function $http(url, options?) {
     };
 };
 
-export interface ConnectToSceneMsg {
+export  interface ConnectToSceneMsg {
     Token: string;
     Routes: RouteDto[];
     ConnectionMetadata: Map;
 }
 
-export interface ConnectionResult {
+export  interface ConnectionResult {
     SceneHandle: number;
     RouteMappings: IMap<number>;
 }
 
-export interface RouteDto {
+export  interface RouteDto {
     Name: string;
     Handle: number;
     Metadata: Map;
 }
 
-export interface SceneInfosRequestDto {
+export  interface SceneInfosRequestDto {
     Token: string;
     Metadata: Map;
 }
 
-export interface SceneInfosDto {
+export  interface SceneInfosDto {
     SceneId: string;
     Metadata: Map;
     Routes: RouteDto[];
     SelectedSerializer: string;
 }
 
-export class WebSocketConnection implements IConnection {
+export  class WebSocketConnection implements IConnection {
     private _socket: WebSocket;
 
     public constructor(id: number, socket: WebSocket) {
@@ -2736,7 +2729,7 @@ export class WebSocketConnection implements IConnection {
     }
 }
 
-export class WebSocketTransport implements ITransport {
+export  class WebSocketTransport implements ITransport {
     public name: string = "websocket";
     public id: Uint8Array;
     // Gets a boolean indicating if the transport is currently running.
@@ -2758,7 +2751,7 @@ export class WebSocketTransport implements ITransport {
     public connectionClosed: ((connection: IConnection) => void)[] = [];
 
     // Starts the transport
-    public start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void> {
+    public start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void> {
         this._type = this.name;
         this._connectionManager = handler;
 

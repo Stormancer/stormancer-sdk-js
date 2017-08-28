@@ -5,7 +5,7 @@
     id: number;
 }
 
-export class RpcService {
+/*export*/ class RpcService {
     private _currentRequestId: number = 0;
     private _scene: Scene;
     private _pendingRequests: IMap<RpcRequest> = {};
@@ -114,7 +114,7 @@ export class RpcService {
             var id = this.computeId(p);
             p.data = p.data.subarray(2);
             var cts = new Cancellation.TokenSource();
-            var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.token);
+            var ctx = new RpcRequestContext(p.connection, this._scene, requestId, ordered, p.data, cts.getToken());
             if (!this._runningRequests[id]) {
                 this._runningRequests[id] = cts;
                 Helpers.invokeWrapping(handler, ctx).then(() => {

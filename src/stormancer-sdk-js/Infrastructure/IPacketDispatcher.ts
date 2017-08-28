@@ -14,7 +14,7 @@ Dispatches a packet to the system.
 @param {Stormancer.Packet} packet Packet to dispatch.
 */
 
-export interface IPacketDispatcher {
+/*export*/ interface IPacketDispatcher {
 
     addProcessor(processor: IPacketProcessor): void;
 

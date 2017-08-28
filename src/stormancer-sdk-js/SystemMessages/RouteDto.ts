@@ -1,4 +1,4 @@
-export interface RouteDto {
+/*export*/ interface RouteDto {
     Name: string;
     Handle: number;
     Metadata: Map;

@@ -1,4 +1,4 @@
-export class Route {
+/*export*/ class Route {
 
     /**
     Creates a new route instance.

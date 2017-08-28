@@ -1,4 +1,4 @@
-export class Packet<T> {
+/*export*/ class Packet<T> {
 
     /**
     A packet sent by a remote peer to the running peer.

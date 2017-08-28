@@ -19,7 +19,7 @@ Available log levels
 @memberof Stormancer
 */
 
-export enum LogLevel {
+/*export*/ enum LogLevel {
     fatal = 0,
     error = 1,
     warn = 2,
@@ -28,7 +28,7 @@ export enum LogLevel {
     trace = 5
 }
 
-export interface ILogger {
+/*export*/ interface ILogger {
 
     log(level: LogLevel, category: string, message: string, data: any);
 }

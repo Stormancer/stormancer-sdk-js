@@ -1,4 +1,4 @@
-﻿export class RpcRequestContext {
+﻿/*export*/ class RpcRequestContext {
 
     private _scene: Scene = null;
     private id: number = null;
@@ -6,7 +6,7 @@
     private _peer: IScenePeer = null;
     private _msgSent: number = null;
     private _data: Uint8Array = null;
-    private _cancellationToken: Cancellation.token = null;
+    private _cancellationToken: Cancellation.Token = null;
 
     public remotePeer(): IScenePeer {
         return this._peer;
@@ -16,11 +16,11 @@
         return this._data;
     }
 
-    public cancellationToken(): Cancellation.token {
+    public cancellationToken(): Cancellation.Token {
         return this._cancellationToken;
     }
 
-    constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.token) {
+    constructor(peer: IScenePeer, scene: Scene, id: number, ordered: boolean, data: Uint8Array, token: Cancellation.Token) {
         this._scene = scene;
         this.id = id;
         this._ordered = ordered;

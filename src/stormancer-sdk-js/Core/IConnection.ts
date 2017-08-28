@@ -87,13 +87,13 @@ Sets the account and application associated with this object. Used only serversi
 @memberof Stormancer
 */
 
-export enum ConnectionState {
+/*export*/ enum ConnectionState {
     Disconnected = 0,
     Connecting = 1,
     Connected = 2
 }
 
-export interface IConnection {
+/*export*/ interface IConnection {
     // Unique id in the node for the connection.
     id: number;
 

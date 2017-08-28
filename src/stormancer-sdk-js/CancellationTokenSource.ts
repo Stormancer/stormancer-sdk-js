@@ -1,9 +1,9 @@
-﻿export module Cancellation {
+﻿/*export*/ module Cancellation {
 
     /**
     TokenSource
     */
-    export class TokenSource {
+    /*export*/ class TokenSource {
 
         /**
         Constructor
@@ -11,55 +11,57 @@
         constructor() {
         }
 
-        private data: sourceData = {
+        /**
+        Cancel
+        */
+        public cancel(reason?: string): void {
+            this._data.isCancelled = true;
+            reason = reason || 'Operation Cancelled';
+
+            this._data.reason = reason;
+
+            setTimeout(() => {
+                for (var i = 0; i < this._data.listeners.length; i++) {
+                    if (typeof this._data.listeners[i] === 'function') {
+                        this._data.listeners[i](reason);
+                    }
+                }
+            }, 0);
+        }
+
+        public getToken(): Token {
+            return this._token;
+        }
+
+        private _data: sourceData = {
             reason: <string>null,
             isCancelled: false,
             listeners: []
         };
 
         /**
-        Cancel
-        */
-        public cancel(reason?: string): void {
-            this.data.isCancelled = true;
-            reason = reason || 'Operation Cancelled';
-
-            this.data.reason = reason;
-
-            setTimeout(() => {
-                for (var i = 0; i < this.data.listeners.length; i++) {
-                    if (typeof this.data.listeners[i] === 'function') {
-                        this.data.listeners[i](reason);
-                    }
-                }
-            }, 0);
-        }
-
-        /**
         Token
         */
-        public token: token = new token(this.data);
+        private _token: Token = new Token(this._data);
     }
 
     /**
     Token
     */
-    export class token {
+    /*export*/ class Token {
 
         /**
         Constructor
         */
         constructor(data: sourceData) {
-            this.data = data;
+            this._data = data;
         }
-
-        private data: sourceData;
 
         /**
         To know if the token has been cancelled.
         */
         public isCancelled(): boolean {
-            return this.data.isCancelled;
+            return this._data.isCancelled;
         }
 
         /**
@@ -67,7 +69,7 @@
         */
         public throwIfCancelled(): void {
             if (this.isCancelled()) {
-                throw this.data.reason;
+                throw this._data.reason;
             }
         }
 
@@ -77,18 +79,20 @@
         public onCancelled(callBack: (reason: string) => void) {
             if (this.isCancelled()) {
                 setTimeout(() => {
-                    callBack(this.data.reason);
+                    callBack(this._data.reason);
                 }, 0);
             } else {
-                this.data.listeners.push(callBack);
+                this._data.listeners.push(callBack);
             }
         }
+
+        private _data: sourceData;
     }
 
     /**
     sourceData
     */
-    export interface sourceData {
+    /*export*/ interface sourceData {
 
         /**
         Cancellation reason

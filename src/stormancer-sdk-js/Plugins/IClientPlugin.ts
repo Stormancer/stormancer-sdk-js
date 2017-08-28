@@ -1,3 +1,3 @@
-﻿export interface IClientPlugin {
+﻿/*export*/ interface IClientPlugin {
     build(ctx: PluginBuildContext): void;
 }

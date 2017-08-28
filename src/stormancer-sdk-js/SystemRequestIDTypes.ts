@@ -5,7 +5,7 @@ Message types understood by the agent.
 @memberof Stormancer
 */
 
-export class SystemRequestIDTypes {
+/*export*/ class SystemRequestIDTypes {
     public static ID_SET_METADATA = 0;
     public static ID_SCENE_READY = 1;
     public static ID_PING = 2;

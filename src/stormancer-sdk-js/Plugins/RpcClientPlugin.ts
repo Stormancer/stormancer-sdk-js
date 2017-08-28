@@ -1,4 +1,4 @@
-﻿export class RpcClientPlugin implements IClientPlugin {
+﻿/*export*/ class RpcClientPlugin implements IClientPlugin {
     static NextRouteName = "stormancer.rpc.next";
     static ErrorRouteName = "stormancer.rpc.error";
     static CompletedRouteName = "stormancer.rpc.completed";

@@ -1,4 +1,4 @@
-export class WebSocketConnection implements IConnection {
+/*export*/ class WebSocketConnection implements IConnection {
     private _socket: WebSocket;
 
     public constructor(id: number, socket: WebSocket) {

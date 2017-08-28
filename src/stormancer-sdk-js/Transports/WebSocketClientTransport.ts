@@ -1,4 +1,4 @@
-export class WebSocketTransport implements ITransport {
+/*export*/ class WebSocketTransport implements ITransport {
     public name: string = "websocket";
     public id: Uint8Array;
     // Gets a boolean indicating if the transport is currently running.
@@ -20,7 +20,7 @@ export class WebSocketTransport implements ITransport {
     public connectionClosed: ((connection: IConnection) => void)[] = [];
 
     // Starts the transport
-    public start(type: string, handler: IConnectionManager, token: Cancellation.token): Promise<void> {
+    public start(type: string, handler: IConnectionManager, token: Cancellation.Token): Promise<void> {
         this._type = this.name;
         this._connectionManager = handler;
 

@@ -1,12 +1,12 @@
-export interface Map {
+/*export*/ interface Map {
     [key: string]: string;
 }
 
-export interface IMap<T> {
+/*export*/ interface IMap<T> {
     [key: string]: T;
 }
 
-export class Helpers {
+/*export*/ class Helpers {
     static base64ToByteArray(data: string): Uint8Array {
         return new Uint8Array(atob(data).split('').map(function (c) { return c.charCodeAt(0) }));
     }
@@ -56,13 +56,13 @@ export class Helpers {
     }
 }
 
-export interface IObserver<T> {
+/*export*/ interface IObserver<T> {
     onCompleted(): void;
     onError(error: any): void;
     onNext(value: T): void;
 }
 
-export class Deferred<T> {
+/*export*/ class Deferred<T> {
     constructor() {
         this._promise = new Promise<T>((resolve, reject) => {
             this._resolve = resolve;
