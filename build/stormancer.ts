@@ -1883,7 +1883,7 @@ export  class MsgPackSerializer implements ISerializer {
     @return {Uint8Array} The byte array.
     */
     public serialize<T>(data: T): Uint8Array {
-        return <Uint8Array>this._msgpack.encode(data);
+        return <any>this._msgpack.encode(data);
     }
 
     /**
@@ -1894,7 +1894,7 @@ export  class MsgPackSerializer implements ISerializer {
     @return {object} The deserialized data.
     */
     public deserialize<T>(bytes: Uint8Array): T {
-        return this._msgpack.decode<T>(bytes);
+        return <T>this._msgpack.decode(<any>bytes);
     }
 
     /**
