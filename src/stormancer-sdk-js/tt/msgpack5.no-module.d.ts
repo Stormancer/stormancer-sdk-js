@@ -9,8 +9,16 @@ declare namespace stream {
 }
 
 //import bl = require('bl');
-declare interface bl { }
-declare interface Buffer { }
+declare class  bl { }
+declare class Buffer {
+    public length: number;
+    public readUInt32BE(offset: number): number;
+    public readUIntBE(offset: number, size: number): number;
+    public readIntBE(offset: number, size: number): number;
+    public static allocUnsafe(size: number): Buffer;
+    public writeUInt8(value: number, offset: number): void;
+    public writeUInt32BE(value: number, offset: number): void;
+}
 
 interface Options {
     forceFloat64: boolean;

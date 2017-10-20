@@ -1873,6 +1873,36 @@ export  class MsgPackSerializer implements ISerializer {
     @memberof Stormancer
     */
     constructor() {
+        function checkTimestamp(obj) {
+            return obj instanceof Date;
+        }
+        function decodeTimestamp(data: Buffer) {
+            var length = data.length;
+            switch (length) {
+                case 4:
+                    return new Date(data.readUInt32BE(0) * 1000);
+                case 8:
+                    var data64 = data.readUIntBE(0, 8);
+                    var date = new Date((data64 & 0x00000003ffffffff) * 1000);
+                    return date;
+
+                case 12:
+                    var data32 = data.readUIntBE(0, 4);
+                    var data64 = data.readIntBE(0, 8);
+                    return new Date(data64 * 1000);
+                default:
+                    throw Error("Failed to unpack date");
+            }
+        }
+        function encodeTimestamp(obj: Date): Buffer {
+            var buffer = Buffer.allocUnsafe(5);
+            buffer.writeUInt8(0xFF, 0);
+            buffer.writeUInt32BE(obj.getTime() / 1000, 0);
+            return buffer;
+        }
+
+        this._msgpack.registerEncoder(checkTimestamp, encodeTimestamp);
+        this._msgpack.registerDecoder(0xFF, decodeTimestamp);
     }
 
     /**
